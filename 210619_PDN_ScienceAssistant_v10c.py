@@ -17,7 +17,7 @@ from pdf2doi.pdf2doi import pdf2doi
 now = datetime.datetime.now()
 t1 = time.perf_counter()
 
-direct = '/Users/johnfallot/Documents/PDN/PDN_studies'
+direct = '/Directory_Sample/
 
 def main(our_files):
     our_files = Path(direct)
