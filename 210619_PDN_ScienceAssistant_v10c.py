@@ -27,17 +27,17 @@ def main(our_files):
             try:
                 print("Preparing file extraction...")
                 print("\nBeginning extraction... \n")
-                study = pdfplumber.open(filepath)
-                n = len(study.pages)
-                extract(n, study, filepath)
+                extract(filepath)
                 print("\nChecking for next file... \n")
                 continue
             except:
                 pass
 
 
-def extract(n, study, filepath):
+def extract(filepath):
 
+    study = pdfplumber.open(filepath)
+    n = len(study.pages)
     doi_results = pdf2doi(filepath, verbose=True, save_identifier_metadata = True, filename_bibtex = False)
 
     preprints = []
