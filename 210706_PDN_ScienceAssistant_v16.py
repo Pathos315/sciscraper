@@ -93,7 +93,6 @@ def extract(filename, file, num_of_files, filepath):
 
             'Title': filepath,
             'DOI': doi_results['identifier'],
-            'Library': doi_results['validation_info'],
             'Pages': n,
             '5 Most Common Words': fdist_top5,
             'Research Words': research_word_overlap,
