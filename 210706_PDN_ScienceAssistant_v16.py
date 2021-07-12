@@ -155,7 +155,7 @@ def printing(compendium):
     What we aim to do is consolidate all entries that belong to one paper, which is what the aggregate_functions aims to do (with occasional success).'''
     print(f'\nFinalizing data for human review...\n')
     df = pd.DataFrame(compendium)
-    aggregation_functions = {'DOI': 'first', 'author': 'first', 'Pages':'first', '5 Most Common Words': 'max', 'Wordscore':'sum'}
+    aggregation_functions = {'DOI': 'first', 'Pages':'first', '5 Most Common Words': 'max', 'Wordscore':'sum'}
     df_new = df.groupby(df['Title']).aggregate(aggregation_functions)
     df_new = df_new.sort_values('5 Most Common Words', ascending=False)
     print(df_new.head())
