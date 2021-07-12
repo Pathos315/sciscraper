@@ -13,8 +13,8 @@ from pdf2doi.pdf2doi import pdf2doi
 now = datetime.datetime.now()
 t1 = time.perf_counter()
 
-'''dir is the default directory on my computer... I'd very much like to make this a little more anonymous.'''
-dir = '/Users/johnfallot/Documents/PDN/PDN_studies'
+'''the sample directory.'''
+dir = 'PDF-Bulk-Assessment/Directory_Sample/'
 
 def main(folder, file, num_of_files): #directory = dir, file = starting at, num_of_file = ending at
     """The main loop of the program. Takes the folder, file, and file number and puts out a range."""
