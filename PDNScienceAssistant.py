@@ -156,16 +156,16 @@ def finalize(compendium):
     What we aim to do is consolidate all entries that belong to one paper, which is what the aggregate_functions aims to do (with occasional success).
     '''
     df = create_dataframe(compendium)
-    print (df.head())
     finish(df)
 
 def create_dataframe(compendium):
     '''A dataframe is generated using pandas, but TBH this #@!?>_< code has only generated headaches so far.'''
     print(f'\nFinalizing data for human review...\n')
     df = pd.DataFrame(compendium)
-    aggregation_functions = {'DOI': 'first', 'author': 'first', 'Pages':'first', '5 Most Common Words': 'max', 'Wordscore':'sum'}
+    aggregation_functions = {'DOI': 'first', 'Pages':'first', '5 Most Common Words': 'max', 'Wordscore':'sum'}
     df = df.groupby(df['Title']).aggregate(aggregation_functions)
     df = df.sort_values('5 Most Common Words', ascending=False)
+    print (df.head())
     return df
 
 def csv_filename():
