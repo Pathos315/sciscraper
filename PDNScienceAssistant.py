@@ -29,7 +29,9 @@ def main(folder, file, num_of_files): #directory = dir, file = starting at, num_
     
     files_to_check = full_dir[:num_of_files] #select the first num_of_files elements from the list
     '''This gets passed to the dataframe'''
-
+    
+    compendium = []
+    
     for file_index,file in enumerate(files_to_check): #note: now the variable file is an element of files_to_check, not a numerical index
         try:
             print("\nPreparing file extraction...\n")
