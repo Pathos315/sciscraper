@@ -22,24 +22,25 @@ def main(folder, file, num_of_files): #directory = dir, file = starting at, num_
     full_dir = [file for file in os.listdir(folder) if file.endswith('.pdf')] 
     '''Only gets the pdfs in the folder and will overlook non-pdf files.'''
     
-    binder = len(full_dir) 
     '''Maximum number of pdfs in a folder.'''
-    if num_of_files == 0:
-        num_of_files = binder
-    '''If num_of_file arg is 0, gets all the files.'''
+    if num_of_files == 0 or num_of_files > len(full_dir): 
+        num_of_files = len(full_dir)
+    '''If num_of_file arg is 0, or if it is larger than the number of files in the target folder, we set it to the number of files in the folder.'''
     
+    files_to_check = full_dir[:num_of_files] #select the first num_of_files elements from the list
+
     compendium = []
     '''This gets passed to the dataframe'''
 
-    for file in range(num_of_files):
-        if file <= num_of_files:
+    for file_index,file in enumerate(files_to_check): #note: now the variable file is an element of files_to_check, not a numerical index
             try:
                 print("Preparing file extraction...")
-                filepath = str(full_dir[file])
+                filepath = str(file)
                 filename = os.path.join(folder,filepath)
                 '''Generates the path to each pdf file'''
                 print("\nBeginning extraction... \n")
-                compendium_item = extract(filename, file, num_of_files, filepath)
+                print(f"Processing file {file_index} of {num_of_files} | {filepath}", end = "\r")
+                compendium_item = extract(filename, filepath)
                 compendium.append(compendium_item)
                 '''The extraction process for each file gets appended to the compendium'''
                 print(f"\nPackaging {filepath}... \n")
@@ -48,14 +49,10 @@ def main(folder, file, num_of_files): #directory = dir, file = starting at, num_
             except:
                 pass
 
-        elif file == num_of_files:
-            break
-        '''This guarantees that the program will iterate for every pdf in the folder. I've been told to write this as an enumerate function, but that seems to throw up problems.'''
-
     printing(compendium)
     '''Once the entire folder has been extracted, the dataframing process begins.'''
 
-def extract(filename, file, num_of_files, filepath):
+def extract(filename,  filepath):
     '''Using the supplied args, each file is opened using pdfplumber, which converts the pdf copy into a string.'''
     doi_results = pdf2doi(filename, verbose=True, save_identifier_metadata = True, filename_bibtex = False)
 
@@ -69,7 +66,7 @@ def extract(filename, file, num_of_files, filepath):
         if page <= n:
             findings = study.pages[page].extract_text()
             '''Each page's string gets appended to preprint []'''
-            print(f"Processing file {file} of {num_of_files} | {filepath} | Page {page} of {n}...", end = "\r")
+            print(f"Processing Page {page} of {n}...", end = "\r")
             preprints.append(findings) 
             continue
             '''Proceeds to next page in the study'''
