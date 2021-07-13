@@ -163,6 +163,9 @@ def create_dataframe(compendium):
     '''A dataframe is generated using pandas, but TBH this #@!?>_< code has only generated headaches so far.'''
     print(f'\nFinalizing data for human review...\n')
     df = pd.DataFrame(compendium)
+    aggregation_functions = {'DOI': 'first', 'author': 'first', 'Pages':'first', '5 Most Common Words': 'max', 'Wordscore':'sum'}
+    df = df.groupby(df['Title']).aggregate(aggregation_functions)
+    df = df.sort_values('5 Most Common Words', ascending=False)
     return df
 
 def csv_filename():
