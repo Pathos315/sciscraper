@@ -1,12 +1,11 @@
-import os, pdfplumber, datetime, time, re
-from pandas.core import groupby
-from pdf2doi.finders import validate
-from nltk.corpus import stopwords, names
+import os, pdfplumber, datetime, time, re, random
 from nltk.tokenize import word_tokenize
-from nltk import FreqDist
-import random
+from nltk.corpus import stopwords, names
 import pandas as pd
 from pdf2doi.pdf2doi import pdf2doi
+from nltk import FreqDist
+from bibtexparser.bparser import BibTexParser
+from bibtexparser.bibdatabase import as_text
 
 '''These are all the imports, which likely slow the entire thing down on launch.'''
 
@@ -30,20 +29,16 @@ def main(folder, file, num_of_files): #directory = dir, file = starting at, num_
     files_to_check = full_dir[:num_of_files] #select the first num_of_files elements from the list
     '''This gets passed to the dataframe'''
     
-    compendium = []
-    
     for file_index,file in enumerate(files_to_check): #note: now the variable file is an element of files_to_check, not a numerical index
         try:
             print("\nPreparing file extraction...\n")
-            filepath = str(file)
-            filename = os.path.join(folder,filepath)
+            filepath, filename = filenaming(folder, file)
             '''Generates the path to each pdf file'''
             print("\nBeginning extraction... \n")
             print(f"\nProcessing file {file_index} of {num_of_files} | {filepath}\n", end = "\r")
-            extract(filename, filepath)
+            extract(filename)
             '''The extraction process for each file gets appended to the compendium'''
             print(f"\nPackaging {filepath}... \n")
-            print("\nChecking for next file... \n")
             continue
         except:
             pass
@@ -51,6 +46,12 @@ def main(folder, file, num_of_files): #directory = dir, file = starting at, num_
     '''Once the entire folder has been extracted, the dataframing process begins.'''
     finalize(compendium)
 
+def filenaming(folder, file):
+    '''Generates filename and locates file in directory'''
+    filepath = str(file)
+    filename = os.path.join(folder,filepath)
+    return filepath,filename 
+    
 def extract(filename, filepath):
     '''Using the supplied args, each file is opened using pdfplumber, which converts the pdf copy into a string.'''
     doi_results = pdf2doi(filename, verbose=True, save_identifier_metadata = True, filename_bibtex = False)
@@ -74,33 +75,61 @@ def extract(filename, filepath):
                 break
     
     for preprint in preprints:
-        manuscript = str(preprint).strip()
-        '''
-        Tokenization & Keyword search. Stopwords are filtered out.
-        '''
+        
+        manuscript = str(preprint).strip().lower()
         postprint = redaction(manuscript)
         all_words = tokenization(postprint)
-        wordscore = word_match(all_words)
+        wordscore, research_word_overlap = word_match(all_words)
+        doi_url, publisher, journal, volume, number, title, author, year = bibtexwriting(doi_results)
+        fdist_top5 = frequency(all_words)
+        sdist_top3 = study_design(research_word_overlap)
 
         '''
         Below is what gets passed back from the entire extraction process.
         '''
-        compendium_item = {
-
-            'Title': filepath,
-            'DOI': doi_results['identifier'],
-            'Pages': n,
-            'Wordscore' : wordscore
-
-            }
         
-        compendium.append(compendium_item)
+        cpdi = {
+
+            'title': title,
+            'author': author,
+            'year': year,
+            'doi': doi_results['identifier'],
+            'doi_url': doi_url,
+            'publisher': publisher,
+            'journal': journal,
+            'volume': volume,
+            'number': number,
+            'pages': n,
+            'wordscore': wordscore,
+            '5 Most Common Words': fdist_top5,
+            'Study Design': sdist_top3
+            
+        }
+
+        compendium.append(cpdi)
+    return
+
+def bibtexwriting(doi_results):
+    '''This takes the validation info from pdf2doi and extracts the entries for appendation to the main compendium item dict'''
+    bibtex = doi_results['validation_info']
+    bp = BibTexParser(interpolate_strings=False)
+    bib_database = bp.parse(bibtex)
+    bib_database.entries[0]
+    doi_url = as_text(bib_database.entries[0]['url'])
+    publisher = as_text(bib_database.entries[0]['publisher'])
+    journal = as_text(bib_database.entries[0]['journal'])
+    volume = as_text(bib_database.entries[0]['volume'])
+    number = as_text(bib_database.entries[0]['number'])
+    title = as_text(bib_database.entries[0]['title'])
+    author = as_text(bib_database.entries[0]['author'])
+    year = as_text(bib_database.entries[0]['year'])
+
+    return doi_url, publisher, journal, volume, number, title, author, year
 
 def redaction(manuscript):
     '''
-    The resulting manuscript is put into lowercase and all non-alphanumeric characters are removed.
+    All non-alphanumeric characters are removed.
     '''
-    manuscript = manuscript.lower()
     postprint = re.sub(r'\W+', ' ', manuscript)
     return postprint
 
@@ -113,37 +142,69 @@ def tokenization(postprint):
     return all_words
 
 def word_match(all_words):
-
-    '''
-    The remaining tokenized words are compared against several lists of words, by way of the lambda overlap function.
+    '''The remaining tokenized words are compared against several lists of words, by way of the lambda overlap function.
     target_words are the words we're looking for in a study. 
     bycatch_words are words that generally indicate a false positive
     research_words are words that help us determine the underlying study design: was it a randomized control or analytical?
+    The length of the target_words minus the length of the bycatch words determines the wordscore.
+    A positive wordscore means a paper is more likely than not to be a match, and vice versa.
+    TO DO: have target words import from separate txt file'''
 
-    The length of the target_words minus the length of the bycatch words determines the wordscore. A positive wordscore means a paper is more likely than not to be a match, and vice versa.
-    '''
-
-    #TO DO: have target words import from separate txt file
-    target_words = ["prosocial", "design", "intervention", "reddit", "humane","social media","user experience","nudge","choice architecture","user interface", "misinformation", "disinformation", "Trump", "conspiracy", "dysinformation", "users"]
-    bycatch_words = ["psychology", "pediatric", "pediatry", "autism", "mental", "medical", "oxytocin", "adolescence", "infant", "health", "wellness", "child", "care", "mindfulness"]
-
+    target_words = ["prosocial", "design", "intervention", "reddit", "humane","social media",\
+                    "user experience","nudge","choice architecture","user interface", "misinformation", \
+                    "disinformation", "Trump", "conspiracy", "dysinformation", "users"]
+    bycatch_words = ["psychology", "pediatric", "pediatry", "autism", "mental", "medical", \
+                    "oxytocin", "adolescence", "infant", "health", "wellness", "child", "care", "mindfulness"]
+    research_words = ["big data", "data", "analytics", "randomized controlled trial", "RCT", "moderation", \
+                    "community", "social media", "conversational", "control", "randomized", "systemic", \
+                    "analysis", "thematic", "review", "study", "case series", "case report", "double blind", \
+                    "ecological", "survey"]
+    
     overlap = lambda li: [w for w in li if w in all_words]
-   
+    
     target_word_overlap = overlap(target_words)
     bycatch_word_overlap = overlap(bycatch_words)
-    
-    wordscore = len(target_word_overlap) - len(bycatch_word_overlap)
+    research_word_overlap = overlap(research_words)
 
-    return wordscore
+    wordscore = len(target_word_overlap) - len(bycatch_word_overlap)
+    return wordscore, research_word_overlap
+
+def study_design(research_word_overlap):
+    sdist = FreqDist(research_word_overlap)
+    sdist_top3 = sdist.most_common(3)
+    return sdist_top3
+
+def frequency(all_words):
+    '''The five most common words in the paper are calculated.'''
+    fdist = FreqDist(all_words) #Determines the frequency of the most common filtered words.
+    fdist_top5 = fdist.most_common(5) #Gets the top 10 most common words
+    return fdist_top5
 
 def finalize(compendium):
-    '''A dataframe is generated using pandas, but TBH this #@!?>_< code has only generated headaches so far.'''
+    '''A dataframe is generated using pandas.'''
     print(f'\nFinalizing data for human review...\n')
+
     df = pd.DataFrame(compendium)
-    aggregation_functions = {'DOI': 'first', 'Pages': 'first', 'Wordscore':'sum'}
-    df = df.groupby(df['Title']).aggregate(aggregation_functions)
-    print(df.head())
-    finish(df)
+
+    aggregation_functions = {
+            'author': 'first',
+            'year': 'first',
+            'doi': 'first',
+            'doi_url': 'first',
+            'publisher': 'first',
+            'journal': 'first',
+            'volume': 'first',
+            'number': 'first',
+            'pages': 'first',
+            '5 Most Common Words': 'max',
+            'Study Design': 'max',
+        }
+
+    df_new = df\
+        .groupby(df['title'])\
+        .agg(aggregation_functions)
+    print(df_new.head())
+    finish(df_new)
 
 def csv_filename():
     '''A YYMMDD timestamp is generated, and a pseudo_unique ID to prevent the deletion of prior work.'''
@@ -159,5 +220,10 @@ def finish(df):
     t2 = time.perf_counter()
     print(f'\nExtraction finished in {t2-t1} seconds.\nDataframe exported to {export_name}')
         
-'''This line of code initiates the entire process.'''
-main(dir, 0, 2)
+#========================
+#    MAIN LOOP TIME
+#========================
+
+compendium = []
+main(dir, 0, 3)
+finalize(compendium)
