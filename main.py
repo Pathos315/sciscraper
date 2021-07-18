@@ -11,7 +11,7 @@ now = datetime.datetime.now()
 t1 = time.perf_counter()
 
 #the sample directory
-default_directory = 'PDF-Bulk-Assessment/Directory_Sample/'
+default_directory = 'pdfcurate/Directory_Sample/'
 
 def run(folder: str, file: int, num_of_files: int): #directory = dir, file = starting at, num_of_file = ending at
     '''
