@@ -39,11 +39,11 @@ def run(folder: str, file: int, num_of_files: int): #directory = dir, file = sta
         try:
             print("\nPreparing file extraction...\n")
             filepath, filename = filenaming(folder, file)
-            '''Generates the path to each pdf file'''
+            #Generates the path to each pdf file
             print("\nBeginning extraction... \n")
             print(f"\nProcessing file {file_index} of {num_of_files} | {filepath}\n", end = "\r")
             extract(filename)
-            '''The extraction process for each file gets appended to the compendium'''
+            #The extraction process for each file gets appended to the compendium
             print(f"\nPackaging {filepath}... \n")
             continue
         except:
@@ -183,7 +183,8 @@ def word_match(all_words):
         
     Returns:
         wordscore (int): A value derived from the length of matching target_words minus the length of matching bycatch words.
-        research_words (list): A list of matching research words in the paper.'''
+        research_words (list): A list of matching research words in the paper.
+    '''
 
     target_words = ["prosocial", "design", "intervention", "reddit", "humane","social media",\
                     "user experience","nudge","choice architecture","user interface", "misinformation", \
@@ -279,7 +280,7 @@ def csv_filename():
     return export_name
 
 def finish(df):
-        '''
+    '''
     Parameters:
         df (dataframe): the pandas dataframe
 
