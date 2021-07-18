@@ -7,15 +7,13 @@ from nltk import FreqDist
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.bibdatabase import as_text
 
-'''These are all the imports, which likely slow the entire thing down on launch.'''
-
 now = datetime.datetime.now()
 t1 = time.perf_counter()
 
-'''the sample directory.'''
-dir = 'PDF-Bulk-Assessment/Directory_Sample/'
+#the sample directory
+default_directory = 'PDF-Bulk-Assessment/Directory_Sample/'
 
-def main(folder: str, file: int, num_of_files: int): #directory = dir, file = starting at, num_of_file = ending at
+def run(folder: str, file: int, num_of_files: int): #directory = dir, file = starting at, num_of_file = ending at
     '''
     Parameters:
         folder (str): The pathname to the folder that contains the files to be extracted.
@@ -28,7 +26,6 @@ def main(folder: str, file: int, num_of_files: int): #directory = dir, file = st
 
     Returns:
         list: a list (compendium) of dictionaries (cpdx) for the finalize method
-
     '''
 
     full_dir = [file for file in os.listdir(folder) if file.endswith('.pdf')]
@@ -95,7 +92,7 @@ def extract(filename, filepath):
         pages_to_check = book[:n]
         for page_number, page in enumerate(pages_to_check):
             findings = study.pages[page_number].extract_text(x_tolerance=3, y_tolerance=3)
-            #Each page's string gets appended to preprint []'''
+            #Each page's string gets appended to preprint []
             print(f" Processing Page {page_number} of {n}...", end = "\r")
             preprints.append(findings)
             continue
@@ -302,5 +299,8 @@ def finish(df):
 #========================
 
 compendium = []
-main(dir, 0, 3)
-finalize(compendium)
+
+if __name__ == '__main__':
+    
+    run(default_directory, 0, 2)
+    finalize(compendium)
