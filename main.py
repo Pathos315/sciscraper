@@ -279,7 +279,7 @@ def csv_filename():
     export_name = f'{csv_date}_PDN_studies_{export_ID}.csv'
     return export_name
 
-def finish(df):
+def finish(df_new):
     '''
     Parameters:
         df (dataframe): the pandas dataframe
@@ -291,7 +291,7 @@ def finish(df):
         pErFeCtIoN
     '''
     export_name = csv_filename()
-    df.to_csv(export_name)
+    df_new.to_csv(export_name)
     t2 = time.perf_counter()
     print(f'\nExtraction finished in {t2-t1} seconds.\nDataframe exported to {export_name}')
         
