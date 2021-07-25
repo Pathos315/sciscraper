@@ -2,7 +2,7 @@ import os, pdfplumber, datetime, time, re, random
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords, names
 import pandas as pd
-from pdf2doi.pdf2doi import pdf2doi
+from pdf2doi import pdf2doi
 from nltk import FreqDist
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.bibdatabase import as_text
