@@ -1,11 +1,27 @@
+'''
+    Credits: Made by John Fallot, 2021
+
+    Special thanks to:
+       
+        Michele Cotrufo
+        Nathan Lippi
+        Jon Watson Rooney
+
+'''
+#========================
+#    IMPORTS
+#========================
+
 import os, pdfplumber, datetime, time, re, random
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords, names
 import pandas as pd
 from pdf2doi import pdf2doi
 from nltk import FreqDist
-from bibtexparser.bparser import BibTexParser
-from bibtexparser.bibdatabase import as_text
+
+#================================
+#    TIME, FOR BENCHMARKING
+#================================
 
 now = datetime.datetime.now()
 t1 = time.perf_counter()
@@ -82,20 +98,11 @@ def extract(filename, filepath):
     Returns: 
         cpdi (dict): A dictionary of key information about the paper in question.
     '''
-    doi_results = pdf2doi(filename, verbose=True, save_identifier_metadata = True, filename_bibtex = False)
-
-    preprints = []
-
-    with pdfplumber.open(filename) as study:
-        n = len(study.pages)
-        book = [page for page in study.pages]
-        pages_to_check = book[:n]
-        for page_number, page in enumerate(pages_to_check):
-            findings = study.pages[page_number].extract_text(x_tolerance=3, y_tolerance=3)
-            #Each page's string gets appended to preprint []
-            print(f" Processing Page {page_number} of {n}...", end = "\r")
-            preprints.append(findings)
-            continue
+    
+    preprints = None
+    doi_results = pdf2doi(filename, verbose=True, save_identifier_metadata = True, filename_bibtex = True)
+    bibtex_data = doi_results['bibtex_data']
+    preprints, n = studysession(filename)
     
     for preprint in preprints:
         manuscript = str(preprint).strip().lower()
@@ -105,20 +112,21 @@ def extract(filename, filepath):
         doi_url, publisher, journal, volume, number, title, author, year = bibtex_writing(doi_results)
         fdist_top5 = frequency(all_words)
         sdist_top3 = study_design(research_word_overlap)
+        title = bibtex_data['title']
 
         # Below is what gets passed back from the entire extraction process.
         
         cpdi = {
 
             'Title': title,
-            'Author(s)': author,
-            'Year': year,
+            'Author(s)': bibtex_data['author'],
+            'Year': bibtex_data['year'],
             'DOI': doi_results['identifier'],
-            'DOI URL': doi_url,
-            'Publisher': publisher,
-            'Journal': journal,
-            'Volume': volume,
-            'No.': number,
+            'DOI URL': bibtex_data['author'],
+            'Publisher': bibtex_data['publisher'],
+            'Journal': bibtex_data['journal'],
+            'Volume': bibtex_data['volume'],
+            'Number, Vol.': bibtex_data['number'],
             'Pages': n,
             'Wordscore': wordscore,
             '5 Most Common Words': fdist_top5,
@@ -128,19 +136,38 @@ def extract(filename, filepath):
         compendium.append(cpdi)
     return
 
-def bibtex_writing(doi_results, keys=('url', 'publisher', 'journal', 'volume', 'number', 'title', 'author', 'year')):
-    ''' 
-    Parameters: 
-        doi_results (bibtex): pdf2doi validation info
-        keys: the keys in the bibtex entry to be extracted
+#=========================================
+#    COMPONENTS TO RUN & EXTRACT CODE
+#=========================================
+
+def studysession(filename):
+    '''
+    Parameters:
+        filename: the full pathname to the file being extracted.
+
+    Variables:
+        study: the opened file
+        findings: the extracted text of each page of the file
 
     Returns: 
-        bibtex data extracted from pdf2doi validation info.
+        preprints (list): A list of each page's findings, appended together into a long list of pages of text.
+        n: the total number of pages in the pdf, aka the length of the study
     '''
-    bibtex = doi_results['validation_info']
-    parser = BibTexParser(interpolate_strings=False)
-    database = parser.parse(bibtex)
-    return (as_text(database.entries[0][key]) for key in keys)
+
+    preprints = []
+
+    with pdfplumber.open(filename) as study:
+        n = len(study.pages)
+        book = [page for page in study.pages]
+        pages_to_check = book[:n]
+
+        for page_number, page in enumerate(pages_to_check):
+            findings = study.pages[page_number].extract_text(x_tolerance=3, y_tolerance=3)
+            #Each page's string gets appended to preprint
+            print(f" Processing Page {page_number} of {n}...", end = "\r")
+            preprints.append(findings)
+    
+    return preprints, n
 
 def redaction(manuscript):
     '''
@@ -229,6 +256,10 @@ def frequency(all_words):
     fdist_top5 = fdist.most_common(5) #Gets the top 10 most common words
     return fdist_top5
 
+#========================================
+#    SETS UP FINAL CSV EXPORT
+#========================================
+
 def finalize(compendium):
     '''
     Parameters:
@@ -279,7 +310,7 @@ def csv_filename():
     export_name = f'{csv_date}_PDN_studies_{export_ID}.csv'
     return export_name
 
-def finish(df_new):
+def finish(df):
     '''
     Parameters:
         df (dataframe): the pandas dataframe
@@ -291,7 +322,7 @@ def finish(df_new):
         pErFeCtIoN
     '''
     export_name = csv_filename()
-    df_new.to_csv(export_name)
+    df.to_csv(export_name)
     t2 = time.perf_counter()
     print(f'\nExtraction finished in {t2-t1} seconds.\nDataframe exported to {export_name}')
         
