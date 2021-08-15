@@ -1,13 +1,18 @@
 '''
-    Credits: Made by John Fallot, 2021
+    ----------------Special Thanks------------------
+    Michele Cotrufo
+    Nathan Lippi
+    Jon Watson Rooney
+    My colleagues and friends at the Prosocial Design Network, Inc.
 
-    Special thanks to:
-       
-        Michele Cotrufo
-        Nathan Lippi
-        Jon Watson Rooney
+    ----------------Maintainer----------------
+    John Fallot <john.fallot@gmail.com>
 
+    ----------------License----------------
+    The MIT License [https://opensource.org/licenses/MIT]
+    Copyright (c) 2021 John Fallot
 '''
+
 #========================
 #    IMPORTS
 #========================
