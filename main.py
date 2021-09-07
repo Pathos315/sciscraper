@@ -61,8 +61,7 @@ def run(folder: str, file: int, num_of_files: int): #directory = dir, file = sta
             print("\nPreparing file extraction...\n")
             filepath, filename = filenaming(folder, file)
             #Generates the path to each pdf file
-            print("\nBeginning extraction... \n")
-            print(f"\nProcessing file {file_index} of {num_of_files} | {filepath}\n", end = "\r")
+            print(f"\nBeginning extraction of {file_index} of {num_of_files} | {filepath}\n", end = "\r")
             extract(filename)
             #The extraction process for each file gets appended to the compendium
             print(f"\nPackaging {filepath}... \n")
@@ -104,7 +103,7 @@ def extract(filename, filepath):
         cpdi (dict): A dictionary of key information about the paper in question.
     '''
     
-    preprints = None
+    preprints = list()
     doi_results = pdf2doi(filename, verbose=True, save_identifier_metadata = True, filename_bibtex = True)
     bibtex_data = doi_results['bibtex_data']
     preprints, n = studysession(filename)
@@ -114,32 +113,30 @@ def extract(filename, filepath):
         postprint = redaction(manuscript)
         all_words = tokenization(postprint)
         wordscore, research_word_overlap = word_match(all_words)
-        doi_url, publisher, journal, volume, number, title, author, year = bibtex_writing(doi_results)
         fdist_top5 = frequency(all_words)
         sdist_top3 = study_design(research_word_overlap)
         title = bibtex_data['title']
 
         # Below is what gets passed back from the entire extraction process.
         
-        cpdi = {
+        compendium_item = {
 
             'Title': title,
-            'Author(s)': bibtex_data['author'],
+            'Author': bibtex_data['author'],,
             'Year': bibtex_data['year'],
             'DOI': doi_results['identifier'],
-            'DOI URL': bibtex_data['author'],
             'Publisher': bibtex_data['publisher'],
             'Journal': bibtex_data['journal'],
             'Volume': bibtex_data['volume'],
-            'Number, Vol.': bibtex_data['number'],
+            'Number': bibtex_data['number'],
             'Pages': n,
             'Wordscore': wordscore,
             '5 Most Common Words': fdist_top5,
             'Study Design': sdist_top3
             
-        }
-        compendium.append(cpdi)
-    return
+            }
+        compendium.append(compendium_item)
+        return
 
 #=========================================
 #    COMPONENTS TO RUN & EXTRACT CODE
@@ -159,7 +156,7 @@ def studysession(filename):
         n: the total number of pages in the pdf, aka the length of the study
     '''
 
-    preprints = []
+    preprints = list()
 
     with pdfplumber.open(filename) as study:
         n = len(study.pages)
@@ -279,65 +276,45 @@ def finalize(compendium):
     df = pd.DataFrame(compendium)
 
     aggregation_functions = {
-            'author': 'first',
-            'year': 'first',
-            'doi': 'first',
-            'doi_url': 'first',
-            'publisher': 'first',
-            'journal': 'first',
-            'volume': 'first',
-            'number': 'first',
-            'pages': 'first',
+            'Author': 'first',
+            'Year': 'first',
+            'DOI': 'first',
+            'Publisher': 'first',
+            'Journal': 'first',
+            'Volume': 'first',
+            'Number': 'first',
+            'Pages': 'first',
+            'Wordscore': 'max',
             '5 Most Common Words': 'max',
-            'Study Design': 'max',
-            'Wordscore': 'sum'
+            'Study Design': 'sum'
         }
 
-    df_new = df\
-        .groupby(df['title'])\
+    dataframe = df\
+        .groupby(df['Title'])\
         .agg(aggregation_functions)
-    print(df_new.head())
-    finish(df_new)
 
-def csv_filename():
-    '''
-    Parameters:
-        None
-
-    Description:
-        A YYMMDD timestamp is generated, and a pseudo_unique ID to prevent the deletion of prior work.
-
-    Returns:
-        export_name (str): A name for the imminent file to be.
-    '''
+    now = datetime.datetime.now()
     csv_date = now.strftime('%y%m%d')
     export_ID = random.randint(0,100)
     export_name = f'{csv_date}_PDN_studies_{export_ID}.csv'
-    return export_name
+    dataframe.to_csv(export_name)
 
-def finish(df):
-    '''
-    Parameters:
-        df (dataframe): the pandas dataframe
-
-    Description:
-        The dataframe is handed off to a csv file and exported. A time is measured for benchmarking.
-
-    Returns:
-        pErFeCtIoN
-    '''
-    export_name = csv_filename()
-    df.to_csv(export_name)
-    t2 = time.perf_counter()
-    print(f'\nExtraction finished in {t2-t1} seconds.\nDataframe exported to {export_name}')
+    print(dataframe.head())
+    print(f'\nDataframe exported to {export_name}')
         
 #========================
-#    MAIN LOOP TIME
+#       MAIN LOOP
 #========================
 
-compendium = []
+compendium = list()
 
-if __name__ == '__main__':
-    
+def main():
+    default_directory = '/Users/johnfallot/Documents/PDN/PDN_studies'
+    t1 = time.perf_counter()
     run(default_directory, 0, 2)
     finalize(compendium)
+    t2 = time.perf_counter()
+    print(f'\nExtraction finished in {t2-t1} seconds.\n')
+
+if __name__ == '__main__':
+    main()
