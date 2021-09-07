@@ -3,6 +3,8 @@
     Michele Cotrufo
     Nathan Lippi
     Jon Watson Rooney
+    Colin Meret
+    ArjanCodes
     My colleagues and friends at the Prosocial Design Network, Inc.
 
     ----------------Maintainer----------------
@@ -17,22 +19,24 @@
 #    IMPORTS
 #========================
 
-import os, pdfplumber, datetime, time, re, random
+import os
+import datetime
+import time
+import re
+import random
+
+import pdfplumber
+from pdf2doi import pdf2doi
+
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords, names
-import pandas as pd
-from pdf2doi import pdf2doi
 from nltk import FreqDist
+
+import pandas as pd
 
 #================================
 #    TIME, FOR BENCHMARKING
 #================================
-
-now = datetime.datetime.now()
-t1 = time.perf_counter()
-
-#the sample directory
-default_directory = 'pdfcurate/Directory_Sample/'
 
 def run(folder: str, file: int, num_of_files: int): #directory = dir, file = starting at, num_of_file = ending at
     '''
@@ -100,7 +104,7 @@ def extract(filename, filepath):
         manuscript (str): for each preprint in the preprints list, it is made into a lowercase string, and stripped of extraneous characters
 
     Returns: 
-        cpdi (dict): A dictionary of key information about the paper in question.
+        compendium_item (dict): A dictionary of key information about the paper in question.
     '''
     
     preprints = list()
@@ -217,7 +221,7 @@ def word_match(all_words):
 
     target_words = ["prosocial", "design", "intervention", "reddit", "humane","social media",\
                     "user experience","nudge","choice architecture","user interface", "misinformation", \
-                    "disinformation", "Trump", "conspiracy", "dysinformation", "users"]
+                    "disinformation", "conspiracy", "dysinformation", "users"]
     bycatch_words = ["psychology", "pediatric", "pediatry", "autism", "mental", "medical", \
                     "oxytocin", "adolescence", "infant", "health", "wellness", "child", "care", "mindfulness"]
     research_words = ["big data", "data", "analytics", "randomized controlled trial", "RCT", "moderation", \
