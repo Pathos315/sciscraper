@@ -34,6 +34,8 @@ from nltk import FreqDist
 
 import pandas as pd
 
+__version__ = '1.00'
+
 #================================
 #    TIME, FOR BENCHMARKING
 #================================
