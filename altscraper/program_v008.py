@@ -9,7 +9,7 @@ export_folder = 'PDN Scraper Exports'
 logging.basicConfig(filename=f'scraper_v008.log', level=logging.DEBUG, 
                     format = '%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
 
-path = '/Users/johnfallot/Downloads/Ideas_Evidence_2.csv'
+path = 'sample.csv
 URL_DMNSNS = "https://app.dimensions.ai/discover/publication/results.json"
 
 def doi_scrape(target: str) -> pd.DataFrame:
