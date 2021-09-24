@@ -9,13 +9,15 @@ export_folder = 'PDN Scraper Exports'
 logging.basicConfig(filename=f'scraper_v008.log', level=logging.DEBUG, 
                     format = '%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
 
-path = 'sample.csv
+path = 'sample.csv'
 URL_DMNSNS = "https://app.dimensions.ai/discover/publication/results.json"
 
 def doi_scrape(target: str) -> pd.DataFrame:
     with open (target, newline='') as f:
         print ('\nGetting digital object identifiers (dois):')
         _df = [doi for doi in pd.read_csv(f, usecols=['DOI'])['DOI']]
+        # this goes through the created list and removes all 'nan' from it
+        _df = [x for x in _df if str(x) != 'nan']
         _search_terms = (search_text for search_text in _df)
         numb_files = len(_df)
         return pd.DataFrame([run_scrape(search_text, search_field='doi', total=numb_files) for search_text in (_search_terms)])
@@ -79,6 +81,7 @@ def export(dataframe: pd.DataFrame=None):
     print(f"\nA spreadsheet was exported to {export_name} in {export_folder}.\n")
 
 def main():
+    os.chdir(os.path.dirname(__file__))
     t1 = time.perf_counter()
     res1 = doi_scrape(path)
     export(res1)
