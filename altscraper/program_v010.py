@@ -22,8 +22,8 @@ msg_error_1='HTTP Error Encountered, moving to next available object. Reason Giv
 logging.basicConfig(filename=f'scraper_v008.log', level=logging.DEBUG, 
                     format = '%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
 
-PRIME_SRC = 'sample.csv'
-URL_DMNSNS = "https://app.dimensions.ai/discover/publication/results.json"
+PRIME_SRC ='sample.csv'
+URL_DMNSNS ='https://app.dimensions.ai/discover/publication/results.json'
 URL_SCIHUB='https://sci-hub.ru'
 
 class ImportFromCSV:
