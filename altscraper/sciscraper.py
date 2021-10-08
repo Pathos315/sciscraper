@@ -25,7 +25,7 @@ msg_error_1='[sciscraper]: HTTP Error Encountered, moving to next available obje
 logging.basicConfig(filename=f'{date}_scraper.log', level=logging.DEBUG, 
                     format = '%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
 
-PRIME_SRC =os.path.realpath('211001_PDN_studies_9.csv')
+PRIME_SRC =os.path.realpath('sample.csv')
 URL_DMNSNS ='https://app.dimensions.ai/discover/publication/results.json'
 RESEARCH_DIR=os.path.realpath(f'{date}_PDN Research Papers From Scrape')
 URL_SCIHUB='https://sci-hubtw.hkvisa.net/'
