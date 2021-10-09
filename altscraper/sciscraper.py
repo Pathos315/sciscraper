@@ -89,11 +89,10 @@ class SciHubScrape(ScrapeRequest, slookup_code='sci'):
             paper_content=(requests.get(paper_url, stream=True, allow_redirects=True)).content
             with open('temp_file.txt', 'wb') as _tempfile:
                 _tempfile.write(paper_content)
-            file=open(paper_title, 'wb')
-            for line in open('temp_file.txt', 'rb').readlines():
-                file.write(line)
-            file.close()
-            os.remove('temp_file.txt')
+            with open(paper_title, 'wb') as file:
+              for line in open('temp_file.txt', 'rb').readlines():
+                  file.write(line)
+              os.remove('temp_file.txt')
 
 class JSONScrape(ScrapeRequest, slookup_code='json'):
     '''
