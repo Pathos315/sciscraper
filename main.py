@@ -5,7 +5,7 @@
     Jon Watson Rooney
     Colin Meret
     ArjanCodes
-    My colleagues and friends at the Prosocial Design Network, Inc.
+    James Murphy
 
     ----------------Maintainer----------------
     John Fallot <john.fallot@gmail.com>
@@ -16,311 +16,403 @@
 '''
 
 #========================
-#    IMPORTS
+#      IMPORTS
 #========================
 
+## File Structure Related Imports
 import os
-import datetime
+from os import listdir, PathLike, path
+from os.path import isdir
+from fnmatch import fnmatch
 import time
-import re
+import datetime
+import logging
+from contextlib import suppress, contextmanager
 import random
+from typing import Optional
 
+## Scraping Related Imports
+import requests 
+import json
+import pandas as pd
+from bs4 import BeautifulSoup
+from dataclasses import dataclass, field, asdict
+from dataclass_wizard import JSONWizard
+import re
+from tqdm import tqdm
+
+## Language Processing Related Imports
 import pdfplumber
-from pdf2doi import pdf2doi
-
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords, names
 from nltk import FreqDist
 
-import pandas as pd
-
-__version__ = '1.00'
+__version__ = '1.01'
 
 #================================
-#    TIME, FOR BENCHMARKING
+#    MULTIPURPOSE DATACLASS
 #================================
 
-def run(folder: str, file: int, num_of_files: int): #directory = dir, file = starting at, num_of_file = ending at
-    '''
-    Parameters:
-        folder (str): The pathname to the folder that contains the files to be extracted.
-        file (int): The index of the file within the folder.
-        num_of_files (int): The total number of files to be extracted.
+@dataclass(frozen=True, order=True)
+class DataEntry(JSONWizard):
+    title: str=''
+    author_list: str=''
+    publisher: str=''
+    pub_date: str=''
+    abstract: str=''
+    acknowledgements: str=''
+    journal_title: str =''
+    volume: str =''
+    issue: str =''
+    times_cited: int = 0
+    mesh_terms: list[str] = field(default_factory=list)
+    cited_dimensions_ids: list[str] = field(default_factory=list)
+    id: str=field(default='')
+    doi: str=field(default='')
+    wordscore: int=0
+    frequency: tuple=field(default_factory=tuple)
+    study_design: tuple=field(default_factory=tuple)
 
-    Variables:
-        full_dir (list): Short for 'full directory', it is a list comprehension of each pdf file in the folder directory.
-        files_to_check: the full_dir (list), compared against the num_of_files parameter. This gets enumerated.
-
-    Returns:
-        list: a list (compendium) of dictionaries (cpdx) for the finalize method
-    '''
-
-    full_dir = [file for file in os.listdir(folder) if file.endswith('.pdf')]
         
-    if num_of_files == 0 or num_of_files > len(full_dir): 
-        num_of_files = len(full_dir) #if the num_of_files is less than 0 or greater than the number of files in the folder, then it will get every pdf file in the folder
+#==========================================
+#    SCRAPE RELATED CLASSES & SUBCLASSES
+#==========================================
+
+class ScrapeRequest:
+    '''
+    The abstraction of the program's web scraping requests, which dynamically returns its appropriate subclasses based on the provided inputs.
+    '''
+    _registry = {}
+
+    def __init_subclass__(cls, slookup_code, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls._registry[slookup_code] = cls
         
-    files_to_check = full_dir[:num_of_files] #select the first num_of_files elements from the list
+    def __new__(cls, s_bool: bool):
+        '''
+        The ScrapeRequest class looks for the boolean value passed to it from the FileRequest class.
+        A value of True, or 1, would return a SciHubScrape subclass. Whereas a value of False, of 0, would return a JSONScrape subclass.
+        '''
+        if s_bool == False:
+            slookup_code = 'json'
+        elif s_bool == True:
+            slookup_code = 'sci'
+        else:
+            raise Exception('[sciscraper]: Invalid prefix detected.')
 
-    for file_index,file in enumerate(files_to_check): #note: now the variable file is an element of files_to_check, not a numerical index
-        try:
-            print("\nPreparing file extraction...\n")
-            filepath, filename = filenaming(folder, file)
-            #Generates the path to each pdf file
-            print(f"\nBeginning extraction of {file_index} of {num_of_files} | {filepath}\n", end = "\r")
-            extract(filename)
-            #The extraction process for each file gets appended to the compendium
-            print(f"\nPackaging {filepath}... \n")
-            continue
-        except:
-            pass
-       
-def filenaming(folder: str, file: int):
+        subclass = cls._registry[slookup_code]
+
+        obj = object.__new__(subclass)
+        return obj
+
+    def download(self) -> None:
+        raise NotImplementedError
+
+class SciHubScrape(ScrapeRequest, slookup_code='sci'):
     '''
-    Parameters:
-        folder (str): The pathname to the folder that contains the files to be extracted.
-        file (int): The index of the file within the folder.
-
-    Returns:
-        filepath: the name assigned to the file being extracted.
-        filename: the full pathname to the file being extracted.
-
-    '''
-    filepath = str(file)
-    filename = os.path.join(folder,filepath)
-    return filepath,filename
-    
-def extract(filename, filepath):
-    '''
-    Parameters:
-        filename: the full pathname to the file being extracted.
-
-    Variables:
-        doi_results: Using the filename, the pdf2doi module returns a bibtex entry for the file.
-        study: The file opened to be read using pdfplumber, a robust pdf file reader.
-        n (int): the total numerical length of all the pages in the study.
-        book(list): a list comprehension of each page to be examined in the opened file
-        pages_to_check: the book (list), compared against the book's total length
-        findings: the raw extraction from each study's pages
-        preprints (list): a list of all the findings appended together
-        manuscript (str): for each preprint in the preprints list, it is made into a lowercase string, and stripped of extraneous characters
-
-    Returns: 
-        compendium_item (dict): A dictionary of key information about the paper in question.
+    The SciHubScrape class takes the provided string from a prior list comprehension.
+    Using that string value, it posts it to the selected website, and then downloads the ensuing pdf file that appears as a result of that query.
     '''
     
-    preprints = list()
-    doi_results = pdf2doi(filename, verbose=True, save_identifier_metadata = True, filename_bibtex = True)
-    bibtex_data = doi_results['bibtex_data']
-    preprints, n = studysession(filename)
-    
-    for preprint in preprints:
-        manuscript = str(preprint).strip().lower()
-        postprint = redaction(manuscript)
-        all_words = tokenization(postprint)
-        wordscore, research_word_overlap = word_match(all_words)
-        fdist_top5 = frequency(all_words)
-        sdist_top3 = study_design(research_word_overlap)
-        title = bibtex_data['title']
+    def download(self, search_text: str):
+        '''
+        The download method generates a session and a payload that gets posted as a search query to the website. This search should return a pdf.
+        Once the search is found, it is parsed with BeautifulSoup, and the link to download that pdf is isolated.
+        '''
+        self.sessions = requests.Session()
+        self.base_url = URL_SCIHUB
+        print(f'[sciscraper]: Delving too greedily and too deep for download links for {search_text}, by means of dark and arcane magicx.', end='\r')
+        self.payload={'request': f'{search_text}'}
+        with change_dir(RESEARCH_DIR):
+            time.sleep(1)
+            with suppress(requests.exceptions.HTTPError, requests.exceptions.RequestException):
+                r=self.sessions.post(url=self.base_url, data=self.payload)
+                r.raise_for_status()
+                logging.info(r.status_code)
+                soup=BeautifulSoup(r.text, 'lxml')
+                self.links=list(((item['onclick']).split('=')[1]).strip("'") for item in soup.select('button[onclick^=\'location.href=\']'))
+                self.enrich_scrape()
 
-        # Below is what gets passed back from the entire extraction process.
+    def enrich_scrape(self, search_text:str):
+        '''
+        With the link to download isolated, it is followed and thereby downloaded.
+        It is sent as bytes to a temporary text file, as a middleman of sorts.
+        The temporary text file is then used as a basis to generate a new pdf.
+        The temporary text file is then deleted in preparation for the next pdf.
+        '''
+        for link in self.links:
+            paper_url=f'{link}=true'
+            paper_title=f'{date}_{search_text.replace("/","")}.pdf'
+            time.sleep(1)
+            paper_content=(requests.get(paper_url, stream=True, allow_redirects=True)).content
+            with open('temp_file.txt', 'wb') as _tempfile:
+                _tempfile.write(paper_content)
+            with open(paper_title, 'wb') as file:
+                for line in open('temp_file.txt', 'rb').readlines():
+                    file.write(line)
+            os.remove('temp_file.txt')
+
+class JSONScrape(ScrapeRequest, slookup_code='json'):
+    '''
+    The JSONScrape class takes the provided string from a prior list comprehension.
+    Using that string value, it gets the resulting JSON data, parses it, and then returns a dictionary, which gets appended to a list.
+    '''
+
+    def download(self, search_text:str) -> dict:
+        '''
+        The download method generates a session and a querystring that gets sent to the website. This returns a JSON entry.
+        The JSON entry is loaded and specific values are identified for passing along, back to a dataframe.
+        '''
+        self.sessions = requests.Session()
+        self.search_field = self.specify_search(search_text)
+        self.base_url = URL_DMNSNS
+        print(f'[sciscraper]: Searching for {search_text} via a {self.search_field}-style search.', end='\r')
+        querystring={'search_mode':'content','search_text':f'{search_text}','search_type':'kws','search_field':f'{self.search_field}'}
+        time.sleep(1)
+
+        with suppress(requests.exceptions.HTTPError, requests.exceptions.RequestException):
+            r=self.sessions.get(self.base_url, params=querystring) 
+            r.raise_for_status()
+            logging.info(r.status_code)
         
-        compendium_item = {
+        with suppress(json.decoder.JSONDecodeError,KeyError):
+            docs=json.loads(r.text)['docs']
+            for item in docs:
+                return self.get_data_entry(item, keys=['title','author_list','publisher',
+                    'pub_date','doi','id','abstract','acknowledgements',
+                    'journal_title','volume','issue','times_cited',
+                    'mesh_terms', 'cited_dimensions_ids'])
 
-            'Title': title,
-            'Author': bibtex_data['author'],,
-            'Year': bibtex_data['year'],
-            'DOI': doi_results['identifier'],
-            'Publisher': bibtex_data['publisher'],
-            'Journal': bibtex_data['journal'],
-            'Volume': bibtex_data['volume'],
-            'Number': bibtex_data['number'],
-            'Pages': n,
-            'Wordscore': wordscore,
-            '5 Most Common Words': fdist_top5,
-            'Study Design': sdist_top3
-            
-            }
-        compendium.append(compendium_item)
-        return
+    def specify_search(self, search_text:str):
+        '''
+        Determines whether the dimensions.ai query will be for a full_search or just for the doi.
+        '''
+        if search_text.startswith('pub'):
+            self.search_field='full_search'
+        else:
+            self.search_field='doi'
+        return self.search_field
 
-#=========================================
-#    COMPONENTS TO RUN & EXTRACT CODE
-#=========================================
+    def get_data_entry(self, item, keys: Optional[list]) -> dict:
+        '''Based on a provided list of keys and items in the JSON data, generates a dictionary entry.
+        This version currently passes through a DataEntry. Ideally, the DataEntry will do much more.'''
+        return asdict(DataEntry.from_dict({key: item.get(key,'') for key in keys}))
 
-def studysession(filename):
+class PDFScrape:
     '''
-    Parameters:
-        filename: the full pathname to the file being extracted.
-
-    Variables:
-        study: the opened file
-        findings: the extracted text of each page of the file
-
-    Returns: 
-        preprints (list): A list of each page's findings, appended together into a long list of pages of text.
-        n: the total number of pages in the pdf, aka the length of the study
+    The PDFScrape class takes the provided string from a prior list comprehension of PDF files in a directory.
+    From each pdf file, it parses the document and returns metrics about its composition and relevance.
     '''
-
-    preprints = list()
-
-    with pdfplumber.open(filename) as study:
-        n = len(study.pages)
-        book = [page for page in study.pages]
-        pages_to_check = book[:n]
-
-        for page_number, page in enumerate(pages_to_check):
-            findings = study.pages[page_number].extract_text(x_tolerance=3, y_tolerance=3)
-            #Each page's string gets appended to preprint
-            print(f" Processing Page {page_number} of {n}...", end = "\r")
-            preprints.append(findings)
-    
-    return preprints, n
-
-def redaction(manuscript):
-    '''
-    Parameters:
-        manuscript (str): A lowercase string from the initial extraction process, stripped of extraneous characters
+    def download(self, search_text:str) -> dict:
+        self.search_text = search_text
+        self.preprints = []
+        with pdfplumber.open(self.search_text) as self.study:
+            self.n = len(self.study.pages)
+            self.pages_to_check = [page for page in self.study.pages][:self.n]
+            for page_number, page in enumerate(self.pages_to_check):
+                page = self.study.pages[page_number].extract_text(x_tolerance=3, y_tolerance=3)
+                print(f"[sciscraper]: Processing Page {page_number} of {self.n-1} | {search_text}...", end = "\r")
+                self.preprints.append(page) #Each page's string gets appended to preprint []
         
-    Returns:
-        postprint (str): All non-alphanumeric characters are removed from the manuscript.
-    '''
-    postprint = re.sub(r'\W+', ' ', manuscript)
-    return postprint
+            self.manuscripts = [str(preprint).strip().lower() for preprint in self.preprints] #The preprints are stripped of extraneous characters and all made lower case.
+            self.postprints = [re.sub(r'\W+', ' ', manuscript) for manuscript in self.manuscripts] #The ensuing manuscripts are stripped of lingering whitespace and non-alphanumeric characters.
+            self.all_words = self.get_tokens()
+            self.research_word_overlap = self.get_research_words()
+            return self.get_data_entry()
 
-def tokenization(postprint):
-    '''
-    Parameters:
-        postprint (str): A lowercase string now removed of its non-alphanumeric characters.
-        
-    Returns:
-        all words (list comprehension): A parsed and tokenized instance of the postprint string.
-    '''
-    stop_words = set(stopwords.words("english"))
-    name_words = set(names.words())
-    word_tokens = word_tokenize(postprint)
-    all_words = [w for w in word_tokens if not w in stop_words and name_words] #Filters out the stopwords
-    return all_words
+    def get_tokens(self):
+        '''Takes a lowercase string, now removed of its non-alphanumeric characters. 
+        It returns (as a list comprehension) a parsed and tokenized version of the postprint, with stopwords and names removed.'''
+        self.stop_words = set(stopwords.words("english"))
+        self.name_words = set(names.words())
+        self.word_tokens = word_tokenize(str(self.postprints))
+        return [w for w in self.word_tokens if not w in self.stop_words and self.name_words] #Filters out the stopwords
 
-def word_match(all_words):
-    '''
-    Parameters:
-        all words (list comprehension): A parsed and tokenized instance of the postprint string.
+    def _overlap(self, li):
+        '''Checks if token words match words in a provided list.'''
+        return [w for w in li if w in self.all_words]
+
+    def get_target_words(self):
+        '''Checks for words that match the user's primary query.'''
+        self.target_words = ["prosocial", "design", "intervention", "reddit", "humane","social media",\
+                        "user experience","nudge","choice architecture","user interface", "misinformation", \
+                        "disinformation", "Trump", "conspiracy", "dysinformation", "users","Thaler","Sunstein","boost"]
+        self.target_word_overlap = self._overlap(self.target_words)
+        return self.target_word_overlap
     
-    Description:
-        The remaining tokenized words are compared against several lists of words, by way of the lambda overlap function.
-
-        target_words are the words we're looking for in a study. 
-        bycatch_words are words that generally indicate a false positive
-        research_words are words that help us determine the underlying study design: was it a randomized control or analytical?
+    def get_bycatch_words(self):
+        '''Checks for words that often occur in conjunction with the user's primary query, but are deemed undesirable.'''
+        self.bycatch_words = ["psychology", "pediatric", "pediatry", "autism", "mental", "medical", \
+                        "oxytocin", "adolescence", "infant", "health", "wellness", "child", "care", "mindfulness"]
+        self.bycatch_word_overlap = self._overlap(self.bycatch_words)
+        return self.bycatch_word_overlap
     
-        A positive wordscore means a paper is more likely than not to be a match, and vice versa.
+    def get_research_words(self):
+        '''Checks for words that correspond to specific experimental designs.'''
+        self.research_words = ["big data", "data", "analytics", "randomized controlled trial", "RCT", "moderation", \
+                            "community", "social media", "conversational", "control", "randomized", "systemic", \
+                            "analysis", "thematic", "review", "study", "case series", "case report", "double blind", \
+                            "ecological", "survey"]
+        self.research_word_overlap = self._overlap(self.research_words)
+        return self.research_word_overlap
+
+    def get_wordscore(self) -> int:
+        '''Returns a score, which is the number of target words minus the number of undesirable words. 
+        A positive score suggests that the paper is more likely than not to be a match.
+        A negative score suggests that the paper is likely to be unrelated to the user's primary query.'''
+        return len(self.get_target_words()) - len(self.get_bycatch_words())
+
+    def get_doi(self) -> str:
+        '''Approximates a possible DOI, assuming the file is saved in YYMMDD_DOI.pdf format.''' 
+        self.getting_doi = path.basename(self.search_text)
+        self.doi = self.getting_doi[7:-4]
+        self.doi = self.doi[:7] + '/' + self.doi[7:]
+        return self.doi
+
+    def get_data_entry(self) -> dict:
+        '''Returns a dictionary entry. Ideally, this will someday work through a DataEntry class.'''
+        self.data = {
         
-    Returns:
-        wordscore (int): A value derived from the length of matching target_words minus the length of matching bycatch words.
-        research_words (list): A list of matching research words in the paper.
-    '''
-
-    target_words = ["prosocial", "design", "intervention", "reddit", "humane","social media",\
-                    "user experience","nudge","choice architecture","user interface", "misinformation", \
-                    "disinformation", "conspiracy", "dysinformation", "users"]
-    bycatch_words = ["psychology", "pediatric", "pediatry", "autism", "mental", "medical", \
-                    "oxytocin", "adolescence", "infant", "health", "wellness", "child", "care", "mindfulness"]
-    research_words = ["big data", "data", "analytics", "randomized controlled trial", "RCT", "moderation", \
-                    "community", "social media", "conversational", "control", "randomized", "systemic", \
-                    "analysis", "thematic", "review", "study", "case series", "case report", "double blind", \
-                    "ecological", "survey"]
-    
-    overlap = lambda li: [w for w in li if w in all_words]
-    
-    target_word_overlap = overlap(target_words)
-    bycatch_word_overlap = overlap(bycatch_words)
-    research_word_overlap = overlap(research_words)
-
-    wordscore = len(target_word_overlap) - len(bycatch_word_overlap)
-    return wordscore, research_word_overlap
-
-def study_design(research_word_overlap):
-    '''
-    Parameters:
-        research_words (list): A list of matching research words in the paper.
+            'DOI': self.get_doi(),
+            'wordscore': self.get_wordscore(),
+            'frequency': FreqDist(self.all_words).most_common(5),
+            'study_design': FreqDist(self.research_word_overlap).most_common(3)
         
-    Returns:
-        sdist_top3 (list): A list of the top three most common research words in the paper.
-    '''
-    sdist = FreqDist(research_word_overlap)
-    sdist_top3 = sdist.most_common(3)
-    return sdist_top3
-
-def frequency(all_words):
-    '''
-    Parameters:
-        all words (list comprehension): A parsed and tokenized instance of the postprint string.
-        
-    Returns:
-        fdist_top5 (list): A list of the five most common words in the paper.
-    '''
-    fdist = FreqDist(all_words) #Determines the frequency of the most common filtered words.
-    fdist_top5 = fdist.most_common(5) #Gets the top 10 most common words
-    return fdist_top5
-
-#========================================
-#    SETS UP FINAL CSV EXPORT
-#========================================
-
-def finalize(compendium):
-    '''
-    Parameters:
-        compendium(list): A list of all dictionaries from the extract method
-        
-    Returns:
-        A csv file, creating using the pandas module, which contains all information about the papers in question.
-    '''
-    
-    print(f'\nFinalizing data for human review...\n')
-
-    df = pd.DataFrame(compendium)
-
-    aggregation_functions = {
-            'Author': 'first',
-            'Year': 'first',
-            'DOI': 'first',
-            'Publisher': 'first',
-            'Journal': 'first',
-            'Volume': 'first',
-            'Number': 'first',
-            'Pages': 'first',
-            'Wordscore': 'max',
-            '5 Most Common Words': 'max',
-            'Study Design': 'sum'
         }
 
-    dataframe = df\
-        .groupby(df['Title'])\
-        .agg(aggregation_functions)
+        return self.data
 
-    now = datetime.datetime.now()
-    csv_date = now.strftime('%y%m%d')
-    export_ID = random.randint(0,100)
-    export_name = f'{csv_date}_PDN_studies_{export_ID}.csv'
-    dataframe.to_csv(export_name)
+#==========================================
+#    CONTEXT MANAGER METACLASS
+#==========================================
 
-    print(dataframe.head())
-    print(f'\nDataframe exported to {export_name}')
-        
-#========================
-#       MAIN LOOP
-#========================
+@contextmanager
+def change_dir(destination:str):
+    '''Sets a destination for exported files.'''
+    try:
+        __dest = os.path.realpath(destination)
+        cwd = os.getcwd()
+        if not os.path.exists(__dest):
+            os.mkdir(__dest)
+        os.chdir(__dest)
+        yield
+    finally:
+        os.chdir(cwd)
 
-compendium = list()
+#==========================================
+#    FILE REQUEST CLASSES & SUBCLASSES
+#==========================================
+
+class FileRequest:
+    '''
+    The abstraction of the program's input file classes. It dynamically returns its appropriate subclasses based on the provided inputs.
+    '''
+    _registry = {}
+
+    def __init_subclass__(cls, dlookup_code, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls._registry[dlookup_code] = cls
+
+    def __new__(cls, target, slookup_key:bool=None):
+        if isdir(target):
+            dlookup_code = 'fold'
+        elif str(target).endswith('csv'): 
+            dlookup_code = 'doi'
+        elif isinstance(target, pd.DataFrame): 
+            dlookup_code = 'pub'
+        else: raise Exception('[sciscraper]: Invalid prefix detected.')
+
+        subclass = cls._registry[dlookup_code]
+
+        obj = object.__new__(subclass)
+        obj.target = target
+        obj.slookup_key = slookup_key
+        obj.scraper = ScrapeRequest(slookup_key)
+        return obj
+
+    def fetch_terms(self) -> None:
+        raise NotImplementedError
+
+class DOIRequest(FileRequest, dlookup_code='doi'):
+    '''
+    The DOIRequest class takes a csv and generates a list comprehension.
+    The list comprehension is scraped, and then returns a DataFrame.
+    '''
+    def __init__(self, target:str, slookup_key:bool=False):
+        if slookup_key == True:
+            print('\n[sciscraper]: Getting DOIs from spreadsheet to download from web...')
+        else: print('\n[sciscraper]: Generate a new dataframe from the DOIs provided...')
+        self.target = target
+        self.slookup_key = slookup_key
+        self.scraper = ScrapeRequest(self.slookup_key)
+
+    def fetch_terms(self):
+        with open(self.target, newline='') as f:
+            self.df=(doi for doi in pd.read_csv(f, usecols=['DOI'])['DOI'])
+            self.search_terms =(search_text for search_text in list(self.df) if search_text is not None)
+        return pd.DataFrame([self.scraper.download(search_text) for search_text in tqdm(list(self.search_terms))])
+
+class PubIDRequest(FileRequest, dlookup_code='pub'):
+    '''
+    The PubIDRequest class takes a DataFrame and generates a list comprehension.
+    The list comprehension is scraped, and then returns a DataFrame.
+    '''
+    def __init__(self, target: pd.DataFrame, slookup_key:bool=False):
+        if slookup_key == True:
+            print('\n[sciscraper]: Getting Pub IDs from dataframe to download from web...')
+        else: print('\n[sciscraper]: Expounding upon existing PubIDs to generate a new dataframe...')
+        self.target = target
+        self.slookup_key = slookup_key
+        self.scraper = ScrapeRequest(self.slookup_key)
+
+    def fetch_terms(self):
+        self.df=self.target.explode('cited_dimensions_ids', 'title')
+        self.search_terms =(search_text for search_text in self.df['cited_dimensions_ids'] if search_text is not None)
+        self.src_title=pd.Series(self.df['title'])
+
+        return pd.DataFrame([self.scraper.download(search_text) for search_text in tqdm(list(self.search_terms))]).join(self.src_title)
+
+class FolderRequest(FileRequest, dlookup_code='fold'):
+    '''
+    The Folder class takes a directory and generates a list comprehension.
+    The list comprehension is scraped, and then returns a DataFrame.
+    Unlike other classes, it cannot undergo a SciScrape.
+    '''
+    def __init__(self, target: PathLike[str], slookup_key:bool=False):
+        print(f'\n[sciscraper]: Getting files from folder: {target}')
+        self.target = target
+        if self.slookup_key == True:
+            raise Exception("This action is prohibited. You already have the files that this query would return.")
+        self.slookup_key = slookup_key
+        self.scraper = PDFScrape()
+
+    def fetch_terms(self):
+        self.search_terms = (path.join(self.target, file) for file in listdir(self.target) if fnmatch(path.basename(file), '*.pdf'))
+        return pd.DataFrame([self.scraper.download(file) for file in tqdm(list(self.search_terms))])
+
+#==========================================
+#    EXPORTING, MAIN LOOP, AND MISCELLANY
+#==========================================
+
+def export(dataframe: Optional[pd.DataFrame]):
+    with change_dir(export_dir):
+        print_id=random.randint(0,100)
+        export_name=f'{date}_DIMScrape_Refactor_{print_id}.csv'
+        msg_spreadsheetexported=f'\n[sciscraper]: A spreadsheet was exported as {export_name} in {export_dir}.\n'
+        dataframe.to_csv(export_name)
+        print(dataframe.head())
+        logging.info(msg_spreadsheetexported)
+        print(msg_spreadsheetexported)
 
 def main():
-    default_directory = '/Users/johnfallot/Documents/PDN/PDN_studies'
-    t1 = time.perf_counter()
-    run(default_directory, 0, 2)
-    finalize(compendium)
-    t2 = time.perf_counter()
-    print(f'\nExtraction finished in {t2-t1} seconds.\n')
+    start=time.perf_counter()
+    results = FileRequest(target='/Users/johnfallot/210930_PDN Research Papers From Scrape_DOI',slookup_key=False).fetch_terms()
+    export(results)
+    elapsed = time.perf_counter() - start
+    msg_timestamp=f'\n[sciscraper]: Extraction finished in {elapsed} seconds.\n'
+    logging.info(msg_timestamp)
+    print(msg_timestamp)
+    quit()
 
 if __name__ == '__main__':
-    main()
+    main()# %%
