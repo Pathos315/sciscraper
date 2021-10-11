@@ -34,10 +34,10 @@ from typing import Optional
 ## Scraping Related Imports
 import requests 
 import json
+from json.decoder import JSONDecodeError
+from requests.exceptions import HTTPError, RequestException
 import pandas as pd
 from bs4 import BeautifulSoup
-from dataclasses import dataclass, field, asdict
-from dataclass_wizard import JSONWizard
 import re
 from tqdm import tqdm
 
@@ -184,7 +184,7 @@ class JSONScrape(ScrapeRequest, slookup_code='json'):
                 'mesh_terms', 'cited_dimensions_ids'])
         return self.data
 
-    def specify_search(self, search_text:str):
+    def specify_search(self, search_text:str) -> str:
         '''
         Determines whether the dimensions.ai query will be for a full_search or just for the doi.
         '''
@@ -220,7 +220,7 @@ class PDFScrape:
             self.research_word_overlap = self.get_research_words()
             return self.get_data_entry()
 
-    def get_tokens(self):
+    def get_tokens(self) -> list:
         '''Takes a lowercase string, now removed of its non-alphanumeric characters. 
         It returns (as a list comprehension) a parsed and tokenized version of the postprint, with stopwords and names removed.'''
         self.stop_words = set(stopwords.words("english"))
@@ -228,7 +228,7 @@ class PDFScrape:
         self.word_tokens = word_tokenize(str(self.postprints))
         return [w for w in self.word_tokens if not w in self.stop_words and self.name_words] #Filters out the stopwords
 
-    def _overlap(self, li):
+    def _overlap(self, li) -> list:
         '''Checks if token words match words in a provided list.'''
         return [w for w in li if w in self.all_words]
 
