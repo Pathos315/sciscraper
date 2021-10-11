@@ -66,30 +66,6 @@ URL_DMNSNS ='https://app.dimensions.ai/discover/publication/results.json'
 RESEARCH_DIR=os.path.realpath(f'{date}_PDN Research Papers From Scrape')
 URL_SCIHUB='https://sci-hubtw.hkvisa.net/'
 
-#================================
-#    MULTIPURPOSE DATACLASS
-#================================
-
-@dataclass(frozen=True, order=True)
-class DataEntry(JSONWizard):
-    title: str=''
-    author_list: str=''
-    publisher: str=''
-    pub_date: str=''
-    abstract: str=''
-    acknowledgements: str=''
-    journal_title: str =''
-    volume: str =''
-    issue: str =''
-    times_cited: int = 0
-    mesh_terms: list[str] = field(default_factory=list)
-    cited_dimensions_ids: list[str] = field(default_factory=list)
-    id: str=field(default='')
-    doi: str=field(default='')
-    wordscore: int=0
-    frequency: tuple=field(default_factory=tuple)
-    study_design: tuple=field(default_factory=tuple)
-
         
 #==========================================
 #    SCRAPE RELATED CLASSES & SUBCLASSES
@@ -187,18 +163,26 @@ class JSONScrape(ScrapeRequest, slookup_code='json'):
         querystring={'search_mode':'content','search_text':f'{search_text}','search_type':'kws','search_field':f'{self.search_field}'}
         time.sleep(1)
 
-        with suppress(requests.exceptions.HTTPError, requests.exceptions.RequestException):
+        try:
             r=self.sessions.get(self.base_url, params=querystring) 
             r.raise_for_status()
             logging.info(r.status_code)
+            self.docs=json.loads(r.text)['docs']
         
-        with suppress(json.decoder.JSONDecodeError,KeyError):
-            docs=json.loads(r.text)['docs']
-            for item in docs:
-                return self.get_data_entry(item, keys=['title','author_list','publisher',
-                    'pub_date','doi','id','abstract','acknowledgements',
-                    'journal_title','volume','issue','times_cited',
-                    'mesh_terms', 'cited_dimensions_ids'])
+        except (JSONDecodeError, RequestException) as e:
+            print(f'\n[sciscraper]: An error occurred while searching for {search_text}.\n[sciscraper]: Proceeding to next item in sequence. Cause of error: {e}\n')
+            pass
+
+        except HTTPError as f:
+            print(f'\n[sciscraper]: Access to {self.base_url} denied while searching for {search_text}.\n[sciscraper]: Terminating sequence. Cause of error: {f}\n')
+            quit()
+
+        for item in self.docs:
+            self.data = self.get_data_entry(item, keys=['title','author_list','publisher',
+                'pub_date','doi','id','abstract','acknowledgements',
+                'journal_title','volume','issue','times_cited',
+                'mesh_terms', 'cited_dimensions_ids'])
+        return self.data
 
     def specify_search(self, search_text:str):
         '''
@@ -211,9 +195,8 @@ class JSONScrape(ScrapeRequest, slookup_code='json'):
         return self.search_field
 
     def get_data_entry(self, item, keys: Optional[list]) -> dict:
-        '''Based on a provided list of keys and items in the JSON data, generates a dictionary entry.
-        This version currently passes through a DataEntry. Ideally, the DataEntry will do much more.'''
-        return asdict(DataEntry.from_dict({key: item.get(key,'') for key in keys}))
+        '''Based on a provided list of keys and items in the JSON data, generates a dictionary entry.'''
+        return {_key: item.get(_key,'') for _key in keys}
 
 class PDFScrape:
     '''
@@ -356,18 +339,16 @@ class DOIRequest(FileRequest, dlookup_code='doi'):
     The list comprehension is scraped, and then returns a DataFrame.
     '''
     def __init__(self, target:str, slookup_key:bool=False):
-        if slookup_key == True:
-            print('\n[sciscraper]: Getting DOIs from spreadsheet to download from web...')
-        else: print('\n[sciscraper]: Generate a new dataframe from the DOIs provided...')
         self.target = target
         self.slookup_key = slookup_key
         self.scraper = ScrapeRequest(self.slookup_key)
 
     def fetch_terms(self):
+        print(f'\n[sciscraper]: Getting entries from file: {self.target}')
         with open(self.target, newline='') as f:
-            self.df=(doi for doi in pd.read_csv(f, usecols=['DOI'])['DOI'])
-            self.search_terms =(search_text for search_text in list(self.df) if search_text is not None)
-        return pd.DataFrame([self.scraper.download(search_text) for search_text in tqdm(list(self.search_terms))])
+            self.df=[doi for doi in pd.read_csv(f, usecols=['DOI'])['DOI']]
+            self.search_terms =[search_text for search_text in self.df if search_text is not None]
+            return pd.DataFrame([self.scraper.download(search_text) for search_text in tqdm(self.search_terms)])
 
 class PubIDRequest(FileRequest, dlookup_code='pub'):
     '''
@@ -404,8 +385,8 @@ class FolderRequest(FileRequest, dlookup_code='fold'):
         self.scraper = PDFScrape()
 
     def fetch_terms(self):
-        self.search_terms = (path.join(self.target, file) for file in listdir(self.target) if fnmatch(path.basename(file), '*.pdf'))
-        return pd.DataFrame([self.scraper.download(file) for file in tqdm(list(self.search_terms))])
+        self.search_terms = [path.join(self.target, file) for file in listdir(self.target) if fnmatch(path.basename(file), '*.pdf')]
+        return pd.DataFrame([self.scraper.download(file) for file in tqdm(self.search_terms)])
 
 #==========================================
 #    EXPORTING, MAIN LOOP, AND MISCELLANY
