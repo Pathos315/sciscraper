@@ -1,6 +1,19 @@
+r'''This module looks up bibliographic information from directories, csv files and pandas databases.
+
+From a .csv file input, you can get:
+    - a folder of .pdf downloads (experimental).
+    - a pandas dataframe
+    - another .csv file
+
+From a pandas dataframe file input, you can get:
+    - a folder of .pdf downloads (experimental).
+    - another pandas dataframe, but the citations of the input are each returned with their own citation information.
+
+From a folder input, you can get:
+    - a pandas dataframe
+    - a .csv file
 '''
-    SciScraper
-'''
+
 #==============================================
 #    SPECIAL THANKS
 #    
@@ -74,7 +87,6 @@ URL_DMNSNS = 'https://app.dimensions.ai/discover/publication/results.json'
 RESEARCH_DIR = os.path.realpath(f'{date}_PDN Research Papers From Scrape')
 URL_SCIHUB = 'https://sci-hubtw.hkvisa.net/'
 
-        
 #==============================================
 #    SCRAPE RELATED CLASSES & SUBCLASSES
 #==============================================
