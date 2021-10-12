@@ -1,11 +1,13 @@
 '''
     ----------------Special Thanks------------------
+    
     Michele Cotrufo
     Nathan Lippi
     Jon Watson Rooney
     Colin Meret
     ArjanCodes
     James Murphy
+    Micael Jarniac
 
     ----------------Maintainer----------------
     John Fallot <john.fallot@gmail.com>
