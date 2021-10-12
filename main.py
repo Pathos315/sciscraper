@@ -134,16 +134,16 @@ class SciHubScrape(ScrapeRequest, slookup_code='sci'):
         '''
         self.sessions = requests.Session()
         self.base_url = URL_SCIHUB
-        print(f'[sciscraper]: Delving too greedily and too deep for download links for {search_text}, by means of dark and arcane magicx.', end = '\r')
+        print(f'[sciscraper]: Delving too greedily and too deep for download links for {search_text}, by means of dark and arcane magicx.', end='\r')
         self.payload = {'request': f'{search_text}'}
         with change_dir(RESEARCH_DIR):
             time.sleep(1)
             with suppress(requests.exceptions.HTTPError, requests.exceptions.RequestException):
-                r = self.sessions.post(url = self.base_url, data = self.payload)
+                r = self.sessions.post(url=self.base_url, data=self.payload)
                 r.raise_for_status()
                 logging.info(r.status_code)
                 soup = BeautifulSoup(r.text, 'lxml')
-                self.links = list(((item['onclick']).split(' = ')[1]).strip("'") for item in soup.select('button[onclick^ = \'location.href = \']'))
+                self.links = list(((item['onclick']).split('=')[1]).strip("'") for item in soup.select('button[onclick^=\'location.href=\']'))
                 self.enrich_scrape()
 
     def enrich_scrape(self, search_text:str):
@@ -153,10 +153,10 @@ class SciHubScrape(ScrapeRequest, slookup_code='sci'):
         The temporary text file is then deleted in preparation for the next pdf.
         '''
         for link in self.links:
-            paper_url = f'{link} = true'
+            paper_url = f'{link}=true'
             paper_title = f'{date}_{search_text.replace("/","")}.pdf'
             time.sleep(1)
-            paper_content = (requests.get(paper_url, stream = True, allow_redirects = True)).content
+            paper_content = (requests.get(paper_url, stream=True, allow_redirects=True)).content
             with open('temp_file.txt', 'wb') as _tempfile:
                 _tempfile.write(paper_content)
             with open(paper_title, 'wb') as file:
@@ -237,8 +237,8 @@ class PDFScrape:
             self.n = len(self.study.pages)
             self.pages_to_check = [page for page in self.study.pages][:self.n]
             for page_number, page in enumerate(self.pages_to_check):
-                page = self.study.pages[page_number].extract_text(x_tolerance = 3, y_tolerance = 3)
-                print(f"[sciscraper]: Processing Page {page_number} of {self.n-1} | {search_text}...", end = "\r")
+                page = self.study.pages[page_number].extract_text(x_tolerance=3, y_tolerance=3)
+                print(f"[sciscraper]: Processing Page {page_number} of {self.n-1} | {search_text}...", end="\r")
                 self.preprints.append(page) #Each page's string gets appended to preprint []
         
             self.manuscripts = [str(preprint).strip().lower() for preprint in self.preprints] 
@@ -372,7 +372,7 @@ class FileRequest:
     def fetch_terms(self) -> None:
         raise NotImplementedError
 
-class DOIRequest(FileRequest, dlookup_code = 'doi'):
+class DOIRequest(FileRequest, dlookup_code='doi'):
     '''The DOIRequest class takes a csv and generates a list comprehension.
     The list comprehension is scraped, and then returns a DataFrame.
     '''
@@ -383,12 +383,12 @@ class DOIRequest(FileRequest, dlookup_code = 'doi'):
 
     def fetch_terms(self):
         print(f'\n[sciscraper]: Getting entries from file: {self.target}')
-        with open(self.target, newline = '') as f:
+        with open(self.target, newline='') as f:
             self.df = [doi for doi in pd.read_csv(f, usecols = ['DOI'])['DOI']]
             self.search_terms = [search_text for search_text in self.df if search_text is not None]
             return pd.DataFrame([self.scraper.download(search_text) for search_text in tqdm(self.search_terms)])
 
-class PubIDRequest(FileRequest, dlookup_code = 'pub'):
+class PubIDRequest(FileRequest, dlookup_code='pub'):
     '''The PubIDRequest class takes a DataFrame and generates a list comprehension.
     The list comprehension is scraped, and then returns a DataFrame.
     '''
