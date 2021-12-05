@@ -19,12 +19,19 @@ PART ONE: ->https://youtu.be/MXM6VEtf8SE
 PART TWO: Coming Soon
 
 # Special Thanks
+
 ArjanCodes
+
 Michele Cotrufo
+
 Nathan Lippi
+
 Jon Watson Rooney
+
 Colin Meret
-James Murphy (mCoding
+
+James Murphy (mCoding)
+
 Micael Jarniac
 
 # Maintainer
