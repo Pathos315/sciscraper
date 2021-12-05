@@ -14,20 +14,23 @@ From a folder input, you can get:
     - a pandas dataframe
     - a .csv file
 
-#==============================================
-#    SPECIAL THANKS
-#    
-#    Michele Cotrufo
-#    Nathan Lippi
-#    Jon Watson Rooney
-#    Colin Meret
-#    ArjanCodes
-#    James Murphy
-#    Micael Jarniac
-#
-#    ----------------Maintainer----------------
-#    John Fallot <john.fallot@gmail.com>
-#
-#    ----------------License----------------
-#    The MIT License [https://opensource.org/licenses/MIT]
-#    Copyright (c) 2021 John Fallot
+# As Featured on ArjanCodes' Code Roast
+PART ONE: ->https://youtu.be/MXM6VEtf8SE
+PART TWO: Coming Soon
+
+# Special Thanks
+ArjanCodes
+Michele Cotrufo
+Nathan Lippi
+Jon Watson Rooney
+Colin Meret
+James Murphy (mCoding
+Micael Jarniac
+
+# Maintainer
+John Fallot
+john.fallot@gmail.com
+
+# License
+The MIT License [https://opensource.org/licenses/MIT]
+Copyright (c) 2021 John Fallot
