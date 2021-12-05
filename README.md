@@ -15,7 +15,9 @@ From a folder input, you can get:
     - a .csv file
 
 # As Featured on ArjanCodes' Code Roast
+
 PART ONE: ->https://youtu.be/MXM6VEtf8SE
+
 PART TWO: Coming Soon
 
 # Special Thanks
@@ -39,5 +41,6 @@ John Fallot
 john.fallot@gmail.com
 
 # License
-The MIT License [https://opensource.org/licenses/MIT]
-Copyright (c) 2021 John Fallot
+[The MIT License](https://opensource.org/licenses/MIT)
+Copyright (c) 2021 
+John Fallot
