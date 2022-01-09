@@ -2,7 +2,6 @@ from fnmatch import fnmatch
 from os import listdir, path
 
 import pandas as pd
-from pandas.core.dtypes.missing import isna
 from tqdm import tqdm
 
 from scrape.config import ScrapeConfig, read_config
