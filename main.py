@@ -9,11 +9,7 @@ from scrape.fetch import (
 )
 from scrape.log import log_msg
 
-# source /Users/johnfallot/all_venvs/sciscraper2_venv/bin/activate
-# this_venv = subprocess.run('source /Users/johnfallot/all_venvs/sciscraper2_venv/bin/activate')
-
-source = "/Users/johnfallot/Downloads/Ideas and Evidence 31429ac75bc546a8b7ebe537ce9cea89 2.csv"
-
+source = #csv file path here
 
 def main() -> None:
 
@@ -23,10 +19,14 @@ def main() -> None:
     # fetch data from pdf files and export it
     start = time.perf_counter()
     initial = fetch_terms_from_doi(source)
+    is_cited_in_result = fetch_citations_hence(initial)
+    pdf_result = fetch_terms_from_pdf_files(config)
+    
+    #exports the data to csv files
     export_data(initial, config.export_dir)
-    result = fetch_citations_hence(initial)
-    # result = fetch_terms_from_pdf_files(config)
-    export_data(result, config.export_dir)
+    export_data(is_cited_in_result, config.export_dir)
+    export_data(pdf_result, config.export_dir)
+    
     elapsed = time.perf_counter() - start
     log_msg(f"\n[sciscraper]: Extraction finished in {elapsed} seconds.\n")
 
