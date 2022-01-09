@@ -9,6 +9,8 @@ from scrape.fetch import (
 )
 from scrape.log import log_msg
 
+__version__ = 2.0
+
 source = #csv file path here
 
 def main() -> None:
