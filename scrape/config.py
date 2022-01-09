@@ -1,9 +1,6 @@
 import json
 from dataclasses import dataclass
 
-# source /Users/johnfallot/all_venvs/sciscraper2_venv/bin/activate
-
-
 @dataclass
 class ScrapeConfig:
     export_dir: str
