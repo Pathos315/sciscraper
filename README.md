@@ -26,9 +26,9 @@ From a folder input, you can get:
 
 # As Featured on ArjanCodes' Code Roast
 
-PART ONE: ->https://youtu.be/MXM6VEtf8SE
+PART ONE: -> https://youtu.be/MXM6VEtf8SE
 
-PART TWO: Coming Soon
+PART TWO: -> https://www.youtube.com/watch?v=6ac4Um2Vicg
 
 # Special Thanks
 
