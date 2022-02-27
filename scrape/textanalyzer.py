@@ -15,8 +15,8 @@ class AnalysisResult:
     digital_object_id: str = "NaN"
 
 
-class TextAnalyser(Protocol):
-    """TextAnalyser _summary_
+class TextAnalyzer(Protocol):
+    """TextAnalyzer _summary_
 
     Args:
         Protocol (_type_): _description_
