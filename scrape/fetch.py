@@ -12,7 +12,18 @@ from scrape.json import JSONScraper
 from scrape.pdf import PDFScraper
 from scrape.scraper import Scraper
 
-@cache
+def unpack_csv(_target: str, _colsinuse: str) -> list:
+    with open(_target, newline="", encoding="utf-8") as file_wrapper:
+        return (
+            pd.read_csv(
+                file_wrapper,
+                skip_blank_lines=True,
+                usecols=[_colsinuse],
+            )
+            .drop_duplicates()[_colsinuse]
+            .tolist()
+        )
+    
 def fetch_terms_from_doi(target: str) -> pd.DataFrame:
     """fetch_terms_from_doi reads a csv file line by line,
     isolating digital object identifiers (DOIs),
@@ -26,19 +37,29 @@ def fetch_terms_from_doi(target: str) -> pd.DataFrame:
         pd.DataFrame: a dataframe containing the bibliographic information of the provided papers
     """
     print(f"\n[sciscraper]: Getting entries from file: {target}")
-    with open(target, newline="", encoding="utf-8") as f:
-        df = list(pd.read_csv(f, usecols=["DOI"])["DOI"])
-        search_terms = [
-            search_text
-            for search_text in df
-            if isinstance(search_text, float) is False and search_text is not None
-        ]
-        scraper = JSONScraper(config.citations_dataset_url, False)
-        return pd.DataFrame(
-            [scraper.download(search_text) for search_text in tqdm(search_terms)]
-        )
+    data_frame = unpack_csv(target, "doi")
+    search_terms = [
+        search_text
+        for search_text in data_frame
+        if not isinstance(search_text, (type(None), float))
+    ]
+    scraper = JSONScraper(config.citations_dataset_url, False)
+    return pd.DataFrame(
+        [scraper.download(search_text) for search_text in tqdm(search_terms)]
+    )
 
-@cache
+def fetch_terms_from_titles(target: str, config: ScrapeConfig) -> pd.DataFrame:
+    data_frame = unpack_csv(target, "title")
+    search_terms = [
+        search_text
+        for search_text in data_frame
+        if not isinstance(search_text, (type(None), float))
+    ]
+    scraper = JSONScraper(config.citations_dataset_url, False)
+    return pd.DataFrame(
+        [scraper.download(search_text) for search_text in tqdm(search_terms)]
+    )
+
 def fetch_terms_from_pubid(target: pd.DataFrame) -> pd.DataFrame:
     """fetch_terms_from_pubid reads a pandas DataFrame,
     takes the cited_dimensions_ids from the result of a prior fetch_terms_from_doi method
@@ -52,20 +73,20 @@ def fetch_terms_from_pubid(target: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: a dataframe containing the
         bibliographic information for each of the provided citations
     """
-    df = target.explode("cited_dimensions_ids", "title")
+    data_frame = target.explode(("cited_dimensions_ids", "title"))
     scraper = JSONScraper(config.citations_dataset_url, False)
     search_terms = (
         search_text
-        for search_text in df["cited_dimensions_ids"]
-        if isinstance(search_text, float) is False and search_text is not None
+        for search_text in data_frame["cited_dimensions_ids"]
+        if not isinstance(search_text, (type(None), float))
     )
-    src_title = pd.Series(df["title"])
+    src_title = pd.Series(data_frame["title"])
 
     return pd.DataFrame(
         [scraper.download(search_text) for search_text in tqdm(list(search_terms))]
     ).join(src_title)
 
-@cache
+
 def fetch_citations_hence(target: pd.DataFrame) -> pd.DataFrame:
     """fetch_citations_hence reads a pandas DataFrame,
     takes the provided pubIDs
@@ -82,14 +103,14 @@ def fetch_citations_hence(target: pd.DataFrame) -> pd.DataFrame:
     search_terms = (
         search_text
         for search_text in target["id"]
-        if isinstance(search_text, float) is False and search_text is not None
+        if not isinstance(search_text, (type(None), float))
     )
-    scraper = JSONScraper(config.url_dmnsns, True)
+    scraper = JSONScraper(config.citations_dataset_url, True)
     return pd.DataFrame(
         [scraper.download(search_text) for search_text in tqdm(list(search_terms))]
     )
 
-@cache
+
 def fetch_terms_from_pdf_files(config: ScrapeConfig) -> pd.DataFrame:
     """fetch_terms_from_pdf_files goes into a directory, reads through
     each pdf file, parses the text, and then generates entries in a dataframe
@@ -102,11 +123,67 @@ def fetch_terms_from_pdf_files(config: ScrapeConfig) -> pd.DataFrame:
     """
 
     search_terms = [
-        path.join(config.paper_folder, file)
-        for file in listdir(config.paper_folder)
+        path.join(config.test_src, file)
+        for file in listdir(config.test_src)
         if fnmatch(path.basename(file), "*.pdf")
     ]
     scraper = PDFScraper(
-        config.research_words, config.bycatch_words, config.target_words
+        target_path=config.target_words,
+        bycatch_path=config.bycatch_words,
+        research_path=config.research_words,
+        digi_path=config.tech_words,
+        solutions_path=config.solution_words,
     )
-    return pd.DataFrame([scraper.scrape(file) for file in tqdm(search_terms)])
+    return pd.DataFrame([scraper.analyze(file) for file in tqdm(search_terms)])
+
+def fetch_abstracts_from_csv(target: str, config: ScrapeConfig) -> pd.DataFrame:
+    """get_abstracts _summary_
+
+    Args:
+        target (pd.DataFrame): _description_
+    """
+    abstracts: list[str] = unpack_csv(target, "abstract")
+
+    summarizer = PaperSummarizer(
+        target_path=config.target_words,
+        bycatch_path=config.bycatch_words,
+        research_path=config.research_words,
+        digi_path=config.tech_words,
+        solutions_path=config.solution_words,
+    )
+
+    return pd.DataFrame(
+        [
+            summarizer.analyze(summary)
+            for summary in tqdm(abstracts)
+            if not isinstance(summary, (type(None), float))
+        ]
+    )
+
+
+def fetch_abstracts_from_dataframe(
+    target: pd.DataFrame, config: ScrapeConfig
+) -> pd.DataFrame:
+    """get_abstracts _summary_
+
+    Args:
+        target (pd.DataFrame): _description_
+    """
+    dois = target["doi"]
+    abstracts = target["abstract"].tolist()
+
+    summarizer = PaperSummarizer(
+        target_path=config.target_words,
+        bycatch_path=config.bycatch_words,
+        research_path=config.research_words,
+        digi_path=config.tech_words,
+        solutions_path=config.solution_words,
+    )
+
+    return pd.DataFrame(
+        [
+            summarizer.analyze(summary)
+            for summary in tqdm(abstracts)
+            if not isinstance(summary, (type(None), float))
+        ]
+    ).join(dois)
