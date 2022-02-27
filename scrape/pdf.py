@@ -8,9 +8,8 @@ from nltk.corpus import names, stopwords
 from nltk.stem.snowball import SnowballStemmer
 from nltk.tokenize import word_tokenize
 from textblob import TextBlob
-from textblob.inflect import singularize
 
-from scrape.textanalyzer import AnalysisResult, TextAnalyser
+from scrape.textanalyzer import AnalysisResult, TextAnalyzer
 
 STOP_WORDS: set[str] = {*stopwords.words("english")}
 
@@ -51,7 +50,7 @@ def compute_filtered_tokens(text: list[str]) -> set[str]:
     return {w for w in word_tokens if w not in STOP_WORDS & NAME_WORDS}
 
 
-def most_common_words(word_set: set[str], n: int) -> list[tuple[str, int]]:
+def most_common_words(word_set: set[str], amount: int) -> list[tuple[str, int]]:
     """most_common_words _summary_
 
     Args:
@@ -61,10 +60,10 @@ def most_common_words(word_set: set[str], n: int) -> list[tuple[str, int]]:
     Returns:
         list[tuple[str, int]]: _description_
     """
-    return FreqDist(word_set).most_common(n)
+    return FreqDist(word_set).most_common(amount)
 
 
-class PDFScraper(TextAnalyser):
+class PDFScraper(TextAnalyzer):
     """PDFScraper _summary_
 
     Args:
@@ -106,7 +105,7 @@ class PDFScraper(TextAnalyser):
                     page
                 )  # Each page's string gets appended to preprint []
 
-            manuscripts = [str(preprint).strip().lower() for preprint in preprints]
+            manuscripts = [preprint.strip().lower() for preprint in preprints]
             # The preprints are stripped of extraneous characters and all made lower case.
             postprints = [re.sub(r"\W+", " ", manuscript) for manuscript in manuscripts]
             # The ensuing manuscripts are stripped of lingering whitespace and non-alphanumeric characters.
@@ -121,22 +120,24 @@ class PDFScraper(TextAnalyser):
             research_overlap = self.research_words.intersection(all_words)
 
             wordscore = len(target_overlap) - len(bycatch_overlap)
+            target_freq = most_common_words(target_overlap, 4)
             mode_words = most_common_words(all_words, 5)
             research = most_common_words(research_overlap, 3)
             tech_freq = most_common_words(tech_overlap, 3)
             solution = most_common_words(solution_overlap, 3)
 
             return AnalysisResult(
-                wordscore,
-                mode_words,
-                research,
-                solution,
-                tech_freq,
+                wordscore=wordscore,
+                matching_terms=target_freq,
+                mode_words=mode_words,
+                research=research,
+                solution=solution,
+                tech=tech_freq,
                 digital_object_id=doi,
             )
 
 
-class PaperSummarizer(TextAnalyser):
+class PaperSummarizer(TextAnalyzer):
     """PDFScraper _summary_
 
     Args:
@@ -167,7 +168,7 @@ class PaperSummarizer(TextAnalyser):
             AnalysisResult: _description_
         """
 
-        blob = TextBlob(text_query.lower())
+        blob = TextBlob(text_query.lower(), tokenizer)
         all_words = [
             stemmer.stem(word)
             for word in blob.words
