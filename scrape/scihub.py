@@ -1,15 +1,17 @@
+r"""Goes to scihub and downloads papers
+
+    Returns:
+        a file with ill begotten papers.
+"""
 import os
 import time
 from contextlib import suppress
 from datetime import datetime
-from typing import Generator
 
 import requests
 from bs4 import BeautifulSoup
-from bs4.element import Tag
 
-from scrape.dir import change_dir
-from scrape.log import log_msg
+from scrape.utils import change_dir
 
 
 class SciHubScraper:
@@ -18,12 +20,13 @@ class SciHubScraper:
     Then, it downloads the ensuing pdf file that appears as a result of that query.
     """
 
-    def __init__(self, scihub_url: str, research_dir: str) -> None:
-        self.scihub_url = scihub_url
+    def __init__(self, downloader_url: str, research_dir: str) -> None:
+        self.downloader_url = downloader_url
         self.sessions = requests.Session()
         self.now = datetime.now()
         self.date = self.now.strftime("%y%m%d")
         self.research_dir = os.path.realpath(f"{research_dir}_{self.date}")
+        self.payload = {}
 
     def download(self, search_text: str):
         """download generates a session and a payload
@@ -39,7 +42,9 @@ class SciHubScraper:
             A pdf file.
         """
         print(
-            f"[sciscraper]: Delving too greedily and too deep for download links for {search_text}, by means of dark and arcane magicx.",
+            f"[sciscraper]: Delving too greedily and too deep for \
+            download links for {search_text}, \
+            by means of dark and arcane magicx.",
             end="\r",
         )
         self.payload = {"request": f"{search_text}"}
@@ -48,12 +53,14 @@ class SciHubScraper:
             with suppress(
                 requests.exceptions.HTTPError, requests.exceptions.RequestException
             ):
-                response = self.sessions.post(url=self.scihub_url, data=self.payload)
+                response = self.sessions.post(
+                    url=self.downloader_url, data=self.payload
+                )
                 response.raise_for_status()
-                log_msg(str(response.status_code))
+                print(response.status_code)
                 soup = BeautifulSoup(response.text, "lxml")
                 links = list(
-                    ((item["onclick"]).split("=")[1]).strip("'")
+                    (str(item["onclick"]).split("=")[1]).strip("'")
                     for item in soup.select("button[onclick^='location.href=']")
                 )
                 return [self.enrich_scrape(search_text, link) for link in links]
