@@ -9,9 +9,9 @@ from nltk.tokenize import word_tokenize
 
 from scrape.scraper import Scraper, ScrapeResult
 
-STOP_WORDS: set[str] = set(stopwords.words("english"))
+STOP_WORDS: set[str] = {*stopwords.words("english")}
 
-NAME_WORDS: set[str] = set(names.words())
+NAME_WORDS: set[str] = {*names.words()}
 
 
 def guess_doi(path_name: str) -> str:
@@ -26,7 +26,7 @@ def compute_filtered_tokens(text: list[str]) -> set[str]:
     version of the text, with stopwords and names removed.
     """
     word_tokens = word_tokenize("\n".join(text))
-    return set([w for w in word_tokens if not w in STOP_WORDS and NAME_WORDS])
+    return {w for w in word_tokens if w not in STOP_WORDS & NAME_WORDS}
 
 
 def most_common_words(word_set: set[str], n: int) -> list[tuple[str, int]]:
@@ -43,8 +43,8 @@ def unpack_txt_files(txtfile: str, __encoding="utf8") -> set[str]:
     Returns:
         set[str]: a set of words
     """
-    with open(txtfile, __encoding) as _iowrapper:
-        return set(_iowrapper.readlines())
+    with open(txtfile, encoding=__encoding) as _iowrapper:
+        return {*_iowrapper}
 
 
 class PDFScraper(Scraper):
@@ -58,7 +58,7 @@ class PDFScraper(Scraper):
         with pdfplumber.open(search_text) as study:
             pages: list[Any] = study.pages
             study_length: int = len(pages)
-            pages_to_check: list[Any] = [page for page in pages][:study_length]
+            pages_to_check: list[Any] = [*pages][:study_length]
             for page_number, page in enumerate(pages_to_check):
                 page: str = pages[page_number].extract_text(
                     x_tolerance=3, y_tolerance=3

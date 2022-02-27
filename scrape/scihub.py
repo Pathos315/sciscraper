@@ -1,12 +1,10 @@
 import os
-import time
 from contextlib import suppress
 from datetime import datetime
-from typing import Generator
+from time import sleep
 
 import requests
 from bs4 import BeautifulSoup
-from bs4.element import Tag
 
 from scrape.dir import change_dir
 from scrape.log import log_msg
@@ -44,7 +42,7 @@ class SciHubScraper:
         )
         self.payload = {"request": f"{search_text}"}
         with change_dir(self.research_dir):
-            time.sleep(1)
+            sleep(1)
             with suppress(
                 requests.exceptions.HTTPError, requests.exceptions.RequestException
             ):
@@ -52,10 +50,10 @@ class SciHubScraper:
                 response.raise_for_status()
                 log_msg(str(response.status_code))
                 soup = BeautifulSoup(response.text, "lxml")
-                links = list(
-                    ((item["onclick"]).split("=")[1]).strip("'")
+                links = [
+                    (item["onclick"]).split("=")[1].strip("'")
                     for item in soup.select("button[onclick^='location.href=']")
-                )
+                ]
                 return [self.enrich_scrape(search_text, link) for link in links]
 
     def enrich_scrape(self, search_text: str, link: str) -> None:
@@ -69,13 +67,13 @@ class SciHubScraper:
         """
         paper_url = f"{link}=true"
         paper_title = f'{self.date}_{search_text.replace("/","")}.pdf'
-        time.sleep(1)
+        sleep(1)
         paper_content = (
             requests.get(paper_url, stream=True, allow_redirects=True)
         ).content
         with open("temp_file.txt", "wb") as _tempfile:
             _tempfile.write(paper_content)
         with open(paper_title, "wb") as file:
-            for line in open("temp_file.txt", "rb").readlines():
+            for line in open("temp_file.txt", "rb"):
                 file.write(line)
         os.remove("temp_file.txt")
