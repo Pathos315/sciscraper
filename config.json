@@ -1,12 +1,14 @@
 {
     "export_dir": "PDN Scraper Exports",
     "log_dir": "PDN Scraper Logs",
-    "prime_src": "211001_PDN_studies_9.csv",
-    "url_dmnsns": "https://app.dimensions.ai/discover/publication/results.json",
+    "prime_src": "/Users/johnfallot/Downloads/Scientific 31429.csv",
+    "citations_dataset_url": "https://app.dimensions.ai/discover/publication/results.json",
     "research_dir": "PDN Research Papers From Scrape",
-    "url_scihub": "https://sci-hubtw.hkvisa.net/",
-    "paper_folder": "./papers",
-    "research_words": "./words/research.txt",
-    "bycatch_words": "./words/bycatch.txt",
-    "target_words": "./words/target.txt"
+    "downloader_url": "https://sci-hubtw.hkvisa.net/",
+    "test_src": "./papers",
+    "tech_words": "./words/tech_words.txt",
+    "solution_words": "./words/solution_words.txt",
+    "target_words": "./words/target_words.txt",
+    "bycatch_words": "./words/bycatch_words.txt",
+    "research_words": "./words/research_words.txt"
 }
