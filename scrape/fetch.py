@@ -7,10 +7,14 @@ from os import listdir, path
 import pandas as pd
 from tqdm import tqdm
 
-from scrape.config import ScrapeConfig, read_config
+from scrape.config import ScrapeConfig
 from scrape.json import JSONScraper
 from scrape.pdf import PDFScraper
-from scrape.scraper import Scraper
+
+
+def filter_types(data):
+    return [i for i in data if not isinstance(i, (type(None), float))]
+
 
 def unpack_csv(_target: str, _colsinuse: str) -> list:
     with open(_target, newline="", encoding="utf-8") as file_wrapper:
@@ -23,7 +27,8 @@ def unpack_csv(_target: str, _colsinuse: str) -> list:
             .drop_duplicates()[_colsinuse]
             .tolist()
         )
-    
+
+
 def fetch_terms_from_doi(target: str) -> pd.DataFrame:
     """fetch_terms_from_doi reads a csv file line by line,
     isolating digital object identifiers (DOIs),
@@ -38,27 +43,21 @@ def fetch_terms_from_doi(target: str) -> pd.DataFrame:
     """
     print(f"\n[sciscraper]: Getting entries from file: {target}")
     data_frame = unpack_csv(target, "doi")
-    search_terms = [
-        search_text
-        for search_text in data_frame
-        if not isinstance(search_text, (type(None), float))
-    ]
+    search_terms = filter_types(data_frame)
     scraper = JSONScraper(config.citations_dataset_url, False)
     return pd.DataFrame(
         [scraper.download(search_text) for search_text in tqdm(search_terms)]
     )
 
+
 def fetch_terms_from_titles(target: str, config: ScrapeConfig) -> pd.DataFrame:
     data_frame = unpack_csv(target, "title")
-    search_terms = [
-        search_text
-        for search_text in data_frame
-        if not isinstance(search_text, (type(None), float))
-    ]
+    search_terms = filter_types(data_frame)
     scraper = JSONScraper(config.citations_dataset_url, False)
     return pd.DataFrame(
         [scraper.download(search_text) for search_text in tqdm(search_terms)]
     )
+
 
 def fetch_terms_from_pubid(target: pd.DataFrame) -> pd.DataFrame:
     """fetch_terms_from_pubid reads a pandas DataFrame,
@@ -75,15 +74,11 @@ def fetch_terms_from_pubid(target: pd.DataFrame) -> pd.DataFrame:
     """
     data_frame = target.explode(("cited_dimensions_ids", "title"))
     scraper = JSONScraper(config.citations_dataset_url, False)
-    search_terms = (
-        search_text
-        for search_text in data_frame["cited_dimensions_ids"]
-        if not isinstance(search_text, (type(None), float))
-    )
+    search_terms = filter_types(data_frame["cited_dimensions_ids"])
     src_title = pd.Series(data_frame["title"])
 
     return pd.DataFrame(
-        [scraper.download(search_text) for search_text in tqdm(list(search_terms))]
+        [scraper.download(search_text) for search_text in tqdm(search_terms)]
     ).join(src_title)
 
 
@@ -100,14 +95,10 @@ def fetch_citations_hence(target: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame:  a dataframe containing the bibliographic information for each paper
         that went on to site the initially provided paper
     """
-    search_terms = (
-        search_text
-        for search_text in target["id"]
-        if not isinstance(search_text, (type(None), float))
-    )
+    search_terms = filter_types(target["id"])
     scraper = JSONScraper(config.citations_dataset_url, True)
     return pd.DataFrame(
-        [scraper.download(search_text) for search_text in tqdm(list(search_terms))]
+        [scraper.download(search_text) for search_text in tqdm(search_terms)]
     )
 
 
@@ -136,6 +127,7 @@ def fetch_terms_from_pdf_files(config: ScrapeConfig) -> pd.DataFrame:
     )
     return pd.DataFrame([scraper.analyze(file) for file in tqdm(search_terms)])
 
+
 def fetch_abstracts_from_csv(target: str, config: ScrapeConfig) -> pd.DataFrame:
     """get_abstracts _summary_
 
@@ -153,11 +145,7 @@ def fetch_abstracts_from_csv(target: str, config: ScrapeConfig) -> pd.DataFrame:
     )
 
     return pd.DataFrame(
-        [
-            summarizer.analyze(summary)
-            for summary in tqdm(abstracts)
-            if not isinstance(summary, (type(None), float))
-        ]
+        [summarizer.analyze(summary) for summary in tqdm(filter_types(abstracts))]
     )
 
 
@@ -181,9 +169,5 @@ def fetch_abstracts_from_dataframe(
     )
 
     return pd.DataFrame(
-        [
-            summarizer.analyze(summary)
-            for summary in tqdm(abstracts)
-            if not isinstance(summary, (type(None), float))
-        ]
+        [summarizer.analyze(summary) for summary in tqdm(filter_types(abstracts))]
     ).join(dois)

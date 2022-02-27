@@ -1,5 +1,5 @@
 import json
-import time
+from time import sleep
 from json.decoder import JSONDecodeError
 
 ## Scraping Related Imports
@@ -18,7 +18,7 @@ class JSONScraper:
     def __init__(self, citations_dataset_url: str, subset_query: bool) -> None:
         self.citations_dataset_url = citations_dataset_url
         self.sessions = requests.Session()
-        self.search_field = str
+        self.search_field = ""
         self.subset_query = subset_query
         self.docs = []
         self.data = {}
@@ -50,7 +50,7 @@ class JSONScraper:
                 "search_field": f"{self.search_field}",
             }
 
-        time.sleep(1.5)
+        sleep(1.5)
 
         try:
             request = self.sessions.get(self.citations_dataset_url, params=querystring)
@@ -60,9 +60,9 @@ class JSONScraper:
 
         except (JSONDecodeError, HTTPError) as error:
             print(
-                f"\n[sciscraper]: An error occurred while searching for {search_text}.\
-                \n[sciscraper]: Proceeding to next item in sequence.\
-                Cause of error: {error}\n"
+                f"\n[sciscraper]: An error occurred while searching for {search_text}."
+                "\n[sciscraper]: Proceeding to next item in sequence."
+                f"Cause of error: {error}\n"
             )
 
         for item in self.docs:
@@ -92,11 +92,9 @@ class JSONScraper:
         query will be for either
         a full_search or just for the doi.
         """
-        search_text = f"{_search_text}"
-        if search_text.startswith("pub"):
-            self.search_field = "full_search"
-        else:
-            self.search_field = "doi"
+        self.search_field = (
+            "full_search" if str(_search_text).startswith("pub") else "doi"
+        )
         return self.search_field
 
     def get_data_entry(self, item, keys: list) -> dict:
@@ -104,4 +102,3 @@ class JSONScraper:
         generates a dictionary entry.
         """
         return {_key: item.get(_key, "") for _key in keys}
-      

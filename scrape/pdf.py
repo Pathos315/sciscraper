@@ -12,9 +12,9 @@ from textblob.inflect import singularize
 
 from scrape.textanalyzer import AnalysisResult, TextAnalyser
 
-STOP_WORDS: set[str] = set(stopwords.words("english"))
+STOP_WORDS: set[str] = {*stopwords.words("english")}
 
-NAME_WORDS: set[str] = set(names.words())
+NAME_WORDS: set[str] = {*names.words()}
 
 stemmer = SnowballStemmer("english", ignore_stopwords=True)
 
@@ -48,7 +48,7 @@ def compute_filtered_tokens(text: list[str]) -> set[str]:
     version of the text, with stopwords and names removed.
     """
     word_tokens = word_tokenize("\n".join(text))
-    return set([w for w in word_tokens if not w in STOP_WORDS and NAME_WORDS])
+    return {w for w in word_tokens if w not in STOP_WORDS & NAME_WORDS}
 
 
 def most_common_words(word_set: set[str], n: int) -> list[tuple[str, int]]:
@@ -93,7 +93,7 @@ class PDFScraper(TextAnalyser):
         with pdfplumber.open(text_query) as study:
             pages: list[Any] = study.pages
             study_length: int = len(pages)
-            pages_to_check: list[Any] = [page for page in pages][:study_length]
+            pages_to_check: list[Any] = [*pages][:study_length]
             for page_number, page in enumerate(pages_to_check):
                 page: str = pages[page_number].extract_text(
                     x_tolerance=3, y_tolerance=3
