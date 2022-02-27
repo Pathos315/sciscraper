@@ -1,12 +1,10 @@
 import json
-from time import sleep
 from json.decoder import JSONDecodeError
+from time import sleep
 
 ## Scraping Related Imports
 import requests
 from requests.exceptions import HTTPError
-
-from scrape.log import log_msg
 
 
 class JSONScraper:
@@ -55,7 +53,7 @@ class JSONScraper:
         try:
             request = self.sessions.get(self.citations_dataset_url, params=querystring)
             request.raise_for_status()
-            log_msg(str(request.status_code))
+            print(str(request.status_code))
             self.docs = json.loads(request.text)["docs"]
 
         except (JSONDecodeError, HTTPError) as error:

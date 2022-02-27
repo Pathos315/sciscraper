@@ -60,8 +60,7 @@ class SciHubScraper:
                 print(response.status_code)
                 soup = BeautifulSoup(response.text, "lxml")
                 links = [
-                    (item["onclick"]).split("=")[1].strip("'")
-
+                    str(item["onclick"]).split("=")[1].strip("'")
                     for item in soup.select("button[onclick^='location.href=']")
                 ]
                 return [self.enrich_scrape(search_text, link) for link in links]
