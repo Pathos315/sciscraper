@@ -30,7 +30,7 @@ def export_data(dataframe: Optional[pd.DataFrame], export_dir: str):
     date = now.strftime("%y%m%d")
     with change_dir(export_dir):
         print_id = random.randint(0, 100)
-        export_name = f"{date}_Sciscraper_{print_id}.csv"
+        export_name = f"{date}_sciscraper_{print_id}.csv"
         print(
             f"\n[sciscraper]: A spreadsheet was exported as {export_name} in {export_dir}.\n"
         )
