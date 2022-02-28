@@ -9,14 +9,31 @@ from tqdm import tqdm
 
 from scrape.config import ScrapeConfig
 from scrape.json import JSONScraper
-from scrape.pdf import PDFScraper
+from scrape.pdf import PaperSummarizer, PDFScraper
 
 
-def filter_types(data):
+def filter_types(data) -> list[str]:
+    """filter_types _summary_
+
+    Args:
+        data (_type_): _description_
+
+    Returns:
+        list[str]: _description_
+    """
     return [i for i in data if not isinstance(i, (type(None), float))]
 
 
-def unpack_csv(_target: str, _colsinuse: str) -> list:
+def unpack_csv(_target: str, _colsinuse: str) -> list[str]:
+    """unpack_csv _summary_
+
+    Args:
+        _target (str): _description_
+        _colsinuse (str): _description_
+
+    Returns:
+        list[str]: _description_
+    """
     with open(_target, newline="", encoding="utf-8") as file_wrapper:
         return (
             pd.read_csv(
@@ -29,7 +46,7 @@ def unpack_csv(_target: str, _colsinuse: str) -> list:
         )
 
 
-def fetch_terms_from_doi(target: str) -> pd.DataFrame:
+def fetch_terms_from_doi(target: str, config: ScrapeConfig) -> pd.DataFrame:
     """fetch_terms_from_doi reads a csv file line by line,
     isolating digital object identifiers (DOIs),
     scrapes the web for each DOIs bibliographic data,
@@ -51,6 +68,15 @@ def fetch_terms_from_doi(target: str) -> pd.DataFrame:
 
 
 def fetch_terms_from_titles(target: str, config: ScrapeConfig) -> pd.DataFrame:
+    """fetch_terms_from_titles _summary_
+
+    Args:
+        target (str): _description_
+        config (ScrapeConfig): _description_
+
+    Returns:
+        pd.DataFrame: _description_
+    """
     data_frame = unpack_csv(target, "title")
     search_terms = filter_types(data_frame)
     scraper = JSONScraper(config.citations_dataset_url, False)
@@ -59,7 +85,7 @@ def fetch_terms_from_titles(target: str, config: ScrapeConfig) -> pd.DataFrame:
     )
 
 
-def fetch_terms_from_pubid(target: pd.DataFrame) -> pd.DataFrame:
+def fetch_terms_from_pubid(target: pd.DataFrame, config: ScrapeConfig) -> pd.DataFrame:
     """fetch_terms_from_pubid reads a pandas DataFrame,
     takes the cited_dimensions_ids from the result of a prior fetch_terms_from_doi method
     scrapes the dimensions.ai API for each listed pub_id for each paper, and returns
@@ -73,8 +99,8 @@ def fetch_terms_from_pubid(target: pd.DataFrame) -> pd.DataFrame:
         bibliographic information for each of the provided citations
     """
     data_frame = target.explode(("cited_dimensions_ids", "title"))
-    scraper = JSONScraper(config.citations_dataset_url, False)
     search_terms = filter_types(data_frame["cited_dimensions_ids"])
+    scraper = JSONScraper(config.citations_dataset_url, False)
     src_title = pd.Series(data_frame["title"])
 
     return pd.DataFrame(
@@ -82,7 +108,7 @@ def fetch_terms_from_pubid(target: pd.DataFrame) -> pd.DataFrame:
     ).join(src_title)
 
 
-def fetch_citations_hence(target: pd.DataFrame) -> pd.DataFrame:
+def fetch_citations_hence(target: pd.DataFrame, config: ScrapeConfig) -> pd.DataFrame:
     """fetch_citations_hence reads a pandas DataFrame,
     takes the provided pubIDs
     scrapes the dimensions.ai API for papers that went on to site site the initially provided paper,
