@@ -41,7 +41,7 @@ def guess_doi(path_name: str) -> str:
     return f"{doi[:7]}/{doi[7:]}"
 
 
-def compute_filtered_tokens(text: list[str]) -> set[str]:
+def compute_filtered_tokens(text: list[str]):
     """Takes a lowercase string, now removed of its non-alphanumeric characters.
     It returns (as a list comprehension) a parsed and tokenized
     version of the text, with stopwords and names removed.
@@ -50,7 +50,7 @@ def compute_filtered_tokens(text: list[str]) -> set[str]:
     return {w for w in word_tokens if w not in STOP_WORDS & NAME_WORDS}
 
 
-def most_common_words(word_set: set[str], amount: int) -> list[tuple[str, int]]:
+def most_common_words(word_set, amount: int):
     """most_common_words _summary_
 
     Args:
@@ -73,6 +73,7 @@ class PDFScraper(TextAnalyzer):
     def __init__(
         self, target_path, bycatch_path, research_path, digi_path, solutions_path
     ):
+        super().__init__()
         self.target_words = unpack_txt_files(target_path)
         self.bycatch_words = unpack_txt_files(bycatch_path)
         self.research_words = unpack_txt_files(research_path)
@@ -152,6 +153,7 @@ class PaperSummarizer(TextAnalyzer):
         digi_path: str,
         solutions_path: str,
     ):
+        super().__init__()
         self.target_words = unpack_txt_files(target_path)
         self.bycatch_words = unpack_txt_files(bycatch_path)
         self.research_words = unpack_txt_files(research_path)
@@ -168,10 +170,11 @@ class PaperSummarizer(TextAnalyzer):
             AnalysisResult: _description_
         """
 
-        blob = TextBlob(text_query.lower(), tokenizer)
+        blob = TextBlob(text_query.lower())
+        word_tokens = word_tokenize(blob)
         all_words = [
             stemmer.stem(word)
-            for word in blob.words
+            for word in word_tokens
             if word not in STOP_WORDS and NAME_WORDS
         ]
         tech_overlap = self.tech_words.intersection(all_words)

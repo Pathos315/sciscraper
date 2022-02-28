@@ -22,5 +22,8 @@ class TextAnalyzer(Protocol):
         Protocol (_type_): _description_
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+
     def analyze(self, text_query: str) -> AnalysisResult:
         ...
