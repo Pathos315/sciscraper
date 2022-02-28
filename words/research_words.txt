@@ -64,7 +64,6 @@ outline
 field
 cross-group
 dyad
-dyadic
 battery
 test
 intervention

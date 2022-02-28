@@ -73,7 +73,6 @@ class PDFScraper(TextAnalyzer):
     def __init__(
         self, target_path, bycatch_path, research_path, digi_path, solutions_path
     ):
-        super().__init__()
         self.target_words = unpack_txt_files(target_path)
         self.bycatch_words = unpack_txt_files(bycatch_path)
         self.research_words = unpack_txt_files(research_path)
@@ -153,7 +152,6 @@ class PaperSummarizer(TextAnalyzer):
         digi_path: str,
         solutions_path: str,
     ):
-        super().__init__()
         self.target_words = unpack_txt_files(target_path)
         self.bycatch_words = unpack_txt_files(bycatch_path)
         self.research_words = unpack_txt_files(research_path)
@@ -175,7 +173,7 @@ class PaperSummarizer(TextAnalyzer):
         all_words = [
             stemmer.stem(word)
             for word in word_tokens
-            if word not in STOP_WORDS and NAME_WORDS
+            if word not in STOP_WORDS & NAME_WORDS
         ]
         tech_overlap = self.tech_words.intersection(all_words)
         solution_overlap = self.solutions_words.intersection(all_words)
