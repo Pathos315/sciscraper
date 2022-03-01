@@ -1,3 +1,4 @@
+import logging
 import re
 from os import path
 from typing import Any
@@ -10,6 +11,8 @@ from nltk.tokenize import word_tokenize
 from textblob import TextBlob
 
 from scrape.textanalyzer import AnalysisResult, TextAnalyzer
+
+logger = logging.getLogger("sciscraper")
 
 STOP_WORDS: set[str] = {*stopwords.words("english")}
 
@@ -97,7 +100,7 @@ class PDFScraper(TextAnalyzer):
                 page: str = pages[page_number].extract_text(
                     x_tolerance=3, y_tolerance=3
                 )
-                print(
+                logger.info(
                     f"[sciscraper]: Processing Page {page_number} of {study_length-1} | {text_query}...",
                     end="\r",
                 )
@@ -169,7 +172,7 @@ class PaperSummarizer(TextAnalyzer):
         """
 
         blob = TextBlob(text_query.lower())
-        word_tokens = word_tokenize(blob)
+        word_tokens = blob.words
         all_words = [
             stemmer.stem(word)
             for word in word_tokens
@@ -190,10 +193,6 @@ class PaperSummarizer(TextAnalyzer):
         research = most_common_words(research_overlap, 4)
         tech_freq = most_common_words(tech_overlap, 4)
         solution = most_common_words(solution_overlap, 4)
-        pos_matches = len([match for match in target_freq if match[1] >= 5])
-        neg_matches = len([match for match in target_freq if match[1] <= -5])
-        print(f"There are {pos_matches} promising papers.\n")
-        print(f"At least {neg_matches} papers seem irrelevant.\n")
 
         return AnalysisResult(
             wordscore=wordscore,

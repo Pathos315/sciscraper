@@ -4,7 +4,6 @@ from typing import Protocol
 
 @dataclass(frozen=True, order=True)
 class AnalysisResult:
-    """_summary_"""
 
     wordscore: int
     matching_terms: list[tuple[str, int]]
@@ -12,7 +11,6 @@ class AnalysisResult:
     research: list[tuple[str, int]]
     solution: list[tuple[str, int]]
     tech: list[tuple[str, int]]
-    digital_object_id: str = "NaN"
 
 
 class TextAnalyzer(Protocol):
