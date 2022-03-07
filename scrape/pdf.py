@@ -31,10 +31,10 @@ def unpack_txt_files(txtfile: str):
     Returns:
         set[str]: a set of words
     """
-    with open(txtfile, encoding="utf8") as _iowrapper:
-        textlines = _iowrapper.readlines()
-        _unstemmed = [word.strip().strip("\n").lower() for word in textlines]
-        return {stemmer.stem(word) for word in _unstemmed}
+    with open(txtfile, encoding="utf8") as iowrapper:
+        textlines = iowrapper.readlines()
+        unstemmed = [word.strip().strip("\n").lower() for word in textlines]
+        return {stemmer.stem(word) for word in unstemmed}
 
 
 def guess_doi(path_name: str) -> str:
@@ -136,7 +136,6 @@ class PDFScraper(TextAnalyzer):
                 research=research,
                 solution=solution,
                 tech=tech_freq,
-                digital_object_id=doi,
             )
 
 
@@ -174,15 +173,14 @@ class PaperSummarizer(TextAnalyzer):
         blob = TextBlob(text_query.lower())
         word_tokens = blob.words
         all_words = [
-            stemmer.stem(word)
-            for word in word_tokens
-            if word not in STOP_WORDS & NAME_WORDS
+            word for word in word_tokens if word not in STOP_WORDS & NAME_WORDS
         ]
-        tech_overlap = self.tech_words.intersection(all_words)
-        solution_overlap = self.solutions_words.intersection(all_words)
-        target_overlap = self.target_words.intersection(all_words)
-        bycatch_overlap = self.bycatch_words.intersection(all_words)
-        research_overlap = self.research_words.intersection(all_words)
+        all_stems = [stemmer.stem(word) for word in all_words]
+        tech_overlap = self.tech_words.intersection(all_stems)
+        solution_overlap = self.solutions_words.intersection(all_stems)
+        target_overlap = self.target_words.intersection(all_stems)
+        bycatch_overlap = self.bycatch_words.intersection(all_stems)
+        research_overlap = self.research_words.intersection(all_stems)
 
         wordscore = (
             len(target_overlap) + len(solution_overlap) + len(tech_overlap)

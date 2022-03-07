@@ -5,7 +5,7 @@
     "citations_dataset_url": "https://app.dimensions.ai/discover/publication/results.json",
     "research_dir": "PDN Research Papers From Scrape",
     "downloader_url": "https://sci-hubtw.hkvisa.net/",
-    "test_src": "./papers",
+    "test_src": "./demo_papers",
     "tech_words": "./words/tech_words.txt",
     "solution_words": "./words/solution_words.txt",
     "target_words": "./words/target_words.txt",
