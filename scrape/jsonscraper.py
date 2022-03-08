@@ -3,10 +3,9 @@ from time import sleep
 from json.decoder import JSONDecodeError
 
 ## Scraping Related Imports
-import requests
+from requests import Session
 from requests.exceptions import HTTPError
-
-from scrape.log import log_msg
+from scrape.log import logger
 
 
 class JSONScraper:
@@ -17,7 +16,7 @@ class JSONScraper:
 
     def __init__(self, citations_dataset_url: str, subset_query: bool) -> None:
         self.citations_dataset_url = citations_dataset_url
-        self.sessions = requests.Session()
+        self.sessions = Session()
         self.search_field = ""
         self.subset_query = subset_query
         self.docs = []
@@ -35,19 +34,15 @@ class JSONScraper:
             dict: a JSON entry, which gets sent back to a dataframe.
         """
 
-        print(
-            f"[sciscraper]: Searching for {search_text} via a {self.search_field}-style search.",
-            end="\r",
-        )
         if self.subset_query:
             querystring = {"or_subset_publication_citations": search_text}
         else:
             self.search_field = self.specify_search(search_text)
             querystring = {
                 "search_mode": "content",
-                "search_text": f"{search_text}",
+                "search_text": search_text,
                 "search_type": "kws",
-                "search_field": f"{self.search_field}",
+                "search_field": self.search_field,
             }
 
         sleep(1.5)
@@ -55,15 +50,15 @@ class JSONScraper:
         try:
             request = self.sessions.get(self.citations_dataset_url, params=querystring)
             request.raise_for_status()
-            log_msg(str(request.status_code))
-            self.docs = json.loads(request.text)["docs"]
+            logger.debug(request.status_code)
+            self.docs = loads(request.text)["docs"]
 
-        except (JSONDecodeError, HTTPError) as error:
-            print(
-                f"\n[sciscraper]: An error occurred while searching for {search_text}."
-                "\n[sciscraper]: Proceeding to next item in sequence."
-                f"Cause of error: {error}\n"
-            )
+        except (JSONDecodeError, HTTPError) as parse_error:
+            logger.error(
+                f"An error occurred while searching for {search_text}.\
+                Status Code: {request.status_code}\
+                Proceeding to next item in sequence.\
+                Cause of error: {parse_error}"
 
         for item in self.docs:
             self.data = self.get_data_entry(
@@ -87,13 +82,13 @@ class JSONScraper:
             )
         return self.data
 
-    def specify_search(self, _search_text: str) -> str:
+    def specify_search(self, search_text: str) -> str:
         """Determines whether the dimensions.ai
         query will be for either
         a full_search or just for the doi.
         """
         self.search_field = (
-            "full_search" if str(_search_text).startswith("pub") else "doi"
+            "doi" if str(search_text).startswith("10") else "full_search"
         )
         return self.search_field
 
