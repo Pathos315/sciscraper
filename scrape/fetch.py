@@ -37,8 +37,8 @@ def unpack_csv(target: str, column: Column) -> list[str]:
     """unpack_csv _summary_
 
     Args:
-        _target (str): _description_
-        _colsinuse (str): _description_
+        target (str): _description_
+        column (str): _description_
 
     Returns:
         list[str]: _description_
