@@ -4,7 +4,7 @@ return varying dataframes or directories for each"""
 from collections import Counter
 from enum import Enum
 from fnmatch import fnmatch
-from os import PathLike, listdir, path
+from os import listdir, path
 
 import pandas as pd
 from tqdm import tqdm
