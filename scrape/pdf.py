@@ -1,3 +1,4 @@
+import logging
 import re
 from os import path
 from typing import Any
@@ -8,9 +9,10 @@ from nltk.corpus import names, stopwords
 from nltk.stem.snowball import SnowballStemmer
 from nltk.tokenize import word_tokenize
 from textblob import TextBlob
-from textblob.inflect import singularize
 
-from scrape.textanalyzer import AnalysisResult, TextAnalyser
+from scrape.textanalyzer import AnalysisResult, TextAnalyzer
+
+logger = logging.getLogger("sciscraper")
 
 STOP_WORDS: set[str] = {*stopwords.words("english")}
 
@@ -29,10 +31,10 @@ def unpack_txt_files(txtfile: str):
     Returns:
         set[str]: a set of words
     """
-    with open(txtfile, encoding="utf8") as _iowrapper:
-        textlines = _iowrapper.readlines()
-        _unstemmed = [word.strip().strip("\n").lower() for word in textlines]
-        return {stemmer.stem(word) for word in _unstemmed}
+    with open(txtfile, encoding="utf8") as iowrapper:
+        textlines = iowrapper.readlines()
+        unstemmed = [word.strip().strip("\n").lower() for word in textlines]
+        return {stemmer.stem(word) for word in unstemmed}
 
 
 def guess_doi(path_name: str) -> str:
@@ -42,7 +44,7 @@ def guess_doi(path_name: str) -> str:
     return f"{doi[:7]}/{doi[7:]}"
 
 
-def compute_filtered_tokens(text: list[str]) -> set[str]:
+def compute_filtered_tokens(text: list[str]):
     """Takes a lowercase string, now removed of its non-alphanumeric characters.
     It returns (as a list comprehension) a parsed and tokenized
     version of the text, with stopwords and names removed.
@@ -51,7 +53,7 @@ def compute_filtered_tokens(text: list[str]) -> set[str]:
     return {w for w in word_tokens if w not in STOP_WORDS & NAME_WORDS}
 
 
-def most_common_words(word_set: set[str], n: int) -> list[tuple[str, int]]:
+def most_common_words(word_set, amount: int):
     """most_common_words _summary_
 
     Args:
@@ -61,10 +63,10 @@ def most_common_words(word_set: set[str], n: int) -> list[tuple[str, int]]:
     Returns:
         list[tuple[str, int]]: _description_
     """
-    return FreqDist(word_set).most_common(n)
+    return FreqDist(word_set).most_common(amount)
 
 
-class PDFScraper(TextAnalyser):
+class PDFScraper(TextAnalyzer):
     """PDFScraper _summary_
 
     Args:
@@ -98,7 +100,7 @@ class PDFScraper(TextAnalyser):
                 page: str = pages[page_number].extract_text(
                     x_tolerance=3, y_tolerance=3
                 )
-                print(
+                logger.info(
                     f"[sciscraper]: Processing Page {page_number} of {study_length-1} | {text_query}...",
                     end="\r",
                 )
@@ -106,7 +108,7 @@ class PDFScraper(TextAnalyser):
                     page
                 )  # Each page's string gets appended to preprint []
 
-            manuscripts = [str(preprint).strip().lower() for preprint in preprints]
+            manuscripts = [preprint.strip().lower() for preprint in preprints]
             # The preprints are stripped of extraneous characters and all made lower case.
             postprints = [re.sub(r"\W+", " ", manuscript) for manuscript in manuscripts]
             # The ensuing manuscripts are stripped of lingering whitespace and non-alphanumeric characters.
@@ -121,22 +123,23 @@ class PDFScraper(TextAnalyser):
             research_overlap = self.research_words.intersection(all_words)
 
             wordscore = len(target_overlap) - len(bycatch_overlap)
+            target_freq = most_common_words(target_overlap, 4)
             mode_words = most_common_words(all_words, 5)
             research = most_common_words(research_overlap, 3)
             tech_freq = most_common_words(tech_overlap, 3)
             solution = most_common_words(solution_overlap, 3)
 
             return AnalysisResult(
-                wordscore,
-                mode_words,
-                research,
-                solution,
-                tech_freq,
-                digital_object_id=doi,
+                wordscore=wordscore,
+                matching_terms=target_freq,
+                mode_words=mode_words,
+                research=research,
+                solution=solution,
+                tech=tech_freq,
             )
 
 
-class PaperSummarizer(TextAnalyser):
+class PaperSummarizer(TextAnalyzer):
     """PDFScraper _summary_
 
     Args:
@@ -168,16 +171,16 @@ class PaperSummarizer(TextAnalyser):
         """
 
         blob = TextBlob(text_query.lower())
+        word_tokens = blob.words
         all_words = [
-            stemmer.stem(word)
-            for word in blob.words
-            if word not in STOP_WORDS and NAME_WORDS
+            word for word in word_tokens if word not in STOP_WORDS & NAME_WORDS
         ]
-        tech_overlap = self.tech_words.intersection(all_words)
-        solution_overlap = self.solutions_words.intersection(all_words)
-        target_overlap = self.target_words.intersection(all_words)
-        bycatch_overlap = self.bycatch_words.intersection(all_words)
-        research_overlap = self.research_words.intersection(all_words)
+        all_stems = [stemmer.stem(word) for word in all_words]
+        tech_overlap = self.tech_words.intersection(all_stems)
+        solution_overlap = self.solutions_words.intersection(all_stems)
+        target_overlap = self.target_words.intersection(all_stems)
+        bycatch_overlap = self.bycatch_words.intersection(all_stems)
+        research_overlap = self.research_words.intersection(all_stems)
 
         wordscore = (
             len(target_overlap) + len(solution_overlap) + len(tech_overlap)
@@ -188,10 +191,6 @@ class PaperSummarizer(TextAnalyser):
         research = most_common_words(research_overlap, 4)
         tech_freq = most_common_words(tech_overlap, 4)
         solution = most_common_words(solution_overlap, 4)
-        pos_matches = len([match for match in target_freq if match[1] >= 5])
-        neg_matches = len([match for match in target_freq if match[1] <= -5])
-        print(f"There are {pos_matches} promising papers.\n")
-        print(f"At least {neg_matches} papers seem irrelevant.\n")
 
         return AnalysisResult(
             wordscore=wordscore,
