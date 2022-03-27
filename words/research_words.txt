@@ -6,6 +6,7 @@ questionnaire
 study
 meta-analysis
 meta-analyzed
+meta
 experiment
 result
 impact
@@ -70,3 +71,13 @@ intervention
 follow-up
 measure
 result
+field
+speculative
+correlational
+observe
+observational
+articles
+replicable
+blind
+double-blind
+competition

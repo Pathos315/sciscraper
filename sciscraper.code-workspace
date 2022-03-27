@@ -1,19 +1,22 @@
 {
 	"folders": [
 		{
-			"name": "sciscraper2_venv",
+			"name": "sciscraper",
 			"path": "."
 		}
 	],
 	"settings": {
-		"python.analysis.typeCheckingMode": "basic",
+		"python.analysis.typeCheckingMode": "off",
 		"editor.formatOnSaveMode": "file",
 		"editor.formatOnSave": true,
 		"editor.codeActionsOnSave": {
 			"source.organizeImports": true
 		},
-		"python.linting.pylintEnabled": true,
-		"python.linting.enabled": true,
-		"python.formatting.provider": "black"
-	}
+		"python.linting.pylintEnabled": false,
+		"python.linting.enabled": false,
+		"python.formatting.provider": "black",
+		"python.terminal.activateEnvironment": true,
+		"python.analysis.autoSearchPaths": true,
+		"python.defaultInterpreterPath": "/Library/Frameworks/Python.framework/Versions/3.10/bin/python3.10"
+	},
 }

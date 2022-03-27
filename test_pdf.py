@@ -1,6 +1,6 @@
 import unittest
 
-from scrape.pdf import compute_filtered_tokens
+from scrape.textscraper import compute_filtered_tokens
 
 
 class TestPdfScraper(unittest.TestCase):
