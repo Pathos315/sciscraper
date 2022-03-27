@@ -12,7 +12,7 @@ from tqdm import tqdm
 from scrape.config import ScrapeConfig
 from scrape.jsonscraper import JSONScraper
 from scrape.log import logger
-from scrape.pdf import PaperSummarizer, PDFScraper
+from scrape.docscraper import DocScraper
 
 
 class Column(Enum):
