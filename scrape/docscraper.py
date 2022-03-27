@@ -10,7 +10,7 @@ from nltk.stem.snowball import SnowballStemmer
 from nltk.tokenize import word_tokenize
 from textblob import TextBlob
 
-from scrape.textanalyzer import AnalysisResult, TextAnalyzer
+from scrape.scraper import WordscoreResult
 
 logger = logging.getLogger("sciscraper")
 
