@@ -84,7 +84,7 @@ class JSONScraper:
                 publisher=item.get("publisher"),
                 pub_date=item.get("pub_date"),
                 doi=item.get("doi"),
-                id=item.get("id"),
+                pub_id=item.get("id"),
                 abstract=item.get("abstract"),
                 journal_title=item.get("journal_title"),
                 volume=item.get("volume"),

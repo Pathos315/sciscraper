@@ -26,7 +26,9 @@ def unpack_txt_files(txtfile: str, stemmed: bool = False) -> set[str]:
 
     Args:
         txtfile (str): filepath to the .txt file containing the words to analyze the document.
-        stemmed (bool): whether or not to stem the words, so as to match all variations of them: plurals, adverbs, &c. Defaults to False.
+        stemmed (bool): determines whether or not to stem the words,
+        so as to match all variations of them: plurals, adverbs, &c.
+        Defaults to False.
 
     Returns:
         set[str]: a set of words against which the text will be compared.
