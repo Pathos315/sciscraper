@@ -77,7 +77,7 @@ def filter_neg_wordscores(
 def fetch_terms_from_csv(
     target: str, column: Column, config: ScrapeConfig
 ) -> pd.DataFrame:
-    """fetch_terms_from_doi reads a csv file line by line,
+    """fetch_terms_from_csv reads a csv file line by line,
     isolating digital object identifiers (DOIs),
     scrapes the web for each DOIs bibliographic data,
     and places all of that resulting data into a pandas dataframe.
@@ -108,7 +108,7 @@ def fetch_abstracts_from_dataframe(
     subset_dataframe: pd.DataFrame = pd.DataFrame(data=subset_dict)
     abstracts: list = serialize_data(target, "abstract")
 
-    scraper = TextScraper(
+    scraper = DocScraper(
         target_words_path=config.target_words,
         bycatch_words_path=config.bycatch_words,
         research_words_path=config.research_words,
@@ -187,7 +187,7 @@ def fetch_terms_from_pdf_files(config: ScrapeConfig) -> pd.DataFrame:
         for file in listdir(config.test_src)
         if fnmatch(path.basename(file), "*.pdf")
     ]
-    scraper = TextScraper(
+    scraper = DocScraper(
         target_words_path=config.target_words,
         bycatch_words_path=config.bycatch_words,
         research_words_path=config.research_words,
@@ -208,7 +208,7 @@ def fetch_abstracts_from_csv(target: str, config: ScrapeConfig) -> pd.DataFrame:
     """
     abstracts: list[str] = unpack_csv(target, "abstract")
 
-    scraper = TextScraper(
+    scraper = DocScraper(
         target_words_path=config.target_words,
         bycatch_words_path=config.bycatch_words,
         research_words_path=config.research_words,
