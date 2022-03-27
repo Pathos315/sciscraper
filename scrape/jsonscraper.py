@@ -14,11 +14,13 @@ class JSONScraper:
     and then returns a dictionary, which gets appended to a list.
     """
 
-    def __init__(self, citations_dataset_url: str, subset_query: bool) -> None:
+    def __init__(
+        self, citations_dataset_url: str, query_subset_citations: bool
+    ) -> None:
         self.citations_dataset_url = citations_dataset_url
         self.sessions = Session()
         self.search_field = ""
-        self.subset_query = subset_query
+        self.query_subset = query_subset_citations
         self.docs = []
         self.data = {}
 
@@ -34,7 +36,7 @@ class JSONScraper:
             dict: a JSON entry, which gets sent back to a dataframe.
         """
 
-        if self.subset_query:
+        if self.query_subset:
             querystring = {"or_subset_publication_citations": search_text}
         else:
             self.search_field = self.specify_search(search_text)
@@ -61,26 +63,20 @@ class JSONScraper:
                 Cause of error: {parse_error}"
 
         for item in self.docs:
-            self.data = self.get_data_entry(
-                item,
-                keys=[
-                    "title",
-                    "author_list",
-                    "publisher",
-                    "pub_date",
-                    "doi",
-                    "id",
-                    "abstract",
-                    "acknowledgements",
-                    "journal_title",
-                    "volume",
-                    "issue",
-                    "times_cited",
-                    "mesh_terms",
-                    "cited_dimensions_ids",
-                ],
-            )
-        return self.data
+            return ScrapeResult(
+                title=item.get("title"),
+                author_list=item.get("author_list"),
+                cited_dimensions_ids=item.get("cited_dimensions_ids"),
+                times_cited=item.get("times_cited"),
+                publisher=item.get("publisher"),
+                pub_date=item.get("pub_date"),
+                doi=item.get("doi"),
+                id=item.get("id"),
+                abstract=item.get("abstract"),
+                journal_title=item.get("journal_title"),
+                volume=item.get("volume"),
+                issue=item.get("issue"),
+                mesh_terms=item.get("mesh_terms"),
 
     def specify_search(self, search_text: str) -> str:
         """Determines whether the dimensions.ai
@@ -91,9 +87,3 @@ class JSONScraper:
             "doi" if str(search_text).startswith("10") else "full_search"
         )
         return self.search_field
-
-    def get_data_entry(self, item, keys: list) -> dict:
-        """Based on a provided list of keys and items in the JSON data,
-        generates a dictionary entry.
-        """
-        return {_key: item.get(_key, "") for _key in keys}
