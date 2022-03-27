@@ -85,8 +85,8 @@ def most_common_words(word_set, amount: int = 4) -> list[tuple[Any, int]]:
     return freq
 
 
-class TextScraper:
-    """PDFScraper _summary_
+class DocScraper:
+    """DocScraper _summary_
 
     Args:
         Scraper (_type_): _description_
