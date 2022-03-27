@@ -33,5 +33,5 @@ def export_data(dataframe: Optional[pd.DataFrame], export_dir: str):
         logger.info(f"A spreadsheet was exported as {export_name} in {export_dir}.")
         if isinstance(dataframe, pd.DataFrame):
             dataframe.to_csv(export_name)
-            logger.info(dataframe.head(10))
-            logger.info(dataframe.tail(10))
+            logger.info(f"\n\n{dataframe.head(10)}")
+            logger.info(f"\n\n{dataframe.tail(10)}")
