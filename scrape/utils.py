@@ -5,7 +5,6 @@ from contextlib import contextmanager
 from datetime import datetime
 from os import chdir, getcwd, makedirs, path
 from typing import Optional
-
 import pandas as pd
 
 from scrape.log import logger

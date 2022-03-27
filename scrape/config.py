@@ -9,9 +9,6 @@ r"""config contains the dataclass describing
 import json
 from dataclasses import dataclass
 
-# source /Users/johnfallot/all_venvs/sciscraper2_venv/bin/activate
-
-
 @dataclass(frozen=True, order=True)
 class ScrapeConfig:
     """A dataclass containing the overall configurations"""

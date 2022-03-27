@@ -9,8 +9,8 @@ import pandas as pd
 from tqdm import tqdm
 
 from scrape.config import ScrapeConfig
+from scrape.docscraper import DocScraper
 from scrape.jsonscraper import JSONScraper
-from scrape.textscraper import TextScraper
 
 
 class Column(Enum):
@@ -111,7 +111,7 @@ def fetch_abstracts_from_dataframe(
     subset_dataframe: pd.DataFrame = pd.DataFrame(data=subset_dict)
     abstracts: list = serialize_data(target, "abstract")
 
-    scraper = TextScraper(
+    scraper = DocScraper(
         target_words_path=config.target_words,
         bycatch_words_path=config.bycatch_words,
         research_words_path=config.research_words,
@@ -190,7 +190,7 @@ def fetch_terms_from_pdf_files(config: ScrapeConfig) -> pd.DataFrame:
         for file in listdir(config.test_src)
         if fnmatch(path.basename(file), "*.pdf")
     ]
-    scraper = TextScraper(
+    scraper = DocScraper(
         target_words_path=config.target_words,
         bycatch_words_path=config.bycatch_words,
         research_words_path=config.research_words,
@@ -210,7 +210,7 @@ def fetch_abstracts_from_csv(target: str, config: ScrapeConfig) -> pd.DataFrame:
     """
     abstracts: list[str] = unpack_csv(target, "abstract")
 
-    scraper = TextScraper(
+    scraper = DocScraper(
         target_words_path=config.target_words,
         bycatch_words_path=config.bycatch_words,
         research_words_path=config.research_words,
