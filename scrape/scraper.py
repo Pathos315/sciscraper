@@ -8,7 +8,7 @@ class ScrapeResult:
     publisher: str
     pub_date: str
     doi: str
-    id: str
+    pub_id: str
     abstract: str
     journal_title: str
     volume: str

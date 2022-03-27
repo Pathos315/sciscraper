@@ -11,6 +11,7 @@ from tqdm import tqdm
 from scrape.config import ScrapeConfig
 from scrape.docscraper import DocScraper
 from scrape.jsonscraper import JSONScraper
+from scrape.log import logger
 
 
 class Column(Enum):
@@ -80,7 +81,7 @@ def filter_neg_wordscores(
 def fetch_terms_from_csv(
     target: str, column: Column, config: ScrapeConfig
 ) -> pd.DataFrame:
-    """fetch_terms_from_doi reads a csv file line by line,
+    """fetch_terms_from_csv reads a csv file line by line,
     isolating digital object identifiers (DOIs),
     scrapes the web for each DOIs bibliographic data,
     and places all of that resulting data into a pandas dataframe.

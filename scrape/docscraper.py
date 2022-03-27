@@ -25,11 +25,11 @@ def unpack_txt_files(txtfile: str, stemmed: bool = False) -> set[str]:
     """unpacks_txt_files takes a txt_file containing indended words.
 
     Args:
-        wordset ([type]): [description]
-        __encoding (str, optional): [description]. Defaults to "utf-8".
+        txtfile (str): filepath to the .txt file containing the words to analyze the document.
+        stemmed (bool): whether or not to stem the words, so as to match all variations of them: plurals, adverbs, &c. Defaults to False.
 
     Returns:
-        set[str]: a set of words
+        set[str]: a set of words against which the text will be compared.
     """
     with open(txtfile, encoding="utf8") as iowrapper:
         textlines = iowrapper.readlines()
@@ -83,12 +83,12 @@ def most_common_words(word_set, amount: int = 4) -> list[tuple[Any, int]]:
     Returns:
         list[tuple[str, int]]: _description_
     """
-    _freq = FreqDist(word_set).most_common(amount)
-    return _freq
+    freq = FreqDist(word_set).most_common(amount)
+    return freq
 
 
 class DocScraper:
-    """PDFScraper _summary_
+    """DocScraper _summary_
 
     Args:
         Scraper (_type_): _description_
