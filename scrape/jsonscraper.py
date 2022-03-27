@@ -76,7 +76,8 @@ class JSONScraper:
                 journal_title=item.get("journal_title"),
                 volume=item.get("volume"),
                 issue=item.get("issue"),
-                mesh_terms=item.get("mesh_terms"),
+                mesh_terms=item.get("mesh_terms")
+            )
 
     def specify_search(self, search_text: str) -> str:
         """Determines whether the dimensions.ai
