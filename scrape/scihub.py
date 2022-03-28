@@ -4,7 +4,7 @@ r"""Goes to scihub and downloads papers
         a file with ill begotten papers.
 """
 from contextlib import suppress
-from datetime import datetime
+from datetime import date
 from os import path, remove
 from time import sleep
 from typing import Iterator
@@ -26,8 +26,7 @@ class SciHubScraper:
     def __init__(self, downloader_url: str, research_dir: str) -> None:
         self.downloader_url = downloader_url
         self.sessions = Session()
-        self.now = datetime.now()
-        self.date = self.now.strftime("%y%m%d")
+        self.date = date.today().strftime("%y%m%d")
         self.research_dir = path.realpath(f"{research_dir}_{self.date}")
         self.payload = {}
 
