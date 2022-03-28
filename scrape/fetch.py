@@ -31,7 +31,7 @@ class SciScraper:
         target: str | pd.DataFrame | Path,
         config: ScrapeConfig,
         scrape_key: str,
-        column: Optional[Column] = None,
+        column: Column | None = None,
         filter_terms: bool = True,
         remove_empty: bool = True,
     ):
@@ -76,8 +76,8 @@ class SciScraper:
             return run_scrape(scraper, search_terms, desc="doi")
 
         elif self.scrape_key == "abstracts":
-            search_terms: list = serialize_data(self.target, column="abstract")
-            subset_dict: dict = {
+            search_terms = serialize_data(self.target, column="abstract")
+            subset_dict: dict[str, Any] = {
                 "_doi": self.target["doi"],
                 "_title": self.target["title"],
             }
@@ -88,7 +88,7 @@ class SciScraper:
             data_frame: pd.DataFrame = self.target.explode(
                 "cited_dimensions_ids", "title"
             )
-            search_terms: list = serialize_data(data_frame, "cited_dimensions_ids")
+            search_terms = serialize_data(data_frame, "cited_dimensions_ids")
             subset: pd.Series = data_frame["title"]
             return run_scrape(scraper, search_terms, desc="citation", subset=subset)
 
@@ -101,11 +101,11 @@ class SciScraper:
             return run_scrape(scraper, search_terms, desc="file")
 
         elif self.scrape_key == "hence":
-            search_terms = serialize_data(self.target, "id")
+            search_terms = serialize_data(self.target, Column.ID)
             return run_scrape(scraper, search_terms, desc="derived papers")
 
         else:
-            raise KeyError("Unknown scrape key: %s" % self.scrape_key)
+            raise KeyError(f"Unknown scrape key: {self.scrape_key}")
 
 
 ###Constituent Functions###
@@ -133,14 +133,12 @@ def run_scrape(
     desc: str,
     subset: Optional[list | pd.DataFrame | pd.Series] = None,
 ) -> pd.DataFrame:
-    if subset is None:
-        return pd.DataFrame(
-            [scraper.scrape(term) for term in tqdm(search_terms, unit=desc)]
-        )
-    else:
-        return pd.DataFrame(
-            [scraper.scrape(term) for term in tqdm(search_terms, unit=desc)]
-        ).join(subset, how="left", lsuffix="_source")
+    df = pd.DataFrame(
+        [scraper.scrape(term) for term in tqdm(search_terms, unit=desc)]
+    )
+    if subset is not None:
+        return df.join(subset, how="left", lsuffix="_source")
+    return df
 
 
 def serialize_data(
@@ -148,9 +146,9 @@ def serialize_data(
 ) -> list:
     series: pd.Series = target[column]
     series_list = series.to_list()
-    if not remove_empty:
-        return series_list
-    return filter_types(series_list)
+    if remove_empty:
+        return filter_types(series_list)
+    return series_list
 
 
 def unpack_csv(target: str, column: Column, filtered: bool = True) -> list[str]:
@@ -171,14 +169,13 @@ def unpack_csv(target: str, column: Column, filtered: bool = True) -> list[str]:
             file_wrapper, skip_blank_lines=True, usecols=[column]
         )[column]
         unfiltered_terms: list[str] = data_from_csv.drop_duplicates().to_list()
-        if not filtered:
-            return unfiltered_terms
-        filtered_data: list[str] = filter_types(unfiltered_terms)
-        return filtered_data
+        if filtered:
+            return filter_types(unfiltered_terms)
+        return unfiltered_terms
 
 
 def filter_neg_wordscores(
-    target: pd.DataFrame, col: Column = "wordscore"
+    target: pd.DataFrame, col: Column = Column.WORDSCORE
 ) -> pd.DataFrame:
     filt = target[col] > int(1)
     return target.loc[filt]
