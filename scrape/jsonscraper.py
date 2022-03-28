@@ -36,7 +36,7 @@ class JSONScraper:
         )
         return self.search_field
 
-    def download(self, search_text: str):
+    def scrape(self, search_text: str):
         """download takes the requested pubid or DOI
         and requests it from the provided citational dataset,
         which returns bibliographic data on the paper(s) requested.

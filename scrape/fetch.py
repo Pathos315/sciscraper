@@ -4,6 +4,8 @@ return varying dataframes or directories for each"""
 from enum import Enum
 from fnmatch import fnmatch
 from os import listdir, path
+from pathlib import Path
+from typing import Any, Optional, Protocol
 
 import pandas as pd
 from tqdm import tqdm
@@ -11,7 +13,7 @@ from tqdm import tqdm
 from scrape.config import ScrapeConfig
 from scrape.docscraper import DocScraper
 from scrape.jsonscraper import JSONScraper
-from scrape.log import logger
+from scrape.utils import export_data
 
 
 class Column(Enum):
@@ -21,6 +23,92 @@ class Column(Enum):
     ID = "id"
     CITED = "cited_dimensions_ids"
     WORDSCORE = "wordscore"
+
+
+class SciScraper:
+    def __init__(
+        self,
+        target: str | pd.DataFrame | Path,
+        config: ScrapeConfig,
+        scrape_key: str,
+        column: Optional[Column] = None,
+        filter_terms: bool = True,
+        remove_empty: bool = True,
+    ):
+        self.target = target
+        self.column = column
+        self.config = config
+        self.scrape_key = scrape_key
+        self.filter_terms = filter_terms
+        self.remove_empty = remove_empty
+
+    @property
+    def scraper_dict(self) -> dict[str, Any]:
+        return {
+            "doi": JSONScraper(self.config.citations_dataset_url, False),
+            "abstracts": DocScraper(
+                target_words_path=self.config.target_words,
+                bycatch_words_path=self.config.bycatch_words,
+                research_words_path=self.config.research_words,
+                tech_words_path=self.config.tech_words,
+                impact_words_path=self.config.solution_words,
+                is_pdf=False,
+            ),
+            "pub": JSONScraper(self.config.citations_dataset_url, False),
+            "pdfs": DocScraper(
+                target_words_path=self.config.target_words,
+                bycatch_words_path=self.config.bycatch_words,
+                research_words_path=self.config.research_words,
+                tech_words_path=self.config.tech_words,
+                impact_words_path=self.config.solution_words,
+                is_pdf=True,
+            ),
+            "hence": JSONScraper(self.config.citations_dataset_url, True),
+        }
+
+    def sciscrape(self) -> pd.DataFrame:
+        scraper = self.scraper_dict[self.scrape_key]
+
+        if self.scrape_key == "doi":
+            search_terms: list[str] = unpack_csv(
+                self.target, self.column, self.filter_terms
+            )
+            return run_scrape(scraper, search_terms, desc="doi")
+
+        elif self.scrape_key == "abstracts":
+            search_terms: list = serialize_data(self.target, column="abstract")
+            subset_dict: dict = {
+                "_doi": self.target["doi"],
+                "_title": self.target["title"],
+            }
+            subset: pd.DataFrame = pd.DataFrame(data=subset_dict)
+            return run_scrape(scraper, search_terms, desc="abstracts", subset=subset)
+
+        elif self.scrape_key == "pub":
+            data_frame: pd.DataFrame = self.target.explode(
+                "cited_dimensions_ids", "title"
+            )
+            search_terms: list = serialize_data(data_frame, "cited_dimensions_ids")
+            subset: pd.Series = data_frame["title"]
+            return run_scrape(scraper, search_terms, desc="citation", subset=subset)
+
+        elif self.scrape_key == "pdfs":
+            search_terms = [
+                path.join(self.config.test_src, file)
+                for file in listdir(self.config.test_src)
+                if fnmatch(path.basename(file), "*.pdf")
+            ]
+            return run_scrape(scraper, search_terms, desc="file")
+
+        elif self.scrape_key == "hence":
+            search_terms = serialize_data(self.target, "id")
+            return run_scrape(scraper, search_terms, desc="derived papers")
+
+        else:
+            raise KeyError("Unknown scrape key: %s" % self.scrape_key)
+
+
+###Constituent Functions###
 
 
 def filter_types(target: list):
@@ -39,10 +127,28 @@ def filter_types(target: list):
     ]
 
 
-def serialize_data(target: pd.DataFrame, column: Column, filtered: bool = True) -> list:
+def run_scrape(
+    scraper: JSONScraper | DocScraper,
+    search_terms: list,
+    desc: str,
+    subset: Optional[list | pd.DataFrame | pd.Series] = None,
+) -> pd.DataFrame:
+    if subset is None:
+        return pd.DataFrame(
+            [scraper.scrape(term) for term in tqdm(search_terms, unit=desc)]
+        )
+    else:
+        return pd.DataFrame(
+            [scraper.scrape(term) for term in tqdm(search_terms, unit=desc)]
+        ).join(subset, how="left", lsuffix="_source")
+
+
+def serialize_data(
+    target: pd.DataFrame, column: Column, remove_empty: bool = True
+) -> list:
     series: pd.Series = target[column]
     series_list = series.to_list()
-    if not filtered:
+    if not remove_empty:
         return series_list
     return filter_types(series_list)
 
@@ -78,6 +184,7 @@ def filter_neg_wordscores(
     return target.loc[filt]
 
 
+'''
 def fetch_terms_from_csv(
     target: str, column: Column, config: ScrapeConfig
 ) -> pd.DataFrame:
@@ -88,6 +195,10 @@ def fetch_terms_from_csv(
     """
     search_terms: list[str] = unpack_csv(target, column)
     scraper = JSONScraper(config.citations_dataset_url, False)
+    return run_scrape(scraper, search_terms, desc=column)
+
+
+"""
     return pd.DataFrame(
         [
             scraper.download(search_text)
@@ -98,10 +209,22 @@ def fetch_terms_from_csv(
             )
         ]
     )
-
+"""
+def fetch_terms_from_csv(
+    target: str, column: Column, config: ScrapeConfig
+) -> pd.DataFrame:
+    """fetch_terms_from_csv reads a csv file line by line,
+    isolating digital object identifiers (DOIs),
+    scrapes the web for each DOIs bibliographic data,
+    and places all of that resulting data into a pandas dataframe.
+    """
+    search_terms: list[str] = unpack_csv(target, column)
+    scraper = JSONScraper(config.citations_dataset_url, False)
+    return run_scrape(scraper, search_terms, desc=column)
+    
 
 def fetch_abstracts_from_dataframe(
-    target: pd.DataFrame, config: ScrapeConfig
+    target: pd.DataFrame, column: Column, config: ScrapeConfig
 ) -> pd.DataFrame:
     """get_abstracts _summary_
 
@@ -109,8 +232,8 @@ def fetch_abstracts_from_dataframe(
         target (pd.DataFrame): _description_
     """
     subset_dict: dict = {"_doi": target["doi"], "_title": target["title"]}
-    subset_dataframe: pd.DataFrame = pd.DataFrame(data=subset_dict)
-    abstracts: list = serialize_data(target, "abstract")
+    subset: pd.DataFrame = pd.DataFrame(data=subset_dict)
+    search_terms: list = serialize_data(target, column="abstract")
 
     scraper = DocScraper(
         target_words_path=config.target_words,
@@ -121,9 +244,7 @@ def fetch_abstracts_from_dataframe(
         is_pdf=False,
     )
 
-    return pd.DataFrame(
-        [scraper.scrape(summary) for summary in tqdm(abstracts, unit="abstract")]
-    ).join(subset_dataframe, how="left", lsuffix="_source")
+    return run_scrape(scraper, search_terms, desc=column)
 
 
 def fetch_terms_from_pubid(target: pd.DataFrame, config: ScrapeConfig) -> pd.DataFrame:
@@ -142,7 +263,7 @@ def fetch_terms_from_pubid(target: pd.DataFrame, config: ScrapeConfig) -> pd.Dat
     data_frame: pd.DataFrame = target.explode("cited_dimensions_ids", "title")
     search_terms: list = serialize_data(data_frame, "cited_dimensions_ids")
     scraper = JSONScraper(config.citations_dataset_url, False)
-    src_title: pd.Series = data_frame["title"]
+    subset: pd.Series = data_frame["title"]
 
     return pd.DataFrame(
         [
@@ -223,3 +344,4 @@ def fetch_abstracts_from_csv(target: str, config: ScrapeConfig) -> pd.DataFrame:
     return pd.DataFrame(
         [scraper.scrape(summary) for summary in tqdm(abstracts, unit="abstract")]
     )
+'''

@@ -1,35 +1,27 @@
 from time import perf_counter
 
 from scrape.config import read_config
-from scrape.fetch import (
-    fetch_abstracts_from_csv,
-    fetch_abstracts_from_dataframe,
-    fetch_citations_hence,
-    fetch_terms_from_csv,
-    fetch_terms_from_pdf_files,
-    fetch_terms_from_pubid,
-    filter_neg_wordscores,
-)
+from scrape.fetch import SciScraper, filter_neg_wordscores
 from scrape.log import logger
 from scrape.utils import export_data
+
+config = read_config("./config.json")
+
+doi = SciScraper(config.prime_src, config, scrape_key="doi", column="doi")
+pub = SciScraper(config.prime_src, config, scrape_key="pub", column="id")
+pdf = SciScraper(config.research_dir, config, scrape_key="pdf")
+abstracts = SciScraper(config.prime_src, "abstract", config, scrape_key="abstract")
+hence = SciScraper(config.prime_src, "abstract", config, scrape_key="hence")
 
 
 def main() -> None:
     """main _summary_"""
     # read the configuration settings from a JSON file
 
-    config = read_config("./config.json")
-
     # fetch data from pdf files and export it
     start = perf_counter()
-    doi_results = fetch_terms_from_csv(config.prime_src, "doi", config)
-    past_results = fetch_terms_from_pubid(doi_results, config=config)
-    export_data(past_results, config.export_dir)
-    hence_results = fetch_citations_hence(past_results, config=config)
-    abstracts = fetch_abstracts_from_dataframe(hence_results, config=config)
-    filt = filter_neg_wordscores(abstracts)
-    # result = fetch_terms_from_pdf_files(config)
-    export_data(filt, config.export_dir)
+    doi_results = doi.sciscrape()
+    export_data(doi_results, config.export_dir)
     elapsed = perf_counter() - start
     logger.info(f"Extraction finished in {elapsed} seconds.")
 
