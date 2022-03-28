@@ -9,6 +9,7 @@ r"""config contains the dataclass describing
 import json
 from dataclasses import dataclass
 
+
 @dataclass(frozen=True, order=True)
 class ScrapeConfig:
     """A dataclass containing the overall configurations"""

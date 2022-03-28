@@ -133,9 +133,7 @@ def run_scrape(
     desc: str,
     subset: Optional[list | pd.DataFrame | pd.Series] = None,
 ) -> pd.DataFrame:
-    df = pd.DataFrame(
-        [scraper.scrape(term) for term in tqdm(search_terms, unit=desc)]
-    )
+    df = pd.DataFrame([scraper.scrape(term) for term in tqdm(search_terms, unit=desc)])
     if subset is not None:
         return df.join(subset, how="left", lsuffix="_source")
     return df
