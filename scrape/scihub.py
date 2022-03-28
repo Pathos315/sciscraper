@@ -7,6 +7,7 @@ from contextlib import suppress
 from datetime import datetime
 from os import path, remove
 from time import sleep
+from typing import Iterator
 
 from bs4 import BeautifulSoup
 from requests import Session
@@ -30,7 +31,7 @@ class SciHubScraper:
         self.research_dir = path.realpath(f"{research_dir}_{self.date}")
         self.payload = {}
 
-    def download(self, search_text: str) -> None:
+    def download(self, search_text: str) -> Iterator[None]:
         """download generates a session and a payload
         This gets posted as a search query to the website.
         The search should return a pdf.
