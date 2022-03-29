@@ -11,7 +11,7 @@ from scrape.scraper import ScrapeResult
 
 
 class JSONScraper:
-    """The JSONScrape class takes the provided string from a prior list comprehension.
+    """The JSONScraper class takes the provided string from a prior list comprehension.
     Using that string value, it gets the resulting JSON data, parses it,
     and then returns a dictionary, which gets appended to a list.
     """
@@ -31,9 +31,7 @@ class JSONScraper:
         query will be for either
         a full_search or just for the doi.
         """
-        self.search_field = (
-            "doi" if str(search_text).startswith("10") else "full_search"
-        )
+        self.search_field = "doi" if search_text.startswith("10") else "full_search"
         return self.search_field
 
     def scrape(self, search_text: str):
@@ -61,33 +59,33 @@ class JSONScraper:
 
         sleep(1.5)
 
+        request = self.sessions.get(self.citations_dataset_url, params=querystring)
         try:
-            request = self.sessions.get(self.citations_dataset_url, params=querystring)
             request.raise_for_status()
             logger.debug(request.status_code)
             self.docs = loads(request.text)["docs"]
 
         except (JSONDecodeError, HTTPError) as parse_error:
             logger.error(
-                f"An error occurred while searching for {search_text}.\
-                Status Code: {request.status_code}\
-                Proceeding to next item in sequence.\
-                Cause of error: {parse_error}"
+                f"An error occurred while searching for {search_text}."
+                f"Status Code: {request.status_code}"
+                "Proceeding to next item in sequence."
+                f"Cause of error: {parse_error}"
             )
 
-        for item in self.docs:
-            return ScrapeResult(
-                title=item.get("title"),
-                author_list=item.get("author_list"),
-                cited_dimensions_ids=item.get("cited_dimensions_ids"),
-                times_cited=item.get("times_cited"),
-                publisher=item.get("publisher"),
-                pub_date=item.get("pub_date"),
-                doi=item.get("doi"),
-                pub_id=item.get("id"),
-                abstract=item.get("abstract"),
-                journal_title=item.get("journal_title"),
-                volume=item.get("volume"),
-                issue=item.get("issue"),
-                mesh_terms=item.get("mesh_terms"),
-            )
+        item = self.docs[0]
+        return ScrapeResult(
+            title=item["title"],
+            author_list=item["author_list"],
+            cited_dimensions_ids=item["cited_dimensions_ids"],
+            times_cited=item["times_cited"],
+            publisher=item["publisher"],
+            pub_date=item["pub_date"],
+            doi=item["doi"],
+            pub_id=item["id"],
+            abstract=item["abstract"],
+            journal_title=item["journal_title"],
+            volume=item["volume"],
+            issue=item["issue"],
+            mesh_terms=item["mesh_terms"],
+        )
