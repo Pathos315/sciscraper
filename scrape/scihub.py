@@ -4,9 +4,10 @@ r"""Goes to scihub and downloads papers
         a file with ill begotten papers.
 """
 from contextlib import suppress
-from datetime import datetime
+from datetime import date
 from os import path, remove
 from time import sleep
+from typing import Iterator
 
 from bs4 import BeautifulSoup
 from requests import Session
@@ -25,12 +26,11 @@ class SciHubScraper:
     def __init__(self, downloader_url: str, research_dir: str) -> None:
         self.downloader_url = downloader_url
         self.sessions = Session()
-        self.now = datetime.now()
-        self.date = self.now.strftime("%y%m%d")
+        self.date = date.today().strftime("%y%m%d")
         self.research_dir = path.realpath(f"{research_dir}_{self.date}")
         self.payload = {}
 
-    def download(self, search_text: str) -> None:
+    def download(self, search_text: str) -> Iterator[None]:
         """download generates a session and a payload
         This gets posted as a search query to the website.
         The search should return a pdf.
