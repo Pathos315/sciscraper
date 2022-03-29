@@ -6,6 +6,7 @@ from time import sleep
 from requests import Session
 from requests.exceptions import HTTPError
 
+from scrape.citation import CitationGenerator
 from scrape.log import logger
 from scrape.scraper import ScrapeResult
 
@@ -24,7 +25,6 @@ class JSONScraper:
         self.search_field = ""
         self.query_subset = query_subset_citations
         self.docs = []
-        self.data = {}
 
     def specify_search(self, search_text: str) -> str:
         """Determines whether the dimensions.ai
@@ -74,6 +74,8 @@ class JSONScraper:
             )
 
         item = self.docs[0]
+        full_apa_citation = CitationGenerator(doi=item["doi"]).get_citation()
+
         return ScrapeResult(
             title=item["title"],
             author_list=item["author_list"],
@@ -83,6 +85,7 @@ class JSONScraper:
             pub_date=item["pub_date"],
             doi=item["doi"],
             pub_id=item["id"],
+            full_apa_citation=full_apa_citation,
             abstract=item["abstract"],
             journal_title=item["journal_title"],
             volume=item["volume"],
