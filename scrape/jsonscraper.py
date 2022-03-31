@@ -18,12 +18,16 @@ class JSONScraper:
     """
 
     def __init__(
-        self, citations_dataset_url: str, query_subset_citations: bool
+        self,
+        citations_dataset_url: str,
+        query_subset_citations: bool,
+        get_citation: bool = True,
     ) -> None:
         self.citations_dataset_url = citations_dataset_url
         self.sessions = Session()
         self.search_field = ""
         self.query_subset = query_subset_citations
+        self.get_citation = get_citation
         self.docs = []
 
     def specify_search(self, search_text: str) -> str:
@@ -65,30 +69,34 @@ class JSONScraper:
             logger.debug(request.status_code)
             self.docs = loads(request.text)["docs"]
 
-        except (JSONDecodeError, HTTPError) as parse_error:
+        except (JSONDecodeError, HTTPError, KeyError) as parse_error:
             logger.error(
-                f"An error occurred while searching for {search_text}."
-                f"Status Code: {request.status_code}"
-                "Proceeding to next item in sequence."
-                f"Cause of error: {parse_error}"
+                f" \nAn error occurred while searching for {search_text}. \n"
+                f"Status Code: {request.status_code}  \n"
+                "Proceeding to next item in sequence.  \n"
+                f"Cause of error: {parse_error}.  \n"
             )
 
         item = self.docs[0]
-        full_apa_citation = CitationGenerator(doi=item["doi"]).get_citation()
+        if self.get_citation:
+            citation_getter = CitationGenerator(doi=item.get("doi"))
+            full_apa = citation_getter.get_citation()
+        else:
+            full_apa = "N/A"
 
         return ScrapeResult(
-            title=item["title"],
-            author_list=item["author_list"],
-            cited_dimensions_ids=item["cited_dimensions_ids"],
-            times_cited=item["times_cited"],
-            publisher=item["publisher"],
-            pub_date=item["pub_date"],
-            doi=item["doi"],
-            pub_id=item["id"],
-            full_apa_citation=full_apa_citation,
-            abstract=item["abstract"],
-            journal_title=item["journal_title"],
-            volume=item["volume"],
-            issue=item["issue"],
-            mesh_terms=item["mesh_terms"],
+            title=item.get("title"),
+            times_cited=item.get("times_cited"),
+            publisher=item.get("publisher"),
+            pub_date=item.get("pub_date"),
+            doi=item.get("doi"),
+            pub_id=item.get("id"),
+            abstract=item.get("abstract"),
+            journal_title=item.get("journal_title"),
+            volume=item.get("volume"),
+            issue=item.get("issue"),
+            cited_dimensions_ids=item.get("cited_dimensions_ids"),
+            author_list=item.get("author_list"),
+            mesh_terms=item.get("mesh_terms"),
+            full_apa=full_apa,
         )

@@ -17,7 +17,7 @@ class CitationGenerator:
     def __init__(
         self,
         doi: str,
-        style: Style = "apa",
+        style: Style = Style.APA,
         url: str = "https://citation.crosscite.org/format",
         lang: str = "en-US",
     ):

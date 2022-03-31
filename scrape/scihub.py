@@ -1,7 +1,4 @@
-r"""Goes to scihub and downloads papers
-
-    Returns:
-        a file with ill begotten papers.
+r"""Downloads papers en masse
 """
 from contextlib import suppress
 from datetime import date
@@ -13,24 +10,25 @@ from bs4 import BeautifulSoup
 from requests import Session
 from requests.exceptions import HTTPError, RequestException
 
+from scrape.config import ScrapeConfig
 from scrape.log import logger
 from scrape.utils import change_dir
 
 
-class SciHubScraper:
-    """The SciHubScrape class takes the provided string from a prior list comprehension.
+class BulkPDFScraper:
+    """The BulkPDFScrape class takes the provided string from a prior list comprehension.
     Using that string value, it posts it to the selected website.
     Then, it downloads the ensuing pdf file that appears as a result of that query.
     """
 
-    def __init__(self, downloader_url: str, research_dir: str) -> None:
-        self.downloader_url = downloader_url
+    def __init__(self, config: ScrapeConfig) -> None:
+        self.downloader_url = config.downloader_url
         self.sessions = Session()
         self.date = date.today().strftime("%y%m%d")
-        self.research_dir = path.realpath(f"{research_dir}_{self.date}")
+        self.research_dir = config.research_dir
         self.payload = {}
 
-    def download(self, search_text: str) -> Iterator[None]:
+    def scrape(self, search_text: str) -> Iterator[None]:
         """download generates a session and a payload
         This gets posted as a search query to the website.
         The search should return a pdf.
@@ -54,7 +52,7 @@ class SciHubScraper:
                 logger.info(response.status_code)
                 soup = BeautifulSoup(response.text, "lxml")
                 links: list[str] = [
-                    item["onclick"].split("=")[1].strip("'")
+                    item["onclick"].split("=")[1].strip("'")  # type: ignore
                     for item in soup.select("button[onclick^='location.href=']")
                 ]
                 yield from (self.enrich_scrape(search_text, link) for link in links)
