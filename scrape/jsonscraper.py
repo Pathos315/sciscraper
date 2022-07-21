@@ -78,11 +78,10 @@ class JSONScraper:
             )
 
         item = self.docs[0]
-        if self.get_citation:
-            citation_getter = CitationGenerator(doi=item.get("doi"))
-            full_apa = citation_getter.get_citation()
-        else:
-            full_apa = "N/A"
+        # if self.get_citation:
+        #    citation_getter = CitationGenerator(style="apa", doi=item.get("doi"))  # type: ignore
+        #    full_apa = citation_getter.get_citation()
+        full_apa = "N/A"
 
         return ScrapeResult(
             title=item.get("title"),
