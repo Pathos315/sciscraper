@@ -1,7 +1,7 @@
 {
     "export_dir": "PDN Scraper Exports",
     "log_dir": "PDN Scraper Logs",
-    "prime_src": "/Users/johnfallot/Downloads/Scientific 31429.csv",
+    "prime_src": "../Downloads/[filename].csv",
     "citations_dataset_url": "https://app.dimensions.ai/discover/publication/results.json",
     "research_dir": "PDN Research Papers From Scrape",
     "downloader_url": "https://sci-hubtw.hkvisa.net/",
