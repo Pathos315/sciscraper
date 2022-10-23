@@ -1,184 +1,114 @@
+import itertools
 import logging
 import re
-from os import path
-from typing import Any
+from collections import Counter
+from dataclasses import dataclass, field
+from typing import Callable, Generator
 
 import pdfplumber
-from nltk import FreqDist
-from nltk.corpus import names, stopwords
-from nltk.stem.snowball import SnowballStemmer
-from nltk.tokenize import word_tokenize
-from textblob import TextBlob
 
-from scrape.scraper import WordscoreResult
-
+UTF = "utf-8"
 logger = logging.getLogger("sciscraper")
 
-STOP_WORDS: set[str] = {*stopwords.words("english")}
+TextractStrategyFunction = Callable[[str],Generator[list[str],None,None]]
 
-NAME_WORDS: set[str] = {*names.words()}
+@dataclass(frozen=True, order=True)
+class FreqDistAndCount:
+    term_count: int
+    frequency_dist: list[tuple[str, int]] = field(default_factory=list)
 
-stemmer = SnowballStemmer("english", ignore_stopwords=True)
+@dataclass(order=True)
+class Wordscore:
+    pos_part: float
+    neg_part: float
+    pos_chances: int
+    neg_chances: int
+    total_len: int
+    formatted_worscore: str = ""
 
+    def calc_wordscore(self): #odds ratio
+        pos_odds = self.pos_part / self.pos_chances
+        neg_odds = self.neg_part / self.neg_chances
+        length_factor = 1 - (((self.pos_chances + self.neg_chances)/self.total_len) * 0.75)
+        try:
+            raw_wordscore = pos_odds / (pos_odds + neg_odds)
+            raw_wordscore = raw_wordscore * length_factor
+        except ZeroDivisionError as zero_error:
+            logger.debug(zero_error)
+            raw_wordscore = 0
+        self.formatted_worscore = f"{raw_wordscore:.2%}"
 
-def unpack_txt_files(txtfile: str, stemmed: bool = False) -> set[str]:
-    """unpacks_txt_files takes a txt_file containing indended words.
-
-    Args:
-        txtfile (str): filepath to the .txt file containing the words to analyze the document.
-        stemmed (bool): determines whether or not to stem the words,
-        so as to match all variations of them: plurals, adverbs, &c.
-        Defaults to False.
-
-    Returns:
-        set[str]: a set of words against which the text will be compared.
-    """
-    with open(txtfile, encoding="utf8") as iowrapper:
-        textlines = iowrapper.readlines()
-        unstemmed = [word.strip().lower() for word in textlines]
-        if stemmed:
-            return {stemmer.stem(word) for word in unstemmed}
-        return {*unstemmed}
-
-
-def overlap_word_sets(
-    word_categories: dict[str, set[str]], all_words: list[str]
-) -> dict[str, set[str]]:
-    return {
-        key: value.intersection(all_words) for key, value in word_categories.items()
-    }
-
-
-def frequency_from_dicts(
-    overlapping_dict: dict[str, set[str]]
-) -> dict[str, list[tuple[str, int]]]:
-    return {key: most_common_words(value) for key, value in overlapping_dict.items()}
+@dataclass(frozen=True, order=True)
+class DocumentResult:
+    formatted_worscore: str
+    target_freq: list = field(default_factory=list)
+    bycatch_freq: list = field(default_factory=list)
 
 
-def guess_doi(path_name: str) -> str:
-    """Guesses the digital identifier for the paper based on the filename"""
-    basename: str = path.basename(path_name)
-    doi = basename[7:-4]
-    return f"{doi[:7]}/{doi[7:]}"
+def match_terms(target: list[str], word_set:set[str]) -> FreqDistAndCount:
+    matching_set = (word for word in target if word in word_set)
+    words = Counter(matching_set)
+    matching_terms = words.most_common(3)
+    term_count = sum(term[1] for term in matching_terms)
+    return FreqDistAndCount(term_count,matching_terms)
 
-
-def compute_filtered_tokens(text: list[str] | Any) -> list[str]:
-    """Takes a lowercase string, now removed of its non-alphanumeric characters.
-    It returns (as a list comprehension) a parsed and tokenized
-    version of the text, with stopwords and names removed.
-    """
-    word_tokens: list[str] = word_tokenize("\n".join(text))
-    return [word for word in word_tokens if word not in STOP_WORDS & NAME_WORDS]
-
-
-def most_common_words(word_set, amount: int = 4) -> list[tuple[Any, int]]:
-    """most_common_words _summary_
-
-    Args:
-        word_set (set[str]): _description_
-        n (int): _description_
-
-    Returns:
-        list[tuple[str, int]]: _description_
-    """
-    return FreqDist(word_set).most_common(amount)
-
-
+@dataclass
 class DocScraper:
-    """DocScraper _summary_
+    bycatch_words:str
+    target_words:str
+    is_pdf: bool = True
 
-    Args:
-        Scraper (_type_): _description_
-    """
-
-    def __init__(
-        self,
-        target_words_path: str,
-        bycatch_words_path: str,
-        research_words_path: str,
-        tech_words_path: str,
-        impact_words_path: str,
-        is_pdf: bool = True,
-    ):
-        self.target_words = unpack_txt_files(target_words_path)
-        self.bycatch_words = unpack_txt_files(bycatch_words_path)
-        self.research_words = unpack_txt_files(research_words_path)
-        self.tech_words = unpack_txt_files(tech_words_path)
-        self.impact_words = unpack_txt_files(impact_words_path)
-        self.is_pdf = is_pdf
-
-    def calc_wordscore(self, overlapping_dict: dict[str, set[str]]) -> int:
-        wordscore = (
-            len(overlapping_dict["target_words"])
-            + len(overlapping_dict["impact_words"])
-            + len(overlapping_dict["tech_words"])
-        ) - (len(overlapping_dict["bycatch_words"]) * 3)
-        return wordscore
-
-    def all_words_from_abstract(self, search_text: str) -> list[str]:
-        blob = TextBlob(search_text.lower())
-        word_tokens = blob.words
-        return compute_filtered_tokens(word_tokens)
-
-    def all_words_from_pdf(self, search_text: str) -> list[str]:
-        preprints: list[str] = []
-        with pdfplumber.open(search_text) as study:
-            pages: list[Any] = study.pages
-            study_length = len(pages)
-            pages_to_check = [*pages][:study_length]
-            for page_number, page in enumerate(pages_to_check):
-                page: str = pages[page_number].extract_text(
-                    x_tolerance=3, y_tolerance=3
-                )
-                logger.info(
-                    f"[sciscraper]: Processing Page {page_number} "
-                    f"of {study_length-1} | {search_text}...",
-                )
-                preprints.append(
-                    page
-                )  # Each page's string gets appended to preprint []
-
-            manuscripts = [preprint.strip().lower() for preprint in preprints]
-            # The preprints are stripped of extraneous
-            # characters and all made lower case.
-            postprints = [re.sub(r"\W+", " ", manuscript) for manuscript in manuscripts]
-            # The ensuing manuscripts are stripped of
-            # lingering whitespace and non-alphanumeric characters.
-            return compute_filtered_tokens(postprints)
-
-    def scrape(self, search_text: str) -> WordscoreResult:
-        """analyze _summary_
-
+    def unpack_txt_files(self, txtfile: str) -> set[str]:
+        """unpacks_txt_files takes a txt_file containing indended words.
         Args:
-            search_text (str): _description_
+            txtfiles (str): filepath to the .txt file containing the words to analyze the document.
+            stemmed (bool): determines whether or not to stem the words,
+            so as to match all variations of them: plurals, adverbs, &c.
+            Defaults to False.
 
         Returns:
-            AnalysisResult: _description_
+            set[str]: a set of words against which the text will be compared.
         """
-        word_categories: dict[str, set[str]] = {
-            "target_words": self.target_words,
-            "bycatch_words": self.bycatch_words,
-            "research_words": self.research_words,
-            "tech_words": self.tech_words,
-            "impact_words": self.impact_words,
-        }
+        with open(txtfile, encoding=UTF) as iowrapper:
+            textlines = iowrapper.readlines()
+            unstemmed = (word.strip().lower() for word in textlines)
+            return {*unstemmed}
+    
+    def scrape(self, search_text: str) -> DocumentResult | None:
+        tokgen = self.extract_text_from_pdf(search_text) if self.is_pdf else self.simple_text_clean(search_text)
+        bycatch_size: int = len(self.bycatch_words)
+        target_size: int = len(self.target_words)
+        for tokens in tokgen:
+            logger.info(tokens)
+            total_len = len(tokens)
+            target_set, bycatch_set = self.unpack_txt_files(self.target_words), self.unpack_txt_files(self.bycatch_words)
+            target, bycatch = match_terms(tokens, target_set), match_terms(tokens, bycatch_set)
+            pos_count, target_freq = target.term_count, target.frequency_dist
+            neg_count, bycatch_freq = bycatch.term_count, bycatch.frequency_dist
+            wordscore = Wordscore(pos_count, neg_count, bycatch_size, target_size, total_len)
+            wordscore.calc_wordscore()
 
-        if self.is_pdf:
-            all_words = self.all_words_from_pdf(search_text)
-        else:
-            all_words = self.all_words_from_abstract(search_text)
+            return DocumentResult(
+                wordscore.formatted_worscore,
+                target_freq,
+                bycatch_freq
+            )
 
-        # doi = guess_doi(search_text)
-        overlap_dict = overlap_word_sets(word_categories, all_words)
-        wordscore = self.calc_wordscore(overlap_dict)
-        frequencies = frequency_from_dicts(overlap_dict)
-        freq_from_all_words = most_common_words(all_words)
+    def extract_text_from_pdf(self, search_text: str) -> Generator[list[str],None,None]:
+        with pdfplumber.open(search_text) as study:
+            study_pages = study.pages
+            study_length = len(study_pages)
+            pages_to_check = [*study_pages][:study_length]
+            preprints = (study_pages[page_number].extract_text(x_tolerance=1,y_tolerance=3) for page_number, _ in enumerate(pages_to_check))
+            manuscripts = (preprint.strip().lower() for preprint in preprints)
+            manuscripts = (re.sub(r"\W+", " ", manuscript) for manuscript in manuscripts)
+            draft = (manuscript.split(" ") for manuscript in manuscripts)
+            yield list(itertools.chain.from_iterable((draft)))
 
-        return WordscoreResult(
-            wordscore=wordscore,
-            most_freq_target_words=frequencies["target_words"],
-            most_freq_all_words=freq_from_all_words,
-            study_design_hunch=frequencies["research_words"],
-            impact_of_study_hunch=frequencies["impact_words"],
-            tech_words_freq=frequencies["tech_words"],
-        )
+    def simple_text_clean(self, search_text: str) -> Generator[list[str],None,None]:
+        logger.info(search_text)
+        manuscripts = search_text.strip().lower()
+        logger.info(manuscripts)
+        draft = (manuscripts.split(" "))
+        logger.info(draft)
+        yield draft

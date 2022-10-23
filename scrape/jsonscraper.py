@@ -1,44 +1,64 @@
+from dataclasses import dataclass, field
 from json import loads
-from json.decoder import JSONDecodeError
 from time import sleep
 
+import httpx
+import pandas as pd
+from bs4 import BeautifulSoup
 ## Scraping Related Imports
-from requests import Session
-from requests.exceptions import HTTPError
+from requests import Session, get
+from requests.exceptions import HTTPError, RequestException
 
-from scrape.citation import CitationGenerator
 from scrape.log import logger
-from scrape.scraper import ScrapeResult
 
+DIMENSIONS_AI_KEYS = {
+    "title":"title",
+    "pub_date":"pub_date",
+    "doi":"doi",
+    "internal_id":"id",
+    "abstract":"abstract",
+    "journal_title":"journal_title",
+    "times_cited":"times_cited",
+    "author_list":"author_list",
+    "citations":"cited_dimensions_ids",
+    "keywords":"mesh_terms"
+}
 
-class JSONScraper:
-    """The JSONScraper class takes the provided string from a prior list comprehension.
-    Using that string value, it gets the resulting JSON data, parses it,
-    and then returns a dictionary, which gets appended to a list.
-    """
+SEMANTIC_SCHOLAR_KEYS = {
+    "title":"title",
+    "pub_date":"publicationDate",
+    "doi":"externalIds",
+    "internal_id":"externalIds",
+    "abstract":"abstract",
+    "journal_title":"journal",
+    "times_cited":"citationCount",
+    "author_list":"authors",
+    "citations":"citations",
+    "keywords":"s2FieldsOfStudy"
+}
 
-    def __init__(
-        self,
-        citations_dataset_url: str,
-        query_subset_citations: bool,
-        get_citation: bool = True,
-    ) -> None:
-        self.citations_dataset_url = citations_dataset_url
-        self.sessions = Session()
-        self.search_field = ""
-        self.query_subset = query_subset_citations
-        self.get_citation = get_citation
-        self.docs = []
+@dataclass(frozen=True, order=True)
+class ScrapeResult:
+    title: str
+    pub_date: str
+    doi: str
+    internal_id: str|None
+    abstract: str
+    journal_title: str|None
+    times_cited: int|None
+    author_list: list[str] = field(default_factory=list)
+    citations: list[str] = field(default_factory=list)
+    keywords: list[str]|None = field(default_factory=list)
 
-    def specify_search(self, search_text: str) -> str:
-        """Determines whether the dimensions.ai
-        query will be for either
-        a full_search or just for the doi.
-        """
-        self.search_field = "doi" if search_text.startswith("10") else "full_search"
-        return self.search_field
+@dataclass
+class WebScraper:
+    url: str
+    query_subset_citations: bool = False
+    api_keys: dict[str,str] = field(default_factory=dict)
+    querystring: dict[str,str] = field(default_factory=dict)
+    session: Session = field(default_factory=Session)
 
-    def scrape(self, search_text: str):
+    def scrape(self, search_text: str) -> ScrapeResult | None:
         """download takes the requested pubid or DOI
         and requests it from the provided citational dataset,
         which returns bibliographic data on the paper(s) requested.
@@ -49,53 +69,24 @@ class JSONScraper:
         Returns:
             dict: a JSON entry, which gets sent back to a dataframe.
         """
-
-        if self.query_subset:
-            querystring = {"or_subset_publication_citations": search_text}
-        else:
-            self.search_field = self.specify_search(search_text)
-            querystring = {
-                "search_mode": "content",
-                "search_text": search_text,
-                "search_type": "kws",
-                "search_field": self.search_field,
-            }
-
+        self.create_querystring(search_text)
+        request = self.session.get(self.url, params=self.querystring)
         sleep(1.5)
 
-        request = self.sessions.get(self.citations_dataset_url, params=querystring)
-        try:
-            request.raise_for_status()
-            logger.debug(request.status_code)
-            self.docs = loads(request.text)["docs"]
+        if request.status_code == 200:
+            docs = loads(request.text)["docs"]
+            item = docs[0]
+            data = {key:item.get(value) for (key, value) in self.api_keys.items()}
+            logger.debug(data)
+            scrape = ScrapeResult(**data)
+            logger.debug(scrape)
+            return scrape
 
-        except (JSONDecodeError, HTTPError, KeyError) as parse_error:
-            logger.error(
-                f" \nAn error occurred while searching for {search_text}. \n"
-                f"Status Code: {request.status_code}  \n"
-                "Proceeding to next item in sequence.  \n"
-                f"Cause of error: {parse_error}.  \n"
-            )
+    def create_querystring(self, search_text: str):
+        self.querystring = {"or_subset_publication_citations": search_text} if self.query_subset_citations else {
+            "search_mode": "content",
+            "search_text": search_text,
+            "search_type": "kws",
+            "search_field": "doi" if search_text.startswith("10") else "text_search",
+            }
 
-        item = self.docs[0]
-        # if self.get_citation:
-        #    citation_getter = CitationGenerator(style="apa", doi=item.get("doi"))  # type: ignore
-        #    full_apa = citation_getter.get_citation()
-        full_apa = "N/A"
-
-        return ScrapeResult(
-            title=item.get("title"),
-            times_cited=item.get("times_cited"),
-            publisher=item.get("publisher"),
-            pub_date=item.get("pub_date"),
-            doi=item.get("doi"),
-            pub_id=item.get("id"),
-            abstract=item.get("abstract"),
-            journal_title=item.get("journal_title"),
-            volume=item.get("volume"),
-            issue=item.get("issue"),
-            cited_dimensions_ids=item.get("cited_dimensions_ids"),
-            author_list=item.get("author_list"),
-            mesh_terms=item.get("mesh_terms"),
-            full_apa=full_apa,
-        )

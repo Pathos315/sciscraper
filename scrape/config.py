@@ -14,18 +14,19 @@ from dataclasses import dataclass
 class ScrapeConfig:
     """A dataclass containing the overall configurations"""
 
+    prog: str
+    description: str
     export_dir: str
+    demo_dir: str
     log_dir: str
     prime_src: str
     citations_dataset_url: str
+    semantic_scholar_url_stub: str
     research_dir: str
     downloader_url: str
     test_src: str
-    tech_words: str
-    solution_words: str
     target_words: str
     bycatch_words: str
-    research_words: str
 
 
 def read_config(config_file: str) -> ScrapeConfig:
