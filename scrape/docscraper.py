@@ -27,11 +27,12 @@ class Wordscore:
     formatted_worscore: str = ""
 
     def calc_wordscore(self): #odds ratio
-        pos_odds = self.pos_part / self.pos_chances
-        neg_odds = self.neg_part / self.neg_chances
-        length_factor = 1 - (((self.pos_chances + self.neg_chances)/self.total_len) * 0.75)
+        weight: float = 0.75
+        pos_odds: float = self.pos_part / self.pos_chances
+        neg_odds: float = self.neg_part / self.neg_chances
+        length_factor: float = 1 - (((self.pos_chances + self.neg_chances)/self.total_len) * weight)
         try:
-            raw_wordscore = pos_odds / (pos_odds + neg_odds)
+            raw_wordscore: float = pos_odds / (pos_odds + neg_odds)
             raw_wordscore = raw_wordscore * length_factor
         except ZeroDivisionError as zero_error:
             logger.debug(zero_error)
@@ -43,7 +44,6 @@ class DocumentResult:
     formatted_worscore: str
     target_freq: list = field(default_factory=list)
     bycatch_freq: list = field(default_factory=list)
-
 
 def match_terms(target: list[str], word_set:set[str]) -> FreqDistAndCount:
     matching_set = (word for word in target if word in word_set)
@@ -62,10 +62,6 @@ class DocScraper:
         """unpacks_txt_files takes a txt_file containing indended words.
         Args:
             txtfiles (str): filepath to the .txt file containing the words to analyze the document.
-            stemmed (bool): determines whether or not to stem the words,
-            so as to match all variations of them: plurals, adverbs, &c.
-            Defaults to False.
-
         Returns:
             set[str]: a set of words against which the text will be compared.
         """
@@ -79,7 +75,7 @@ class DocScraper:
         bycatch_size: int = len(self.bycatch_words)
         target_size: int = len(self.target_words)
         for tokens in tokgen:
-            logger.info(tokens)
+            logger.debug(tokens)
             total_len = len(tokens)
             target_set, bycatch_set = self.unpack_txt_files(self.target_words), self.unpack_txt_files(self.bycatch_words)
             target, bycatch = match_terms(tokens, target_set), match_terms(tokens, bycatch_set)

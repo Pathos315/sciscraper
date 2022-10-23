@@ -1,13 +1,9 @@
 from dataclasses import dataclass, field
+
+## Scraping Related Imports
+from requests import Session
 from json import loads
 from time import sleep
-
-import httpx
-import pandas as pd
-from bs4 import BeautifulSoup
-## Scraping Related Imports
-from requests import Session, get
-from requests.exceptions import HTTPError, RequestException
 
 from scrape.log import logger
 

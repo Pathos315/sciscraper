@@ -1,7 +1,7 @@
 from enum import Enum
 from time import perf_counter
 
-from scrape.config import ScrapeConfig, read_config
+from scrape.config import read_config
 from scrape.docscraper import DocScraper
 from scrape.fetch import SciScraper
 from scrape.jsonscraper import (DIMENSIONS_AI_KEYS, SEMANTIC_SCHOLAR_KEYS,
