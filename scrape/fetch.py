@@ -1,6 +1,7 @@
 r"""Contains methods that take various files, which each
 return varying dataframes or directories for each"""
 
+from functools import partial
 import logging
 from dataclasses import asdict, dataclass
 from typing import Any, Callable, Iterable
@@ -30,8 +31,7 @@ class SciScraper:
         logger.debug(data)
         data = list(map(asdict,data))
         logger.debug(data)
-        dataframe = pd.DataFrame(data)
-        return dataframe
+        return pd.DataFrame(data)
 
     def logging_level(self):
         return logger.setLevel(10) if self.verbose_logging else logger.setLevel(20)
