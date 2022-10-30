@@ -1,10 +1,9 @@
 r"""Downloads papers en masse
 """
-from contextlib import suppress
 from datetime import date
-from os import path, remove
+from os import remove
 from time import sleep
-from typing import Iterator
+from typing import Generator, Iterator
 
 from bs4 import BeautifulSoup
 from requests import Session
@@ -28,7 +27,7 @@ class BulkPDFScraper:
         self.research_dir = config.research_dir
         self.payload = {}
 
-    def scrape(self, search_text: str) -> Iterator[None]:
+    def scrape(self, search_text: str) -> Iterator | None:
         """download generates a session and a payload
         This gets posted as a search query to the website.
         The search should return a pdf.
@@ -44,18 +43,20 @@ class BulkPDFScraper:
         self.payload = {"request": search_text}
         with change_dir(self.research_dir):
             sleep(1)
-            with suppress(HTTPError, RequestException):
+            try: 
                 response = self.sessions.post(
-                    url=self.downloader_url, data=self.payload
+                    url=self.downloader_url, data=self.payload, verify=False
                 )
                 response.raise_for_status()
                 logger.info(response.status_code)
                 soup = BeautifulSoup(response.text, "lxml")
-                links: list[str] = [
-                    item["onclick"].split("=")[1].strip("'")  # type: ignore
+                links: Generator[str, None, None] = (str(item["onclick"]).split("=")[1].strip("'") # type: ignore
                     for item in soup.select("button[onclick^='location.href=']")
-                ]
-                yield from (self.enrich_scrape(search_text, link) for link in links)
+                    )
+                for link in links:
+                    return self.enrich_scrape(search_text, link)
+            except (HTTPError, RequestException) as err:
+                logger.error(err)
 
     def enrich_scrape(self, search_text: str, link: str) -> None:
         """enrich_scrape goes to, and downloads, the isolated download link.
@@ -66,14 +67,14 @@ class BulkPDFScraper:
         Args:
             search_text (str): the link to be followed.
         """
-        paper_url = f"{link}=true"
-        paper_title = f'{self.date}_{search_text.replace("/","")}.pdf'
+        paper_url:str = f"{link}=true"
+        paper_title: str = f'{self.date}_{search_text.replace("/","")}.pdf'
         sleep(1)
-        paper_content = (
-            self.sessions.get(paper_url, stream=True, allow_redirects=True)
+        paper_content: bytes = (
+            self.sessions.get(paper_url, stream=True, allow_redirects=True, verify=False)
         ).content
-        with open("temp_file.txt", "wb") as _tempfile:
-            _tempfile.write(paper_content)
+        with open("temp_file.txt", "wb") as tempfile:
+            tempfile.write(paper_content)
         with open(paper_title, "wb") as file:
             for line in open("temp_file.txt", "rb"):
                 file.write(line)
