@@ -1,14 +1,15 @@
 {
+    "prog": "sciscraper",
+    "description": "A bulk academic PDF extractor program, designed specifically for papers about behavioral science and design.",
     "export_dir": "PDN Scraper Exports",
+    "demo_dir": "sciscraper/demo_papers",
     "log_dir": "PDN Scraper Logs",
-    "prime_src": "../Downloads/[filename].csv",
+    "prime_src": "...",
     "citations_dataset_url": "https://app.dimensions.ai/discover/publication/results.json",
+    "semantic_scholar_url_stub": "https://api.semanticscholar.org/graph/v1/paper/{...}",
     "research_dir": "PDN Research Papers From Scrape",
     "downloader_url": "https://sci-hubtw.hkvisa.net/",
     "test_src": "./PDN Scraper Exports/220301_sciscraper_20.csv",
-    "tech_words": "./words/tech_words.txt",
-    "solution_words": "./words/solution_words.txt",
-    "target_words": "./words/target_words.txt",
-    "bycatch_words": "./words/bycatch_words.txt",
-    "research_words": "./words/research_words.txt"
+    "target_words": "sciscraper/words/target_words.txt",
+    "bycatch_words": "sciscraper/words/bycatch_words.txt"
 }

@@ -1,16 +1,12 @@
 import itertools
-import logging
 import re
 from collections import Counter
 from dataclasses import dataclass, field
-from typing import Callable, Generator
+from typing import Generator
+from scrape.log import logger
+from scrape.utils import UTF
 
 import pdfplumber
-
-UTF = "utf-8"
-logger = logging.getLogger("sciscraper")
-
-TextractStrategyFunction = Callable[[str],Generator[list[str],None,None]]
 
 @dataclass(frozen=True, order=True)
 class FreqDistAndCount:
@@ -46,9 +42,7 @@ class DocumentResult:
     bycatch_freq: list = field(default_factory=list)
 
 def match_terms(target: list[str], word_set:set[str]) -> FreqDistAndCount:
-    matching_set = (word for word in target if word in word_set)
-    words = Counter(matching_set)
-    matching_terms = words.most_common(3)
+    matching_terms = Counter((word for word in target if word in word_set)).most_common(3)
     term_count = sum(term[1] for term in matching_terms)
     return FreqDistAndCount(term_count,matching_terms)
 
@@ -102,9 +96,9 @@ class DocScraper:
             yield list(itertools.chain.from_iterable((draft)))
 
     def simple_text_clean(self, search_text: str) -> Generator[list[str],None,None]:
-        logger.info(search_text)
+        logger.debug(search_text)
         manuscripts = search_text.strip().lower()
-        logger.info(manuscripts)
+        logger.debug(manuscripts)
         draft = (manuscripts.split(" "))
-        logger.info(draft)
+        logger.debug(draft)
         yield draft

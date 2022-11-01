@@ -33,7 +33,7 @@ SEMANTIC_SCHOLAR_KEYS = {
     "keywords":"s2FieldsOfStudy"
 }
 
-@dataclass(frozen=True, order=True)
+@dataclass(slots=True, frozen=True, order=True)
 class ScrapeResult:
     title: str
     pub_date: str
@@ -46,7 +46,7 @@ class ScrapeResult:
     citations: list[str] = field(default_factory=list)
     keywords: list[str]|None = field(default_factory=list)
 
-@dataclass
+@dataclass(slots=True)
 class WebScraper:
     url: str
     query_subset_citations: bool = False

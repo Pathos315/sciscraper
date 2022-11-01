@@ -1,7 +1,6 @@
 r"""Contains methods that take various files, which each
 return varying dataframes or directories for each"""
 
-from functools import partial
 import logging
 from dataclasses import asdict, dataclass
 from typing import Any, Callable, Iterable
@@ -12,11 +11,11 @@ from tqdm import tqdm
 from scrape.config import ScrapeConfig
 from scrape.docscraper import DocScraper
 from scrape.jsonscraper import WebScraper
-from scrape.utils import logger
+from scrape.log import logger
 
 SerializationStrategyFunction = Callable[[str|pd.DataFrame],Iterable[Any]]
 
-@dataclass
+@dataclass(slots=True)
 class SciScraper:
     config: ScrapeConfig
     serializer: SerializationStrategyFunction
@@ -26,12 +25,14 @@ class SciScraper:
 
     def run(self, target: str|pd.DataFrame) -> pd.DataFrame:
         search_terms = self.serializer(target)
-        data = (self.scraper.scrape(term) for term in tqdm(search_terms))
+        data = (self.scraper.scrape(term) for term in tqdm(search_terms, desc="[sciscraper]: ", unit="papers"))
         data = (term for term in data if term != None)
         logger.debug(data)
         data = list(map(asdict,data))
         logger.debug(data)
-        return pd.DataFrame(data)
+        data = pd.DataFrame(data)
+        titles: pd.Series[str] = pd.Series(search_terms, name="titles")
+        return data.join(titles)
 
     def logging_level(self):
         return logger.setLevel(10) if self.verbose_logging else logger.setLevel(20)
