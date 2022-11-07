@@ -2,7 +2,7 @@ from functools import partial
 from scrape.serials import serialize_from_series, serialize_from_directory, serialize_from_csv
 from scrape.docscraper import DocScraper
 from scrape.jsonscraper import WebScraper, DIMENSIONS_AI_KEYS, SEMANTIC_SCHOLAR_KEYS
-from scrape.fetch import SciScraper
+from scrape.fetch import SciScraper, SciDownloader
 from scrape.config import read_config
 from scrape.bulkpdf import BulkPDFScraper
 from scrape.log import logger
@@ -26,13 +26,17 @@ SCRAPERS = {
 }
 
 SCISCRAPERS = {
-    "pdfs": SciScraper(config,serializer=SERIALIZERS["directory"],scraper=SCRAPERS["pdf"],verbose_logging=True),
-    "dimensions": SciScraper(config,serializer=SERIALIZERS["doi_csv"],scraper=SCRAPERS["dimensions"],verbose_logging=True),
-    "semantic": SciScraper(config,serializer=SERIALIZERS["doi_csv"],scraper=SCRAPERS["semantic"],verbose_logging=True),
-    "summarize": SciScraper(config,serializer=SERIALIZERS["abstracts"],scraper=SCRAPERS["summary"],verbose_logging=True),
+    "pdfs": SciScraper(config,serializer=SERIALIZERS["directory"],scraper=SCRAPERS["pdf"]),
+    "dimensions": SciScraper(config,serializer=SERIALIZERS["doi_csv"],scraper=SCRAPERS["dimensions"]),
+    "semantic": SciScraper(config,serializer=SERIALIZERS["doi_csv"],scraper=SCRAPERS["semantic"]),
+    "summarize": SciScraper(config,serializer=SERIALIZERS["abstracts"],scraper=SCRAPERS["summary"]),
 }
 
-def read_factory() -> SciScraper:
+SCIDOWNLOADER = {
+    "scihub": SciDownloader(config,serializer=SERIALIZERS["doi_csv"],scraper=SCRAPERS["scihub"]),
+}
+
+def read_factory(debug: bool = False) -> SciScraper:
     """Constructs an exporter factory based on the user's preference."""
 
     while True:
@@ -40,7 +44,30 @@ def read_factory() -> SciScraper:
             f"Enter desired data scraping process ({', '.join(SCISCRAPERS)}): "
         )
         try:
-            return SCISCRAPERS[scrape_process]
+            if debug:
+                SCISCRAPERS[scrape_process].toggle_logging_level()
+                logger.info(f"Debug logging active: '{SCISCRAPERS[scrape_process].verbose_logging}")
+                return SCISCRAPERS[scrape_process]
+            else:
+                logger.info(f"Debug logging active: '{SCISCRAPERS[scrape_process].verbose_logging}")
+                return SCISCRAPERS[scrape_process]
         except KeyError:
             logger.error(f"Unknown data scraping process option: {scrape_process}.")
 
+def read_downloader(debug: bool = False) -> SciDownloader:
+    """Constructs an exporter factory based on the user's preference."""
+
+    while True:
+        scrape_process = input(
+            f"Enter desired data scraping process ({', '.join(SCIDOWNLOADER)}): "
+        )
+        try:
+            if debug:
+                SCIDOWNLOADER[scrape_process].toggle_logging_level()
+                logger.info(f"Debug logging active: '{SCIDOWNLOADER[scrape_process].verbose_logging}")
+                return SCIDOWNLOADER[scrape_process]
+            else:
+                logger.info(f"Debug logging active: '{SCISCRAPERS[scrape_process].verbose_logging}")
+                return SCIDOWNLOADER[scrape_process]
+        except KeyError:
+            logger.error(f"Unknown data scraping process option: {scrape_process}.")

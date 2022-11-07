@@ -1,56 +1,41 @@
 # sciscraper
-A bulk academic PDF extractor program, designed specifically for papers about behavioral science and design.
+```sciscraper``` is a Python program that extracts data in bulk from academic papers. Currently, it may only be used inside a python script.
+Future updates will, hopefully, allow for usage in the command line.
 
-This module looks up bibliographic information from directories, csv files and pandas databases.
+## Latest stable version
+The latest stable version of ```sciscraper``` is **1.0**.
 
-From a .csv file input, you can get:
+## Description
+```sciscraper``` can take any of the following inputs:
+- A folder of pdfs
+- A csv, or pandas dataframe, of bibliographic information
 
-    - a folder of .pdf downloads (experimental).
-    
-    - a pandas dataframe
-    
-    - another .csv file
-    
-From a pandas dataframe file input, you can get:
+And return any of the following:
+- A rating of relevance, based on a corpus of keywords
+- Another csv or pandas dataframe, containing information on its citations or references
+- PDF downloads thereof, where possible
 
-    - a folder of .pdf downloads (experimental).
-    
-    - another pandas dataframe, but the citations of the input are each returned with their own citation information.
-    
-From a folder input, you can get:
-
-    - a pandas dataframe
-    
-    - a .csv file
-    
-
-# As Featured on ArjanCodes' Code Roast
+### As Featured on ArjanCodes' Code Roast
 
 PART ONE: -> https://youtu.be/MXM6VEtf8SE
 
 PART TWO: -> https://www.youtube.com/watch?v=6ac4Um2Vicg
 
-# Special Thanks
+### Special Thanks
 
 ArjanCodes
-
 Michele Cotrufo
-
 Nathan Lippi
-
 Jon Watson Rooney
-
 Colin Meret
-
 James Murphy (mCoding)
-
 Micael Jarniac
 
-# Maintainer
+### Maintainer
 John Fallot
 john.fallot@gmail.com
 
-# License
+### License
 [The MIT License](https://opensource.org/licenses/MIT)
-Copyright (c) 2021 
+Copyright (c) 2021-
 John Fallot

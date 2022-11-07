@@ -1,4 +1,4 @@
-import itertools
+from itertools import chain
 import re
 from collections import Counter
 from dataclasses import dataclass, field
@@ -8,12 +8,12 @@ from scrape.utils import UTF
 
 import pdfplumber
 
-@dataclass(frozen=True, order=True)
+@dataclass(slots=True, frozen=True, order=True)
 class FreqDistAndCount:
     term_count: int
     frequency_dist: list[tuple[str, int]] = field(default_factory=list)
 
-@dataclass(order=True)
+@dataclass(slots=True, order=True)
 class Wordscore:
     pos_part: float
     neg_part: float
@@ -23,10 +23,10 @@ class Wordscore:
     formatted_worscore: str = ""
 
     def calc_wordscore(self): #odds ratio
-        weight: float = 0.75
+        WEIGHT: float = 0.75
         pos_odds: float = self.pos_part / self.pos_chances
         neg_odds: float = self.neg_part / self.neg_chances
-        length_factor: float = 1 - (((self.pos_chances + self.neg_chances)/self.total_len) * weight)
+        length_factor: float = 1 - (((self.pos_chances + self.neg_chances)/self.total_len) * WEIGHT)
         try:
             raw_wordscore: float = pos_odds / (pos_odds + neg_odds)
             raw_wordscore = raw_wordscore * length_factor
@@ -35,7 +35,7 @@ class Wordscore:
             raw_wordscore = 0
         self.formatted_worscore = f"{raw_wordscore:.2%}"
 
-@dataclass(frozen=True, order=True)
+@dataclass(slots=True, frozen=True, order=True)
 class DocumentResult:
     formatted_worscore: str
     target_freq: list = field(default_factory=list)
@@ -46,7 +46,7 @@ def match_terms(target: list[str], word_set:set[str]) -> FreqDistAndCount:
     term_count = sum(term[1] for term in matching_terms)
     return FreqDistAndCount(term_count,matching_terms)
 
-@dataclass
+@dataclass(slots=True)
 class DocScraper:
     bycatch_words:str
     target_words:str
@@ -92,8 +92,8 @@ class DocScraper:
             preprints = (study_pages[page_number].extract_text(x_tolerance=1,y_tolerance=3) for page_number, _ in enumerate(pages_to_check))
             manuscripts = (preprint.strip().lower() for preprint in preprints)
             manuscripts = (re.sub(r"\W+", " ", manuscript) for manuscript in manuscripts)
-            draft = (manuscript.split(" ") for manuscript in manuscripts)
-            yield list(itertools.chain.from_iterable((draft)))
+            output_draft = (manuscript.split(" ") for manuscript in manuscripts)
+            yield list(chain.from_iterable((output_draft)))
 
     def simple_text_clean(self, search_text: str) -> Generator[list[str],None,None]:
         logger.debug(search_text)
