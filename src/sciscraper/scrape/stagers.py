@@ -1,0 +1,130 @@
+from ast import literal_eval
+import pandas as pd
+from sciscraper.scrape.log import logger
+from sciscraper.scrape.serials import clean_any_nested_columns
+
+
+def stage_from_series(target: pd.DataFrame, column: str = "abstract") -> list[str]:
+    """
+    stage_from_series reads a `column` of interest from a
+    dataframe `target`, which gets copied internally, and then
+    returns a list of entries. Unavailable entries are filled in with 'N/A'.
+
+    Parameters
+    ----------
+    target : pd.DataFrame
+        The dataframe to have a `column` isolated.
+
+    column : str
+        The column of interest to be isolated.
+
+    Returns
+    -------
+    list[str]
+        A list of entries from the provided column.
+
+    See Also
+    --------
+    `stage_with_reference` : Take two columns from a dataframe's return
+    two lists of entries as a tuple.
+
+    Example
+    -------
+        >>> df: pd.DataFrame
+                A     B                   C
+          'apple'    10     ['a', 'b', 'c']
+         'orange'    10          ['d', 'e']
+              NaN    10          ['f', 'g']
+        ...
+        >>> stage_from_series(df, 'A') =
+        ... ['apple','orange','N/A']
+    """
+
+    raw_terms: list[str] = target.copy()[column].fillna("N/A").to_list()
+    staged_terms = clean_any_nested_columns(raw_terms)
+    logger.debug("stager=%s, terms=%s", repr(stage_from_series), staged_terms)
+    return staged_terms
+
+
+def stage_with_reference(
+    target: pd.DataFrame,
+    column_x: str = "citations",
+    column_y: str = "title",
+) -> tuple[list[str], list[str]]:
+    """
+        stage_with_reference takes a dataframe `target`, transforms each
+        element of list-like data in `column_x` into a row
+        of its own, and replicates its index values into a new,
+        intermediary dataframe.
+
+        From that intermediary dataframe, it isolates the new row-wise
+        `column_x`, and also `column_y`, which serves as the initial
+        source titles to which the values in `column_x` were
+        initially lists of citations.
+
+        It returns them both as a tuple of lists of strings.
+
+        Parameters
+        ----------
+        target : pd.DataFrame
+            The initial dataframe to be expanded upon and referenced.
+        column_x : str
+            The column label containing the list-like data to be transformed.
+            Defaults to "citations".
+        column_y : str
+            The column label containing the titles of papers to be referenced,
+            to show relation. Defaults to "title".
+
+
+        Returns
+        -------
+        tuple : [list[str], list[str]]
+
+            A tuple of two lists of strings, containing rows from the
+            aforementioned columns.
+
+        See Also
+        --------
+        `stage_from_series` : Take a dataframe's column
+        and return a list of entries.
+
+        Example
+        -------
+            >>> target: pd.DataFrame
+                      A  B      C
+                'apple'  1     ['a', 'b', 'c']
+               'orange'  1     ['d', 'e']
+               'banana'  1     ['f', 'g']
+    ...
+            >>> stage_with_reference(df)
+            >>> df = target.explode('C')
+            >>> df
+                      A  B      C
+                'apple'  1     'a'
+                'apple'  1     'b'
+                'apple'  1     'c'
+               'orange'  1     'd'
+               'orange'  1     'e'
+               'banana'  1     'f'
+               'banana'  1     'g'
+    ...
+            >>> df['C'].to_list() =
+            ... ['a','b','c','d','e','f','g']
+            >>> df['A'].to_list() =
+            ... ['apple','apple','apple','orange','orange','banana','banana']
+            >>> stage_with_reference(df) =
+            ... (['a','b','c','d','e','f','g'],
+            ... ['apple','apple','apple','orange','orange','banana','banana']
+                )
+
+    """
+    data: pd.DataFrame = target.copy().explode(column_x)
+    data_col_x: list[str] = clean_any_nested_columns(
+        data[column_x].fillna("N/A").to_list()
+    )
+    data_col_y: list[str] = clean_any_nested_columns(
+        data[column_y].fillna("N/A").to_list()
+    )
+    staged_terms: tuple[list[str], list[str]] = (data_col_x, data_col_y)
+    logger.debug("stager=%s, terms=%s", repr(stage_with_reference), staged_terms)
+    return staged_terms

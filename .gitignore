@@ -1,0 +1,145 @@
+src/sciscraper/scrape/__pycache__/__init__.cpython-310.pyc
+src/sciscraper/scrape/__pycache__/bulkpdf.cpython-310.pyc
+src/sciscraper/scrape/__pycache__/change_dir.cpython-310.pyc
+src/sciscraper/scrape/__pycache__/config.cpython-310.pyc
+src/sciscraper/scrape/__pycache__/docscraper.cpython-310.pyc
+src/sciscraper/scrape/__pycache__/downloaders.cpython-310.pyc
+src/sciscraper/scrape/__pycache__/factories.cpython-310.pyc
+src/sciscraper/scrape/__pycache__/fetch.cpython-310.pyc
+src/sciscraper/scrape/__pycache__/jsonscraper.cpython-310.pyc
+src/sciscraper/scrape/__pycache__/log.cpython-310.pyc
+src/sciscraper/scrape/__pycache__/serials.cpython-310.pyc
+src/sciscraper/scrape/__pycache__/stagers.cpython-310.pyc
+src/sciscraper/scrape/__pycache__/utils.cpython-310.pyc
+src/sciscraper/scrape/__pycache__/webscrapers.cpython-310.pyc
+src/sciscraper/scrape/__pycache__/wordscore.cpython-310.pyc
+src/sciscraper/words/.DS_Store
+.vscode/launch.json
+.vscode/settings.json
+src/sciscraper/__pycache__/__init__.cpython-310.pyc
+src/sciscraper/__pycache__/main.cpython-310.pyc
+src/sciscraper/scrape/.DS_Store
+src/sciscraper/PDN Scraper Exports/.DS_Store
+src/sciscraper/PDN Scraper Exports/221130_sciscraper_TEST.csv
+src/sciscraper/PDN Scraper Exports/221203_8857da7aa6a609a63e6d266c73872db9_251.png
+src/sciscraper/PDN Scraper Exports/221203_368288604d79a9b3eeeb48c4bb228972_160.png
+src/sciscraper/PDN Scraper Exports/221203_dbe76251b3d5f7c7997f49557f7ab188_97.png
+src/sciscraper/PDN Scraper Exports/221206_10.11111467-6486.00386.pdf
+src/sciscraper/PDN Scraper Exports/221206_10.11771745691619855638.pdf
+src/sciscraper/PDN Scraper Exports/221206_8857da7aa6a609a63e6d266c73872db9_67.png
+src/sciscraper/PDN Scraper Exports/221206_368288604d79a9b3eeeb48c4bb228972_192.png
+src/sciscraper/PDN Scraper Exports/221206_dbe76251b3d5f7c7997f49557f7ab188_191.png
+src/sciscraper/PDN Scraper Exports/221206_sciscraper_6.csv
+src/sciscraper/PDN Scraper Exports/221206_sciscraper_17.csv
+src/sciscraper/PDN Scraper Exports/221206_sciscraper_18.csv
+src/sciscraper/PDN Scraper Exports/221206_sciscraper_20.csv
+src/sciscraper/PDN Scraper Exports/221206_sciscraper_26.csv
+src/sciscraper/PDN Scraper Exports/221206_sciscraper_42.csv
+src/sciscraper/PDN Scraper Exports/221206_sciscraper_56.csv
+src/sciscraper/PDN Scraper Exports/221206_sciscraper_61.csv
+src/sciscraper/PDN Scraper Exports/221206_sciscraper_64.csv
+src/sciscraper/PDN Scraper Exports/221206_sciscraper_73.csv
+src/sciscraper/PDN Scraper Exports/221206_sciscraper_83.csv
+src/sciscraper/PDN Scraper Exports/221206_sciscraper_92.csv
+src/sciscraper/PDN Scraper Exports/221207_10.11111467-6486.00386.pdf
+src/sciscraper/PDN Scraper Exports/221207_10.11771745691619855638.pdf
+src/sciscraper/PDN Scraper Exports/221207_8857da7aa6a609a63e6d266c73872db9_23.png
+src/sciscraper/PDN Scraper Exports/221207_8857da7aa6a609a63e6d266c73872db9_48.png
+src/sciscraper/PDN Scraper Exports/221207_8857da7aa6a609a63e6d266c73872db9_68.png
+src/sciscraper/PDN Scraper Exports/221207_8857da7aa6a609a63e6d266c73872db9_71.png
+src/sciscraper/PDN Scraper Exports/221207_8857da7aa6a609a63e6d266c73872db9_104.png
+src/sciscraper/PDN Scraper Exports/221207_8857da7aa6a609a63e6d266c73872db9_109.png
+src/sciscraper/PDN Scraper Exports/221207_8857da7aa6a609a63e6d266c73872db9_111.png
+src/sciscraper/PDN Scraper Exports/221207_8857da7aa6a609a63e6d266c73872db9_140.png
+src/sciscraper/PDN Scraper Exports/221207_8857da7aa6a609a63e6d266c73872db9_145.png
+src/sciscraper/PDN Scraper Exports/221207_8857da7aa6a609a63e6d266c73872db9_168.png
+src/sciscraper/PDN Scraper Exports/221207_368288604d79a9b3eeeb48c4bb228972_14.png
+src/sciscraper/PDN Scraper Exports/221207_368288604d79a9b3eeeb48c4bb228972_35.png
+src/sciscraper/PDN Scraper Exports/221207_368288604d79a9b3eeeb48c4bb228972_52.png
+src/sciscraper/PDN Scraper Exports/221207_368288604d79a9b3eeeb48c4bb228972_107.png
+src/sciscraper/PDN Scraper Exports/221207_368288604d79a9b3eeeb48c4bb228972_132.png
+src/sciscraper/PDN Scraper Exports/221207_368288604d79a9b3eeeb48c4bb228972_195.png
+src/sciscraper/PDN Scraper Exports/221207_368288604d79a9b3eeeb48c4bb228972_198.png
+src/sciscraper/PDN Scraper Exports/221207_368288604d79a9b3eeeb48c4bb228972_216.png
+src/sciscraper/PDN Scraper Exports/221207_368288604d79a9b3eeeb48c4bb228972_223.png
+src/sciscraper/PDN Scraper Exports/221207_368288604d79a9b3eeeb48c4bb228972_243.png
+src/sciscraper/PDN Scraper Exports/221207_dbe76251b3d5f7c7997f49557f7ab188_30.png
+src/sciscraper/PDN Scraper Exports/221207_dbe76251b3d5f7c7997f49557f7ab188_64.png
+src/sciscraper/PDN Scraper Exports/221207_dbe76251b3d5f7c7997f49557f7ab188_74.png
+src/sciscraper/PDN Scraper Exports/221207_dbe76251b3d5f7c7997f49557f7ab188_109.png
+src/sciscraper/PDN Scraper Exports/221207_dbe76251b3d5f7c7997f49557f7ab188_118.png
+src/sciscraper/PDN Scraper Exports/221207_dbe76251b3d5f7c7997f49557f7ab188_134.png
+src/sciscraper/PDN Scraper Exports/221207_dbe76251b3d5f7c7997f49557f7ab188_158.png
+src/sciscraper/PDN Scraper Exports/221207_dbe76251b3d5f7c7997f49557f7ab188_171.png
+src/sciscraper/PDN Scraper Exports/221207_dbe76251b3d5f7c7997f49557f7ab188_204.png
+src/sciscraper/PDN Scraper Exports/221207_dbe76251b3d5f7c7997f49557f7ab188_233.png
+src/sciscraper/PDN Scraper Exports/221207_sciscraper_12.csv
+src/sciscraper/PDN Scraper Exports/221207_sciscraper_19.csv
+src/sciscraper/PDN Scraper Exports/221207_sciscraper_24.csv
+src/sciscraper/PDN Scraper Exports/221207_sciscraper_31.csv
+src/sciscraper/PDN Scraper Exports/221207_sciscraper_39.csv
+src/sciscraper/PDN Scraper Exports/221207_sciscraper_53.csv
+src/sciscraper/PDN Scraper Exports/221207_sciscraper_55.csv
+src/sciscraper/PDN Scraper Exports/221207_sciscraper_58.csv
+src/sciscraper/PDN Scraper Exports/221207_sciscraper_67.csv
+src/sciscraper/PDN Scraper Exports/221207_sciscraper_77.csv
+src/sciscraper/PDN Scraper Exports/221207_sciscraper_86.csv
+src/sciscraper/PDN Scraper Exports/221207_sciscraper_87.csv
+src/sciscraper/PDN Scraper Exports/221207_sciscraper_91.csv
+src/sciscraper/PDN Scraper Exports/221207_sciscraper_100.csv
+src/sciscraper/PDN Scraper Exports/221213_sciscraper_2.csv
+src/sciscraper/PDN Scraper Exports/221213_sciscraper_39.csv
+src/sciscraper/PDN Scraper Exports/221213_sciscraper_55.csv
+src/sciscraper/PDN Scraper Exports/221213_sciscraper_59.csv
+src/sciscraper/PDN Scraper Exports/221218_sciscraper_15.csv
+src/sciscraper/PDN Scraper Exports/221218_sciscraper_50.csv
+src/sciscraper/PDN Scraper Exports/221218_sciscraper_68.csv
+src/sciscraper/PDN Scraper Exports/sciscraper/PDN Scraper Exports/221207_8857da7aa6a609a63e6d266c73872db9_48.png
+src/sciscraper/PDN Scraper Exports/sciscraper/PDN Scraper Exports/221207_8857da7aa6a609a63e6d266c73872db9_110.png
+src/sciscraper/PDN Scraper Exports/sciscraper/PDN Scraper Exports/221207_368288604d79a9b3eeeb48c4bb228972_63.png
+src/sciscraper/PDN Scraper Exports/sciscraper/PDN Scraper Exports/221207_368288604d79a9b3eeeb48c4bb228972_123.png
+src/sciscraper/PDN Scraper Exports/sciscraper/PDN Scraper Exports/221207_dbe76251b3d5f7c7997f49557f7ab188_22.png
+src/sciscraper/PDN Scraper Exports/sciscraper/PDN Scraper Exports/221207_dbe76251b3d5f7c7997f49557f7ab188_235.png
+src/sciscraper/py.typed
+src/sciscraper.egg-info/dependency_links.txt
+src/sciscraper.egg-info/not-zip-safe
+src/sciscraper.egg-info/PKG-INFO
+src/sciscraper.egg-info/requires.txt
+src/sciscraper.egg-info/SOURCES.txt
+src/sciscraper.egg-info/top_level.txt
+tests/__pycache__/__init__.cpython-39.pyc
+tests/__pycache__/__init__.cpython-310.pyc
+tests/__pycache__/test_docscraper.cpython-39-pytest-7.2.0.pyc
+tests/__pycache__/test_docscraper.cpython-310-pytest-7.2.0.pyc
+tests/__pycache__/test_downloaders.cpython-39-pytest-7.2.0.pyc
+tests/__pycache__/test_downloaders.cpython-310-pytest-7.2.0.pyc
+tests/__pycache__/test_downloads.cpython-310-pytest-7.2.0.pyc
+tests/__pycache__/test_fetch.cpython-39-pytest-7.2.0.pyc
+tests/__pycache__/test_fetch.cpython-310-pytest-7.2.0.pyc
+tests/__pycache__/test_sciscrape.cpython-310-pytest-7.2.0.pyc
+tests/__pycache__/test_serialize_from_csv.cpython-310-pytest-7.2.0.pyc
+tests/__pycache__/test_serialize_from_directory.cpython-310-pytest-7.2.0.pyc
+tests/__pycache__/test_serializers.cpython-39-pytest-7.2.0.pyc
+tests/__pycache__/test_serializers.cpython-310-pytest-7.2.0.pyc
+tests/__pycache__/test_user_agent_cycler.cpython-310-pytest-7.2.0.pyc
+tests/__pycache__/test_webscrapers.cpython-39-pytest-7.2.0.pyc
+tests/__pycache__/test_webscrapers.cpython-310-pytest-7.2.0.pyc
+tests/__pycache__/test_wordscore.cpython-39-pytest-7.2.0.pyc
+tests/__pycache__/test_wordscore.cpython-310-pytest-7.2.0.pyc
+.DS_Store
+src/sciscraper/sciscrape_profiling.prof
+.tox/flake8/.tox-info.json
+.tox/mypy/.tox-info.json
+.tox/py37/.tox-info.json
+tests/__init__.py
+tests/test_docscraper.py
+tests/test_downloaders.py
+tests/test_fetch.py
+tests/test_serializers.py
+tests/test_webscrapers.py
+tests/test_wordscore.py
+tests/test_dirs/test_csv_1.csv
+tests/test_dirs/test_example_1.txt
+tests/test_dirs/test_example_2.txt
+tests/test_dirs/test_pdf_1.pdf
+.coverage
