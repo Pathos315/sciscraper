@@ -5,7 +5,7 @@ import requests
 from requests import Response
 from sciscrape.docscraper import DocScraper
 from sciscrape.wordscore import RelevanceCalculator
-from sciscrape.config import config, HOME
+from sciscrape.config import config
 from sciscrape.downloaders import (
     BulkPDFScraper,
     ImagesDownloader,
@@ -21,7 +21,7 @@ from unittest import mock
 # File Path Fixtures
 @pytest.fixture()
 def mock_dirs():
-    return HOME / "sciscraper/tests/test_dirs"
+    return "tests/test_dirs"
 
 
 @pytest.fixture()
@@ -106,6 +106,7 @@ def wordscore_calc():
         pos_chances=256,
         neg_chances=256,
         total_len=2048,
+        implicature_score=0.5,
     )
 
 
@@ -117,6 +118,7 @@ def wordscore_dict() -> dict[str, float | int]:
         "pos_chances": 256,
         "neg_chances": 256,
         "total_len": 2048,
+        "implicature_score": 0.5,
     }
 
 
