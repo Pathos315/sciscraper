@@ -4,26 +4,25 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sciscraper"
-version = "1.0.0"
+version = "0.5.0"
 authors = [
     { name="John Fallot", email="john.fallot@gmail.com" },
 ]
 description = " A bulk academic PDF extractor program, designed specifically for papers about behavioral science and design."
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 classifiers = [
-    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10"
 ]
 
 [tool.pytest.ini_options]
-addopts = "--cov=sciscraper --cov-report term-missing -vv"
+addopts = "--cov=src --cov-report term-missing -v"
 testpaths = [
     "test",
 ]
 
 [tool.mypy]
 mypy_path = "src"
-platform = "darwin"
 enable_error_code = [
     "truthy-bool",
     "truthy-function",
