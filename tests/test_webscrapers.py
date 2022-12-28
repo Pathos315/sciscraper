@@ -8,7 +8,6 @@ from sciscrape.webscrapers import (
     DimensionsScraper,
     CitationScraper,
     OverviewScraper,
-    TLDRScraper,
     WebScrapeResult,
     SemanticFigureScraper,
 )
@@ -238,37 +237,3 @@ def test_get_invalid_paper_id():
 def test_get_null_paper_id():
     with pytest.raises(KeyError):
         assert SemanticFigureScraper(url="").get_paper_id("{}") == None
-
-
-def test_navigate_api_valid_input():
-    # Test valid input
-    docs = [{"generated_text": "This is a test."}]
-    # TODO: Review values in assert statement
-    assert TLDRScraper("").navigate_api(docs) == "This is a test."
-
-    # Test the case where the API returns a list of lists of lists
-
-
-def test_navigate_api_specific_inputs():
-    # Test for input with no "generated_text"
-    with pytest.raises(TypeError):
-        docs = [{"foo": "bar"}]
-        TLDRScraper().navigate_api(docs) == "N/A"  # type: ignore
-
-
-def test_navigate_api_missing_input():
-    # Test without input
-    docs = [{"generated_text": "This is a test"}]
-    tldr = TLDRScraper(
-        url="https://api-inference.huggingface.co/models/lrakotoson/scitldr-catts-xsum-ao",
-        sleep_val=0.2,
-    ).navigate_api(docs)
-    # TODO: Review values in assert statement
-    assert tldr == "This is a test"
-
-
-def test_navigate_api_NaN_input():
-    # Test NaN input
-    docs = [{"generated_text": "N/A"}]
-    # TODO: Review values in assert statement
-    assert TLDRScraper("").navigate_api(docs) == "N/A"

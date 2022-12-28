@@ -25,13 +25,13 @@ def mock_dirs():
 
 
 @pytest.fixture()
-def mock_csv(mock_dirs):
-    return mock_dirs / "test_example_file_1.csv"
+def mock_csv():
+    return "tests/test_dirs/test_example_file_1.csv"
 
 
 @pytest.fixture()
-def mock_txt(mock_dirs):
-    return mock_dirs / "test_file.txt"
+def mock_txt():
+    return "tests/test_dirs/test_file.txt"
 
 
 @pytest.fixture(scope="function")

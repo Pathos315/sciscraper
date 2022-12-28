@@ -320,9 +320,7 @@ class SemanticFigureScraper(WebScraper):
         a server's response to an HTTP response."""
 
         try:
-            return self.get_singular_item_from_response(
-                response_text, "results", "paperId"
-            )
+            return self.get_singular_item_from_response(response_text, "results", "id")
         except IndexError as e:
             logger.error(
                 "The following error occurred in %s while getting paper ID info: %s. \
