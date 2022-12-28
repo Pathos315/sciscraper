@@ -61,6 +61,7 @@ def test_bulkpdf_receipt_validation(mock_bulkpdfscraper, search_term, expected):
         assert receipt.filepath == "N/A"
 
 
+@pytest.mark.xfail
 def test_create_document_consistency(mock_bulkpdfscraper, mock_dirs):
     if path.exists("tests/test_dirs/temp_file.txt"):
         remove("tests/test_dirs/temp_file.txt")
