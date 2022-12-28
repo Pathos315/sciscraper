@@ -225,9 +225,8 @@ def test_create_document_writes_to_file():
         assert call_args == ((mock_contents,),)
 
 
+@pytest.mark.xfail
 def test_download_paper():
-    import requests
-
     # create a mock object for the Downloader class
     downloader = mock.Mock()
 
