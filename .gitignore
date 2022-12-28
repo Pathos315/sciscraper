@@ -1,11 +1,6 @@
 .env
 .logs/profiling/sciscrape_profiling.prof
 .coverage
-.tox/.tmp/package/1/sciscraper-0.5.0.tar.gz
-.tox/.tmp/package/2/sciscraper-0.5.0.tar.gz
-.tox/.tmp/package/3/sciscraper-0.5.0.tar.gz
-.tox/.tmp/package/4/sciscraper-0.5.0.tar.gz
-.tox/.tmp/package/57/sciscraper-0.5.0.tar.gz
 .venv/__init__.py
 .venv/bin/activate
 .venv/bin/activate.csh
