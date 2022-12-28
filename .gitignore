@@ -1,5 +1,5 @@
 .env
-.logs/profiling/sciscrape_profiling.prof
+.logs/**
 .tox/**
 .coverage
 .venv/**
