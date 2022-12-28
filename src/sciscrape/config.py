@@ -9,10 +9,9 @@ Returns
 import json
 from datetime import date
 from dataclasses import dataclass, field
-from typing import Optional, Union
+from typing import Union
 from pathlib import Path
 from dotenv import load_dotenv
-from os import getenv
 
 FilePath = Union[str, Path]
 UTF = "utf-8"
@@ -104,7 +103,4 @@ def read_config(config_file: str) -> ScrapeConfig:
         return ScrapeConfig(**data)
 
 
-HOME: Path = Path.home()
-CONFIG = "sciscraper/src/config_setup.json"
-
-config: ScrapeConfig = read_config(f"{HOME}/{CONFIG}")
+config: ScrapeConfig = read_config("src/config_setup.json")
