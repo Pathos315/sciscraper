@@ -3,7 +3,6 @@ from os import getenv
 
 from itertools import chain
 from json import loads
-import numpy as np
 import pdfplumber
 import re
 from collections import Counter

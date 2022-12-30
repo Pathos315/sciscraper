@@ -8,7 +8,7 @@ from subprocess import Popen
 from sciscrape.config import config
 from sciscrape.fetch import SciScraper
 
-from memory_profiler import profile
+# from memory_profiler import profile
 
 
 def run_benchmark(args, sciscrape: SciScraper) -> None:
@@ -40,12 +40,10 @@ def run_benchmark(args, sciscrape: SciScraper) -> None:
     Popen([sys.executable, "-m", "snakeviz", config.profiling_path])
 
 
-@profile(precision=4)
-def run_memory_profiler(args, sciscrape: SciScraper) -> None:
-    sciscrape(args.file, args.export, args.debug)
+# @profile(precision=4)
+# def run_memory_profiler(args, sciscrape: SciScraper) -> None:
+#    sciscrape(args.file, args.export, args.debug)
 
 
-"""
-TODO: def run_disassembler(args, sciscrape: SciScraper) -> None:
-    dis.dis(sciscrape(args.file, args.export, args.debug))
-"""
+# def run_disassembler(args, sciscrape: SciScraper) -> None:
+#    dis.dis(sciscrape(args.file, args.export, args.debug))

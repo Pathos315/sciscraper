@@ -1,7 +1,5 @@
 from dataclasses import dataclass, asdict
-from math import comb
 import numpy as np
-from sciscrape.log import logger
 
 
 @dataclass(slots=True, order=True)
