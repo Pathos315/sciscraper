@@ -178,7 +178,8 @@ class SciScraper:
         """
 
         # Convert "pub_date" column to datetime data type
-        df["pub_date"] = cls.downcast_available_datetimes(df)
+        if "pub_date" in df:
+            df["pub_date"] = cls.downcast_available_datetimes(df)
 
         # Convert columns in KEY_TYPE_PAIRINGS dictionary to specified data types
         for scikey, value in KEY_TYPE_PAIRINGS.items():
