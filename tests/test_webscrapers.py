@@ -49,13 +49,6 @@ def test_scraper_result_creation(result_data):
     assert scrape_result.to_dict() == result_data
 
 
-def test_semantic_querystring_creation():
-    output = SemanticFigureScraper(config.semantic_scholar_url_stub).create_querystring(
-        "testing"
-    )
-    assert isinstance(output, dict)
-
-
 def test_citation_querystring_creation():
     citation_scraper = CitationScraper(config.citation_crosscite_url)
     output = citation_scraper.create_querystring("testing")
@@ -168,27 +161,10 @@ def test_obtain_summary_text_not_found():
     assert scraper.obtain("asdf") is None
 
 
-@pytest.mark.xfail
-def test_get_semantic_images():
-    # Test valid paper ID
-    # TODO: Review values in assert statement
-    assert SemanticFigureScraper(url="").get_semantic_images("a9b8c7d6e5f4g3h2i1j0")
-
-
 def test_parse_html_tree_invalid_resp():
     # Test invalid response
     # TODO: Review values in assert statement
     assert SemanticFigureScraper(url="").parse_html_tree("") == None
-
-
-def test_get_paper_id_valid():
-    response = requests.Response()
-    response.status_code = 200
-    response._content = b'{"results":[{"id":"12345"}]}'
-    assert (
-        SemanticFigureScraper.get_paper_id(SemanticFigureScraper(url=""), response.text)
-        == "12345"
-    )
 
 
 def test_valid_figure_obtain():
@@ -227,13 +203,3 @@ def test_missing_extra_variables():
     getter = OverviewScraper(config.abstract_getting_url)
     query = "internal_id"
     assert scraper.get_extra_variables(data, query, getter) is None
-
-
-def test_get_invalid_paper_id():
-    response_text = '{"results": []}'
-    assert SemanticFigureScraper(url="").get_paper_id(response_text) is None
-
-
-def test_get_null_paper_id():
-    with pytest.raises(KeyError):
-        assert SemanticFigureScraper(url="").get_paper_id("{}") == None

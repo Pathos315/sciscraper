@@ -103,8 +103,6 @@ def wordscore_calc():
     return RelevanceCalculator(
         pos_part=64,
         neg_part=32,
-        pos_chances=256,
-        neg_chances=256,
         total_len=2048,
         implicature_score=0.5,
     )
@@ -115,10 +113,7 @@ def wordscore_dict() -> dict[str, float | int]:
     return {
         "pos_part": float(10),
         "neg_part": float(10),
-        "pos_chances": 256,
-        "neg_chances": 256,
         "total_len": 2048,
-        "implicature_score": 0.5,
     }
 
 
