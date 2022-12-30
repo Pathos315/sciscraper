@@ -1,3 +1,6 @@
+
+![sciscraper](https://github.com/Pathos315/sciscraper/actions/workflows/tests.yaml/badge.svg)
+
 # sciscraper
 ```sciscraper``` is a Python program that extracts data in bulk from academic papers. Currently, it may only be used inside a python script.
 Future updates will, hopefully, allow for usage in the command line.
