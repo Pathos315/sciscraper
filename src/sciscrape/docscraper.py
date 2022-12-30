@@ -50,8 +50,7 @@ class DocumentResult:
     """
 
     summary: str
-    relevance_score: list[tuple[str, float]]
-    implicature_score: float
+    relevance_scores: list[tuple[str, float]]
     wordscore: float
     target_freq: list[tuple[str, int]] = field(default_factory=list)
     bycatch_freq: list[tuple[str, int]] = field(default_factory=list)
@@ -187,8 +186,6 @@ class DocScraper:
         wordcalc = RelevanceCalculator(
             target.term_count,
             bycatch.term_count,
-            len(bycatch_set),
-            len(target_set),
             len(token_list),
             implicature_score,
         )
@@ -197,7 +194,6 @@ class DocScraper:
         doc = DocumentResult(
             summary,
             relevance_scores,
-            implicature_score,
             wordcalc(),
             target.frequency_dist,
             bycatch.frequency_dist,
@@ -388,7 +384,7 @@ class ZeroShotClassifier(WebScraper):
         labels: list[str] = raw_relevance["labels"]
         labels = [str.title(label) for label in labels]
         scores: list[float] = raw_relevance["scores"]
-        implicature_score = float(np.mean(scores))
+        implicature_score = scores[0]
         relevance_scores = list(zip(labels, scores))
 
         logger.debug(f"\n{labels}\n{scores}\n=>{relevance_scores}")

@@ -4,7 +4,7 @@
     "source_file": "exports/221222_TEST.csv",
     "source_dir": "./src/sciscraper/demo_papers",
     "dimensions_ai_dataset_url": "https://app.dimensions.ai/discover/publication/results.json",
-    "semantic_scholar_url_stub": "https://www.semanticscholar.org/api/1/search",
+    "semantic_scholar_url_stub": "https://api.semanticscholar.org/graph/v1/paper/search?query=",
     "citation_crosscite_url": "https://citation.crosscite.org/format",
     "abstract_getting_url": "https://app.dimensions.ai/details/sources/publication",
     "sci_tldr_url": "https://api-inference.huggingface.co/models/lrakotoson/scitldr-catts-xsum-ao",
