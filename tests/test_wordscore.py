@@ -11,15 +11,6 @@ from sciscrape.wordscore import RelevanceCalculator
 """
 
 
-def test_calc_odds(wordscore_calc):
-    odds_list = [
-        wordscore_calc.calc_odds(wordscore_calc.pos_part, wordscore_calc.neg_part)
-        for _ in range(255)
-    ]
-    assert all(isinstance(odds, float) for odds in odds_list)
-    del odds_list
-
-
 def test_wordscore_div_zero_raw_score():
     with pytest.raises(ZeroDivisionError):
         return 0 / (0 + 0)
@@ -28,8 +19,3 @@ def test_wordscore_div_zero_raw_score():
 def test_wordscore_creation(wordscore_dict):
     wordscore_b = RelevanceCalculator.from_dict(wordscore_dict)
     assert wordscore_b.to_dict() == wordscore_dict
-
-
-def test_zero_division_final_score(wordscore_calc):
-    with pytest.raises(ZeroDivisionError):
-        wordscore_calc(0, 0, 0)

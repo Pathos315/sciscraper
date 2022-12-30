@@ -114,6 +114,7 @@ def wordscore_dict() -> dict[str, float | int]:
         "pos_part": float(10),
         "neg_part": float(10),
         "total_len": 2048,
+        "implicature_score": 0.5,
     }
 
 

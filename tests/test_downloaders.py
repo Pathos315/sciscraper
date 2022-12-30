@@ -148,7 +148,6 @@ def test_img_downloader_etag(img_downloader, etag, extension):
     assert extension in filename
 
 
-@pytest.mark.xfail
 def test_get_response(mock_response):
     downloader = BulkPDFScraper(url="https://httpstat.us/200")
     output = downloader.obtain(mock_response.text)

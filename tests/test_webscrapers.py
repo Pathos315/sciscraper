@@ -43,7 +43,6 @@ def test_scraper_inequality_with_diff_urls():
     assert scraper_1 != scraper_2
 
 
-@pytest.mark.xfail
 def test_scraper_result_creation(result_data):
     scrape_result = WebScrapeResult.from_dict(result_data)
     assert scrape_result.to_dict() == result_data
@@ -74,7 +73,6 @@ def test_obtain_search_data(scraper):
     )
 
 
-@pytest.mark.xfail
 def test_obtain_returns_none(faulty_scraper):
     input_query = "10.1103/physrevlett.124.048301"
     output = faulty_scraper.obtain(input_query)
@@ -108,13 +106,6 @@ def test_get_extra_variables_key_error(scraper):
 def test_image_getter_sha(image_scraper):
     with pytest.raises(json.decoder.JSONDecodeError):
         image_scraper.obtain("test")
-
-
-@pytest.mark.xfail
-def test_image_getter_faulty_sha(faulty_image_scraper):
-    output = faulty_image_scraper.obtain("test")
-    assert output == None
-    assert faulty_image_scraper.get_semantic_images("test") == None
 
 
 @pytest.mark.parametrize(
@@ -165,13 +156,6 @@ def test_parse_html_tree_invalid_resp():
     # Test invalid response
     # TODO: Review values in assert statement
     assert SemanticFigureScraper(url="").parse_html_tree("") == None
-
-
-def test_valid_figure_obtain():
-    response = requests.Response()
-    response.status_code = 200
-    response._content = b'{"results":[{"id":"12345"}]}'
-    assert SemanticFigureScraper(url="https://httpstatus.io/").obtain("") == None
 
 
 def test_invalid_figure_obtain():
