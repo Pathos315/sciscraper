@@ -6,7 +6,6 @@ By John Fallot <john.fallot@gmail.com>
 import argparse
 from typing import Optional, Sequence
 from time import perf_counter
-from dotenv import load_dotenv
 
 from sciscrape.log import logger
 from sciscrape.factories import read_factory
@@ -26,14 +25,12 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     ---------
     argv:
     A sequence of strings representing the command line arguments. If not provided, the default value is
-        `None`, in which case the `argv` list is constructed from `sys.argv`.
+    `None`, in which case the `argv` list is constructed from `sys.argv`.
 
     Returns
     -------
     None
     """
-
-    load_dotenv()
 
     parser = argparse.ArgumentParser(
         prog=config.prog,

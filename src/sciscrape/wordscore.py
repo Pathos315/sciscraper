@@ -5,7 +5,11 @@ import numpy as np
 @dataclass(slots=True, order=True)
 class RelevanceCalculator:
     """
-    RelevanceCalculator contains all the variables necessary to calculate the `wordscore` of a paper or abstract.
+    A class for calculating the relevance of a paper or abstract based on its target and bycatch words.
+
+    This class contains attributes and methods for calculating the wordscore of a paper or abstract
+    based on the number of times target and bycatch words appear in it, its length,
+    and a prior zero-shot classification score.
 
     Attributes
     ----------
@@ -13,12 +17,10 @@ class RelevanceCalculator:
         The number of times a target word appeared in the paper or abstract.
     neg_part : float
         The number of times a bycatch word appeared in the paper or abstract.
-    pos_changes : int
-        The total number of target words from the set.
-    neg_chances : int
-        The total number of bycatch words from the set.
     total_len : int
         The total number of words in the paper or abstract.
+    implicature_score : float
+        The highest score from a prior `DocScraper` zero-shot classification.
 
     Methods
     -------
@@ -38,6 +40,27 @@ class RelevanceCalculator:
         -------
         float
             The probability that the paper is relevant, as a percentage.
+
+        Example
+        -------
+        >>> calculator = RelevanceCalculator(
+                pos_part=2,
+                neg_part=1,
+                total_len=100,
+                implicature_score=0.9
+                )
+        >>> raw_score = (2 + 1) / (2 + 0.95 + 1)
+        ... = 3 / 3.95
+        ... = 0.76
+        >>> bycatch_coefficient
+        ... = (1 + 1) / (1 + (2 - 0.95))
+        ... = 2 / 1 + 1.05
+        ... = 2 / 2.05
+        ... = 0.97
+        >>> weight = 0.9 * 0.97
+        ... = 0.873
+        >>> wordscore = (0.76 + 0.87) / 2
+        ... return 0.815 # or 81.5%
         """
         s: float = 0.95
         raw_score = (self.pos_part + 1) / (self.pos_part + s + 1)
