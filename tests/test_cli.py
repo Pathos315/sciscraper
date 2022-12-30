@@ -35,17 +35,6 @@ def mock_stats():
     return stats
 
 
-def test_run_benchmark_calls_sciscrape_with_correct_arguments(mock_sciscrape):
-    # Set up mock objects
-    mock_args = Mock(file="test.txt", export="csv", debug=True)
-
-    # Call the function with the mock objects
-    run_benchmark(mock_args, mock_sciscrape)
-
-    # Assert that the mock function was called with the correct arguments
-    mock_sciscrape.assert_called_once_with("test.txt", "csv", True)
-
-
 @pytest.mark.xfail
 def test_main_parses_command_line_arguments():
     # Set up mock objects
