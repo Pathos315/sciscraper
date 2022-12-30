@@ -278,91 +278,14 @@ class SemanticFigureScraper(WebScraper):
     from the paper in question.
     """
 
-    def create_querystring(self, search_text: str) -> dict[str, Any]:
-        return {
-            "queryString": search_text,
-            "page": 1,
-            "pageSize": 10,
-            "sort": "relevance",
-            "authors": [],
-            "coAuthors": [],
-            "venues": [],
-            "yearFilter": None,
-            "requireViewablePdf": False,
-            "externalContentTypes": [],
-            "fieldsOfStudy": [],
-            "useFallbackRankerService": False,
-            "useFallbackSearchCluster": False,
-            "hydrateWithDdb": True,
-            "includeTldrs": True,
-            "performTitleMatch": True,
-            "includeBadges": True,
-            "tldrModelVersion": "v2.0.0",
-            "getQuerySuggestions": False,
-            "useS2FosFields": True,
-        }
-
     def obtain(self, search_text: str) -> Optional[list[Optional[str]]]:
-        querystring = self.create_querystring(search_text)
-        response: Response = client.post(self.url, json=querystring)
-        logger.debug(
-            "search_text=%s, scraper=%s, status_code=%s",
-            search_text,
-            repr(self),
-            response.status_code,
-        )
-        sha = None if response.status_code != 200 else self.get_paper_id(response.text)
-        return self.get_semantic_images(sha) if sha else None
-
-    def get_paper_id(self, response_text: str) -> Optional[Any]:
-        """
-        Gets the SemanticScholar Paper ID by using
-        a server's response to an HTTP response."""
-
-        try:
-            return self.get_singular_item_from_response(response_text, "results", "id")
-        except IndexError as e:
-            logger.error(
-                "The following error occurred in %s while getting paper ID info: %s. \
-                No figures found for this entry.",
-                repr(self.get_paper_id),
-                e,
-            )
+        paper_url = self.find_paper_url(search_text)
+        if paper_url is None:
             return None
-
-    def get_semantic_images(
-        self, semantic_scholar_id: str
-    ) -> Optional[list[Optional[str]]]:
-        """
-        get_semantic_images takes a previously acquired SemanticScholar
-        Paper ID, passes that into a `revised_url`,
-        requests the webpage for the paper in question,
-        and then scrapes that webpage for graphs and figures from that paper
-        using Selectolax.
-
-        Parameters
-        ---------
-        semantic_scholar_id : str
-            A SemanticScholar Paper ID, which can be used
-            to access the semanticscholar.org webpage
-            for the paper, if possible.
-
-        Returns
-        ------
-        Optional[list[str]] :
-            A list of links to figures and images related
-            to the requested paper. Otherwise, returns None.
-        """
-
-        revised_url: str = (
-            f"https://www.semanticscholar.org/paper/{semantic_scholar_id}"
-        )
-        response: Response = client.get(revised_url)
+        response: Response = client.get(paper_url)
         logger.debug(
-            "sha=%s,\
-            scraper=%s,\
-            status_code=%s",
-            semantic_scholar_id,
+            "paper_url=%s, scraper=%s, status_code=%s",
+            paper_url,
             repr(self),
             response.status_code,
         )
@@ -370,14 +293,28 @@ class SemanticFigureScraper(WebScraper):
             None if response.status_code != 200 else self.parse_html_tree(response.text)
         )
 
-    def parse_html_tree(self, response_text: str):
+    def find_paper_url(self, search_text: str) -> Optional[str]:
+        title = search_text.replace(" ", "+")
+        logger.debug(f"\n{title}\n")
+        paper_searching_url = f"{self.url}{title}&fields=url&limit=1"
+        logger.debug(f"\n{paper_searching_url}\n")
+        paper_searching_response: Response = client.get(paper_searching_url)
+        logger.debug(f"\n{paper_searching_response}\n")
+        paper_info: dict[str, Any] = loads(paper_searching_response.text)
+        logger.debug(f"\n{paper_info}\n")
+        try:
+            paper_url: Optional[str] = paper_info["data"][0]["url"]
+            logger.debug(f"\n{paper_url}\n")
+        except IndexError as e:
+            logger.debug(
+                "error=%s, action_undertaken=%s",
+                e,
+                "Returning None",
+            )
+            paper_url = None
+        return paper_url
+
+    def parse_html_tree(self, response_text: str) -> Optional[list[Any]]:
         tree: HTMLParser = HTMLParser(response_text)
         images: list[Any] = tree.css("li.figure-list__figure > a > figure > div > img")
         return [image.attributes.get("src") for image in images] if images else None
-
-
-# from numpy import (
-#    float16 as np_float16,
-#    array as np_array,
-#    mean as np_mean,
-# )
