@@ -63,7 +63,8 @@ class RelevanceCalculator:
         ... return 0.815 # or 81.5%
         """
         s: float = 0.95
-        raw_score = (self.pos_part + 1) / (self.pos_part + s + 1)
+        probability = self.pos_part - self.neg_part / self.total_len * 100
+        raw_score = (probability + 1) / (probability + s + 1)
         bycatch_coefficient = (self.neg_part + 1) / (self.neg_part + (2 - s))
         weight = self.implicature_score * bycatch_coefficient
         return np.mean([raw_score, weight], dtype=float)

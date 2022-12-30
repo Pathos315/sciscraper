@@ -43,7 +43,6 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         metavar="FILE",
         type=str,
         default=config.source_file,
-        required=True,
         help="Specify the target file: default: %(default)s)",
     )
     parser.add_argument(
