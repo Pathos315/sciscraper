@@ -9,3 +9,4 @@
 exports/**
 .vscode/**
 **/lib/**
+.DS_Store
