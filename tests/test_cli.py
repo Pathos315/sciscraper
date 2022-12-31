@@ -1,5 +1,3 @@
-import argparse
-import pstats
 import pytest
 from src.main import main
 from unittest.mock import Mock, patch, MagicMock

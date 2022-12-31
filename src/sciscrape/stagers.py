@@ -59,8 +59,10 @@ def stage_with_reference(
 
         Parameters:
             target(pd.DataFrame): The initial dataframe to be expanded upon and referenced.
-            column_x(str): The column label containing the list-like data to be transformed. Defaults to "citations".
-            column_y(str): The column label containing the titles of papers to be referenced, to show relation. Defaults to "title".
+            column_x(str): The column label containing the list-like data to be transformed.
+                Defaults to "citations".
+            column_y(str): The column label containing the titles of papers
+                to be referenced, to show relation. Defaults to "title".
 
 
         Returns:

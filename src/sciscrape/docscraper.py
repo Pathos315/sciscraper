@@ -28,8 +28,10 @@ class FreqDistAndCount:
     and the sum of the frequencies of those matching words.
 
     Attributes:
-        term_count(int): A cumulative count of the frequencies of the three most common words within the text.
-        frequency_dist(list[tuple[str,int]]): A list of three tuples, each tuple containing the word and its frequency within the text.
+        term_count(int): A cumulative count of the frequencies
+            of the three most common words within the text.
+        frequency_dist(list[tuple[str,int]]): A list of three tuples,
+            each tuple containing the word and its frequency within the text.
     """
 
     term_count: int
@@ -131,7 +133,8 @@ class DocScraper:
         sets of words to assess relevance.
 
         Parameters:
-            search_text(str) : The initially provided search string from a prior list comprehension, often in the form of either a filepath or the abstract of a paper.
+            search_text(str) : The initially provided search string from
+                a prior list comprehension, often in the form of either a filepath or the abstract of a paper.
 
         Returns:
             DocumentResult | None : It either returns a formatted DocumentResult dataclass, which is
@@ -270,7 +273,8 @@ class DocScraper:
 @dataclass(slots=True)
 class ZeroShotClassifier(WebScraper):
     """
-    The ZeroShotClassifier classifies text into one of several labels, without any prior training or knowledge of the classes.
+    The ZeroShotClassifier classifies text into one of several labels,
+        without any prior training or knowledge of the classes.
     """
 
     def obtain(

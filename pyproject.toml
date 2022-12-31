@@ -113,13 +113,3 @@ strict_equality = true
 warn_redundant_casts = true
 disallow_untyped_calls = true
 warn_unreachable = true
-
-[tool.flake8]
-max-line-length = 120
-max-complexity = 5
-select = ["B","C","E","F","W",]
-exclude = [
-    ".git",
-    "__pycache__",
-    ".env",
-    ]
