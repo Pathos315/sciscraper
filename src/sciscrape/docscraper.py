@@ -1,3 +1,4 @@
+from time import sleep
 from dotenv import load_dotenv
 from os import getenv
 
@@ -26,14 +27,9 @@ class FreqDistAndCount:
     that were found in both the target and the set,
     and the sum of the frequencies of those matching words.
 
-    Attributes
-    ----------
-    term_count : int
-        A cumulative count of the frequencies of
-        the three most common words within the text.
-    frequency_dist : list[tuple[str,int]]
-        A list of three tuples, each tuple containing
-        the word and its frequency within the text.
+    Attributes:
+        term_count(int): A cumulative count of the frequencies of the three most common words within the text.
+        frequency_dist(list[tuple[str,int]]): A list of three tuples, each tuple containing the word and its frequency within the text.
     """
 
     term_count: int
@@ -48,8 +44,7 @@ class DocumentResult:
     This gets passed back to a pandas dataframe.\
     """
 
-    summary: str
-    relevance_scores: list[tuple[str, float]]
+    relevance_scores: Optional[list[tuple[str, float]]]
     wordscore: float
     target_freq: list[tuple[str, int]] = field(default_factory=list)
     bycatch_freq: list[tuple[str, int]] = field(default_factory=list)
@@ -59,19 +54,13 @@ def match_terms(target: list[str], word_set: set[str]) -> FreqDistAndCount:
     """
     Calculates the relevance of the paper, or abstract, as a percentage.
 
-    Parameters
-    ----------
-    target : list[str]
-        The list of words to be assessed.
-    wordset : set[str]
-        The set of words against which the target words will be compared.
+    Parameters:
+        target(list[str]): The list of words to be assessed.
+        wordset(set[str]): The set of words against which the target words will be compared.
 
-    Returns
-    -------
-    FreqDistAndCount
-        A dataclass with a the 3 most common words that were found in
-        both the target and the set, and the sum of the frequencies
-        of those matching words.
+    Returns:
+        FreqDistAndCount: A dataclass with a the 3 most common words that were found in
+        both the target and the set, and the sum of the frequencies of those matching words.
 
     Example
     --------
@@ -80,13 +69,13 @@ def match_terms(target: list[str], word_set: set[str]) -> FreqDistAndCount:
     # that more frequent 'd'
     # from word_list will be absent
 
-    word_list                   = ['a','a','b','c','d',
+    >>> word_list                   = ['a','a','b','c','d',
                                    'd','d','d','c','a',
                                    'f','f','f','g','d']
-    word_set                    = {'a','b','f'}
-    output: FreqDistAndCount    = match_terms(word_list,word_set)
-    output.matching_terms       = [('a',3),('f',3),('b',1)]
-    output.term_count           = 7
+    >>> word_set                    = {'a','b','f'}
+    >>> output: FreqDistAndCount    = match_terms(word_list,word_set)
+    >>> output.matching_terms       = [('a',3),('f',3),('b',1)]
+    >>> output.term_count           = 7
     """
 
     matching_terms: list[tuple[str, int]] = Counter(
@@ -121,16 +110,12 @@ class DocScraper:
         Opens a .txt file containing the words that will analyze
         the ensuing passage, and creates a set with those words.
 
-        Parameters
-        ----------
-        txtfiles : str
-            The filepath to the .txt file containing the words that
+        Parameters:
+            txtfiles(FilePath): The filepath to the .txt file containing the words that
             will analyze the document.
 
-        Returns
-        -------
-        set[str]
-            A set of words against which the text will be compared.
+        Returns:
+            set[str]: A set of words against which the text will be compared.
         """
         with open(txtfile, encoding=UTF) as iowrapper:
             textlines: list[str] = iowrapper.readlines()
@@ -145,19 +130,12 @@ class DocScraper:
         and then it compares the cleaned data against the provided
         sets of words to assess relevance.
 
-        Parameters
-        ----------
-        search_text : str
-            The initially provided search string from a prior list
-            comprehension, often in the form of a filepath
-            or the abstract of a paper.
+        Parameters:
+            search_text(str) : The initially provided search string from a prior list comprehension, often in the form of either a filepath or the abstract of a paper.
 
-        Returns
-        -------
-        DocumentResult | None
-            It either returns a formatted DocumentResult dataclass, which is
-            sent back to a dataframe, or
-            it returns None.
+        Returns:
+            DocumentResult | None : It either returns a formatted DocumentResult dataclass, which is
+            sent back to a dataframe, or it returns None.
         """
 
         logger.debug(repr(self))
@@ -172,16 +150,14 @@ class DocScraper:
         )
 
         token_list = next(token_generator)
-        summary = TLDRScraper(
-            url=config.sci_tldr_url,
-            sleep_val=0.2,
-        ).obtain(search_text)
-        relevance_scores, implicature_score = ZeroShotClassifier(
+        classifier = ZeroShotClassifier(
             url=config.zero_classifier_url,
-            sleep_val=0.2,
+            sleep_val=1.1,
         ).obtain(search_text)
         target: FreqDistAndCount = match_terms(token_list, target_set)
         bycatch: FreqDistAndCount = match_terms(token_list, bycatch_set)
+        relevance_scores = None if classifier is None else classifier[0]
+        implicature_score = None if classifier is None else classifier[1]
         wordcalc = RelevanceCalculator(
             target.term_count,
             bycatch.term_count,
@@ -191,7 +167,6 @@ class DocScraper:
         logger.debug(repr(wordcalc))
 
         doc = DocumentResult(
-            summary,
             relevance_scores,
             wordcalc(),
             target.frequency_dist,
@@ -208,19 +183,14 @@ class DocScraper:
         file and cleans the text. Returning the words from each page
         as a Generator object.
 
-        Parameters
-        ----------
-        search_text : str
-            The initially provided filepath from a prior list comprehension.
+        Parameters:
+            search_text(str): The initially provided filepath from a prior list comprehension.
 
-        Yields
-        -------
-        Generator
-            A generator with cleaned words from each entire document.
+        Yields:
+            Generator: A generator with cleaned words from each entire document.
 
-        See Also
-        -------
-        extract_text_from_summary : Extract text from academic paper abstracts.
+        See Also:
+            `extract_text_from_summary` : Extract text from academic paper abstracts.
         """
         with pdfplumber.open(search_text) as study:
             study_pages: list[Any] = study.pages
@@ -271,19 +241,14 @@ class DocScraper:
         and cleans it. Returning the words from each
         abstract as a generator object.
 
-        Parameters
-        ----------
-        search_text : str
-            The initially provided abstract from a prior list comprehension.
+        Parameters:
+            search_text(str): The initially provided abstract from a prior list comprehension.
 
-        Yields
-        -------
-        Generator
-            A generator with cleaned words from each paper's abstract.
+        Yields:
+            Generator: A generator with cleaned words from each paper's abstract.
 
-        See Also
-        -------
-        extract_text_from_pdf : Extract text from PDF files.
+        See Also:
+            `extract_text_from_pdf`: Extract text from PDF files.
         """
         logger.debug(
             "func=%s,\
@@ -303,51 +268,17 @@ class DocScraper:
 
 
 @dataclass(slots=True)
-class TLDRScraper(WebScraper):
-    """
-    OverviewScraper is a webscraper for
-    summarizing paper abstracts.
-    """
-
-    def obtain(self, search_text: str) -> str:
-        headers = {"Authorization": f"Bearer {API_KEY}"}
-        response = client.post(self.url, headers=headers, json=search_text)
-        logger.debug(
-            "search_text=%s, scraper=%s, status_code=%s",
-            search_text,
-            repr(self),
-            response.status_code,
-        )
-        docs = loads(response.text)
-        return self.navigate_api(docs)
-
-    def navigate_api(self, docs: Any) -> str:
-        try:
-            item = docs[0]
-            tldr: str = item.get("generated_text")
-        except KeyError:
-            tldr = "N/A"
-        return tldr
-
-
-@dataclass(slots=True)
 class ZeroShotClassifier(WebScraper):
-    """_summary_
-
-    Parameters
-    ----------
-    WebScraper : _type_
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
+    """
+    The ZeroShotClassifier classifies text into one of several labels, without any prior training or knowledge of the classes.
     """
 
-    def obtain(self, search_text: str) -> tuple[list[tuple[str, float]], float]:
+    def obtain(
+        self, search_text: str
+    ) -> Optional[tuple[list[tuple[str, float]], float]]:
         headers = {"Authorization": f"Bearer {API_KEY}"}
         querystring = self.create_querystring(search_text)
+        sleep(self.sleep_val)
         response = client.post(self.url, headers=headers, json=querystring)
         logger.debug(
             "search_text=%s, scraper=%s, status_code=%s",
@@ -355,11 +286,19 @@ class ZeroShotClassifier(WebScraper):
             repr(self),
             response.status_code,
         )
-        raw_relevance: dict[str, Any] = loads(response.text)
-        relevance_score, implicature_score = self.zip_raw_relevance_values(
-            raw_relevance
+        raw_relevance = (
+            None
+            if response.status_code != 200
+            else self.get_raw_relevance(response.text)
         )
-        return relevance_score, implicature_score
+        return (
+            None
+            if raw_relevance is None
+            else self.zip_raw_relevance_values(raw_relevance)
+        )
+
+    def get_raw_relevance(self, response_text: str) -> dict[str, Any]:
+        return loads(response_text)
 
     def create_querystring(
         self,
@@ -379,12 +318,15 @@ class ZeroShotClassifier(WebScraper):
 
     def zip_raw_relevance_values(
         self, raw_relevance: dict
-    ) -> tuple[list[tuple[str, float]], float]:
-        labels: list[str] = raw_relevance["labels"]
-        labels = [str.title(label) for label in labels]
-        scores: list[float] = raw_relevance["scores"]
-        implicature_score = scores[0]
-        relevance_scores = list(zip(labels, scores))
-
-        logger.debug(f"\n{labels}\n{scores}\n=>{relevance_scores}")
-        return relevance_scores, implicature_score
+    ) -> Optional[tuple[list[tuple[str, float]], float]]:
+        try:
+            labels: list[str] = raw_relevance["labels"]
+            labels = [str.title(label) for label in labels]
+            scores: list[float] = raw_relevance["scores"]
+            implicature_score = scores[0]
+            relevance_scores = list(zip(labels, scores))
+            logger.debug(f"\n{labels}\n{scores}\n=>{relevance_scores}")
+            return relevance_scores, implicature_score
+        except KeyError as e:
+            logger.debug("The following error occurred, %e", e)
+            return None
