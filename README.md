@@ -1,4 +1,3 @@
-
 ![sciscraper](https://github.com/Pathos315/sciscraper/actions/workflows/tests.yaml/badge.svg)
 
 # sciscraper
@@ -6,7 +5,7 @@
 Future updates will, hopefully, allow for usage in the command line.
 
 ## Latest stable version
-The latest stable version of ```sciscraper``` is **1.0.0**.
+The latest stable version of ```sciscraper``` is **0.5.0**.
 
 ## Description
 ```sciscraper``` can take any of the following inputs:
@@ -19,26 +18,17 @@ And return any of the following:
 - PDF downloads thereof, where possible
 
 ### As Featured on ArjanCodes' Code Roast
-
 PART ONE: -> https://youtu.be/MXM6VEtf8SE
-
 PART TWO: -> https://www.youtube.com/watch?v=6ac4Um2Vicg
 
 ### Special Thanks
-
-ArjanCodes
-
-Michele Cotrufo
-
-Nathan Lippi
-
-Jon Watson Rooney
-
-Colin Meret
-
-James Murphy (mCoding)
-
-Micael Jarniac
+- ArjanCodes
+- Michele Cotrufo
+- Nathan Lippi
+- Jon Watson Rooney
+- Colin Meret
+- James Murphy (mCoding)
+- Micael Jarniac
 
 
 ### Maintainer
