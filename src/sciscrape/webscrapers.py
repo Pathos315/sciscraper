@@ -133,7 +133,7 @@ class DimensionsScraper(WebScraper):
             ),
             "figures": (
                 "title",
-                SemanticFigureScraper(config.semantic_scholar_url_stub, sleep_val=2),
+                SemanticFigureScraper(config.semantic_scholar_url_stub, sleep_val=0.1),
             ),
         }
 
@@ -165,7 +165,7 @@ class DimensionsScraper(WebScraper):
         try:
             return getter.obtain(data[query])
         except (KeyError, TypeError) as e:
-            logger.error(
+            logger.debug(
                 "func_repr=%s, query=%s, error=%s, action_undertaken=%s",
                 repr(getter),
                 query,
@@ -295,13 +295,9 @@ class SemanticFigureScraper(WebScraper):
 
     def find_paper_url(self, search_text: str) -> Optional[str]:
         title = search_text.replace(" ", "+")
-        logger.debug(f"\n{title}\n")
         paper_searching_url = f"{self.url}{title}&fields=url&limit=1"
-        logger.debug(f"\n{paper_searching_url}\n")
         paper_searching_response: Response = client.get(paper_searching_url)
-        logger.debug(f"\n{paper_searching_response}\n")
         paper_info: dict[str, Any] = loads(paper_searching_response.text)
-        logger.debug(f"\n{paper_info}\n")
         try:
             paper_url: Optional[str] = paper_info["data"][0]["url"]
             logger.debug(f"\n{paper_url}\n")
