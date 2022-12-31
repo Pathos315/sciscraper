@@ -7,25 +7,19 @@ def stage_from_series(target: pd.DataFrame, column: str = "abstract") -> list[st
     """
     stage_from_series reads a `column` of interest from a
     dataframe `target`, which gets copied internally, and then
-    returns a list of entries. Unavailable entries are filled in with 'N/A'.
+    returns a list of entries.
 
-    Parameters
-    ----------
-    target : pd.DataFrame
-        The dataframe to have a `column` isolated.
+    Unavailable entries are filled in with 'N/A'.
 
-    column : str
-        The column of interest to be isolated.
+    Parameters:
+        target(pd.DataFrame): The dataframe to have a `column` isolated.
+        column(str): The column of interest to be isolated. Defaults to "abstract".
 
-    Returns
-    -------
-    list[str]
-        A list of entries from the provided column.
+    Returns:
+        list[str]: A list of entries from the provided column.
 
-    See Also
-    --------
-    `stage_with_reference` : Take two columns from a dataframe's return
-    two lists of entries as a tuple.
+    See Also:
+        `stage_with_reference`: Takes two columns from a dataframe and returns two lists of entries as a tuple.
 
     Example
     -------
@@ -34,9 +28,9 @@ def stage_from_series(target: pd.DataFrame, column: str = "abstract") -> list[st
           'apple'    10     ['a', 'b', 'c']
          'orange'    10          ['d', 'e']
               NaN    10          ['f', 'g']
-        ...
+    ...
         >>> stage_from_series(df, 'A') =
-        ... ['apple','orange','N/A']
+        ['apple','orange','N/A']
     """
 
     raw_terms: list[str] = target.copy()[column].fillna("N/A").to_list()
@@ -63,29 +57,17 @@ def stage_with_reference(
 
         It returns them both as a tuple of lists of strings.
 
-        Parameters
-        ----------
-        target : pd.DataFrame
-            The initial dataframe to be expanded upon and referenced.
-        column_x : str
-            The column label containing the list-like data to be transformed.
-            Defaults to "citations".
-        column_y : str
-            The column label containing the titles of papers to be referenced,
-            to show relation. Defaults to "title".
+        Parameters:
+            target(pd.DataFrame): The initial dataframe to be expanded upon and referenced.
+            column_x(str): The column label containing the list-like data to be transformed. Defaults to "citations".
+            column_y(str): The column label containing the titles of papers to be referenced, to show relation. Defaults to "title".
 
 
-        Returns
-        -------
-        tuple : [list[str], list[str]]
-
-            A tuple of two lists of strings, containing rows from the
+        Returns:
+            tuple[list[str], list[str]]: A tuple of two lists of strings, containing rows from the
             aforementioned columns.
 
-        See Also
-        --------
-        `stage_from_series` : Take a dataframe's column
-        and return a list of entries.
+        See Also: `stage_from_series`: Take a dataframe's column and return a list of entries.
 
         Example
         -------
@@ -96,8 +78,8 @@ def stage_with_reference(
                'banana'  1     ['f', 'g']
     ...
             >>> stage_with_reference(df)
-            >>> df = target.explode('C')
-            >>> df
+                df = target.explode('C')
+                df =
                       A  B      C
                 'apple'  1     'a'
                 'apple'  1     'b'
@@ -107,15 +89,10 @@ def stage_with_reference(
                'banana'  1     'f'
                'banana'  1     'g'
     ...
-            >>> df['C'].to_list() =
-            ... ['a','b','c','d','e','f','g']
-            >>> df['A'].to_list() =
-            ... ['apple','apple','apple','orange','orange','banana','banana']
+            >>> df['C'].to_list() = ['a','b','c','d','e','f','g']
+            >>> df['A'].to_list() = ['apple','apple','apple','orange','orange','banana','banana']
             >>> stage_with_reference(df) =
-            ... (['a','b','c','d','e','f','g'],
-            ... ['apple','apple','apple','orange','orange','banana','banana']
-                )
-
+            return (['a','b','c','d','e','f','g'],['apple','apple','apple','orange','orange','banana','banana'])
     """
     data: pd.DataFrame = target.copy().explode(column_x)
     data_col_x: list[str] = clean_any_nested_columns(

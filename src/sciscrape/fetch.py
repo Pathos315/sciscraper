@@ -155,8 +155,8 @@ class SciScraper:
         self, target: FilePath, export: bool = True, debug: bool = False
     ) -> None:
         self.set_logging(debug)
-        logger.info(f"Debug logging status: '{debug}'\n")
-        logger.info("Commencing scisciscraper.scrape...\n")
+        logger.info(f"Debug logging status: '{debug}'")
+        logger.info("Commencing sciscraper...\n")
         df: pd.DataFrame = self.scraper(target)
         df = self.stager(df) if self.stager else df
         df = self.df_casting(df) if self.downcast else df
