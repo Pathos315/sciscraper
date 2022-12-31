@@ -40,8 +40,8 @@ def test_serialize_from_csv(mock_csv, column, expected):
     assert output == expected
 
 
-def test_serialize_from_csv_type_error(mock_csv):
-    with pytest.raises(TypeError):
+def test_serialize_from_csv_attr_error(mock_csv):
+    with pytest.raises(AttributeError):
         serialize_from_csv(mock_csv, "times_cited")
 
 

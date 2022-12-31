@@ -73,8 +73,8 @@ def serialize_from_directory(target: FilePath, suffix: str = "pdf") -> list[str]
 
 
 def clean_any_nested_columns(data_list: list[str], column: str) -> list[str]:
-    initial_terms: list[str] = [term for term in data_list if "{" not in term]
+    initial_terms: list[str] = [term for term in data_list if not term.startswith("{")]
     nested_terms: list[str] = [
-        literal_eval(term)[column] for term in data_list if "{" in term
+        literal_eval(term)[column] for term in data_list if term.startswith("{")
     ]
     return initial_terms + nested_terms
