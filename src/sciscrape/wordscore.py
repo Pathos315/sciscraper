@@ -4,8 +4,6 @@ from dataclasses import (
 )
 from typing import Optional, Union
 from math import comb
-import numpy as np
-from scipy.stats import binom
 
 
 @dataclass(slots=True, order=True)
