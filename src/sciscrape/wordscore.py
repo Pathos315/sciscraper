@@ -42,28 +42,46 @@ class RelevanceCalculator:
         ------------------
         - `total_len`: the total number of words in the text.
         - `pos_part`: the number of matches between the word and the search term.
-        - `neg_part` represents the number of "bycatch" occurrences of the word, which are not matches to the search term.
+        - `neg_part` represents the number of "bycatch" occurrences
+            of the word, which are not matches to the search term.
         - `neutral_part`: the total number of words minus the number of matches.
-        - `failure_margin`: the probability of the observations occurring given that the event has not occurred.
-            This is calculated as the `neutral_part` divided by the total number of words (`total_len`) to the power of the neutral part.
-        - `match_likelihood`: represents P(B|A), or the likelihood of the observations (B) occurring, given that the event (A) has occurred.
-            This likelihood is calculated using a binomial distribution, which takes into account:
+        - `failure_margin`: the probability of the observations occurring
+            given that the event has not occurred.
+            This is calculated as the `neutral_part` divided by
+            the total number of words (`total_len`) to the power of the neutral part.
+        - `match_likelihood`: represents P(B|A), or the likelihood of
+            the observations (B) occurring, given that the event (A) has occurred.
+            This likelihood is calculated using a binomial distribution,
+            which takes into account:
                 - the number of matches (`pos_part`),
                 - the total number of words (`total_len`), and
                 - the number of neutral words (`neutral_part`).
-        -`true positives`: the probability of a match occurring, given that the event has occurred.
-            This is calculated as the number of matches (`pos_part`) divided by the total number of words (`total_len`).
-        - `false positives`: the probability of a "bycatch" occurrence happening, given that the event has not occurred.
-            This is calculated as the number of "bycatch" occurrences (`neg_part`) divided by the total number of words (`total_len`).
-        - `positive posterior`: the probability of the event occurring, given the observations.
-            This is calculated using Bayes' theorem, which takes into account:
-                - the likelihood of the observations occurring (`match_likelihood`),
-                - the prior probability of the event occurring (`true positives`), and
-                - the probability of the observations occurring given that the event has not occurred, (`failure margin`).
-        - `negative posterior` represents the probability of the event not occurring, given the observations.
-            This is calculated in a similar way to the positive posterior, but with the likelihood and prior probability values reversed.
-        - `unweighted_wordscore` represents the penulimate probability of the event occurring,
-            which is calculated as the difference between the positive posterior and negative posterior.
+        -`true positives`: the probability of a match occurring, given
+            that the event has occurred.
+            This is calculated as the number of matches (`pos_part`)
+            divided by the total number of words (`total_len`).
+        - `false positives`: the probability of a "bycatch" occurrence happening,
+            given that the event has not occurred.
+            This is calculated as the number of "bycatch" occurrences (`neg_part`)
+            divided by the total number of words (`total_len`).
+        - `positive posterior`: the probability of the event occurring,
+            given the observations. This is calculated using Bayes' theorem,
+            which takes into account:
+                - the likelihood of the observations occurring:
+                    or (`match_likelihood`),
+                - the prior probability of the event occurring:
+                    or (`true positives`); and,
+                - the probability of the observations occurring given
+                    that the event has not occurred:
+                    or (`failure margin`).
+        - `negative posterior` represents the probability of
+            the event not occurring, given the observations.
+            This is calculated in a similar way to the positive posterior,
+            but with the likelihood and prior probability values reversed.
+        - `unweighted_wordscore` represents the penulimate
+            probability of the event occurring,
+            which is calculated as the difference between
+            the positive posterior and negative posterior.
         """
         # Neutral Part is all the words that are not the matching words
         neutral_part: int = self.total_len - self.pos_part
@@ -90,7 +108,8 @@ class RelevanceCalculator:
         # False positives is the bycatch part over the total length
         false_positive: float = self.neg_part / self.total_len
 
-        # positive posterior is a bayes equation, in which the match likelihood is multiplied by the true positives ratio
+        # positive posterior is a bayes equation, in which the match likelihood
+        # is multiplied by the true positives ratio
         # and then divided by the likelihood plus the failure margin
         # The formula, therefore, is
         pos_posterior = self.bayes_theorem(
@@ -134,11 +153,14 @@ class RelevanceCalculator:
 
         Args:
             prior (float): The total number of true positive words found.
-            likelihood (float): The likelihood of this outcome, given the calculated binomial probability
-            margin (float): The probability of failure, given the calculated binomial probability
+            likelihood (float): The likelihood of this outcome,
+                given the calculated binomial probability
+            margin (float): The probability of failure,
+                given the calculated binomial probability
 
         Returns:
-            float: posterior, or the likelihood of the paper being a match given the words present.
+            float: posterior, or the likelihood of the paper
+                being a match given the words present.
         """
         hypothesis = prior * likelihood
         total_evidence = hypothesis + margin
