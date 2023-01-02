@@ -2,6 +2,7 @@ r"""
 Downloads papers en masse
 """
 import random
+import tempfile
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, asdict
 from os import remove, path
@@ -96,7 +97,6 @@ class Downloader(ABC):
         self,
         filename: str,
         contents: bytes,
-        tempfilepath: FilePath = "temp_file.txt",
     ) -> None:
         """
         `create_document` goes to, and downloads, the isolated download link.
@@ -116,12 +116,11 @@ class Downloader(ABC):
         -------
             A .pdf or .png file, depending on the `Downloader` in use.
         """
-        with change_dir(self.export_dir), open(tempfilepath, "xb") as wtempfile:
-            wtempfile.write(contents)
-            with open(filename, "wb") as file, open(tempfilepath, "rb") as rtempfile:
-                for line in rtempfile:
+        with (change_dir(self.export_dir), tempfile.TemporaryFile() as temp):
+            temp.write(contents)
+            with open(filename, "wb") as file:
+                for line in temp:
                     file.write(line)
-                remove(tempfilepath)
 
 
 @dataclass(slots=True)
