@@ -1,6 +1,15 @@
 from dataclasses import dataclass, asdict
 from typing import Optional, Union
-from math import comb
+from math import comb, sqrt
+
+
+@dataclass(slots=True, frozen=True, order=True)
+class Wordscore:
+    probability: float
+    expectation: float
+    variance: float
+    standard_deviation: float
+    skewness: float
 
 
 @dataclass(slots=True, order=True)
@@ -33,7 +42,7 @@ class RelevanceCalculator:
     total_length: int
     implicature_score: Optional[float]
 
-    def __call__(self) -> float:
+    def __call__(self) -> Wordscore:
         """
         Equation Variables
         ------------------
@@ -46,7 +55,7 @@ class RelevanceCalculator:
             given that the event has not occurred.
             This is calculated as the `neutral_part` divided by
             the total number of words (`total_length`) to the power of the neutral part.
-        - `match_likelihood`: represents P(B|A), or the likelihood of
+        - `success_likelihood`: represents P(B|A), or the likelihood of
             the observations (B) occurring, given that the event (A) has occurred.
             This likelihood is calculated using a binomial distribution,
             which takes into account:
@@ -65,7 +74,7 @@ class RelevanceCalculator:
             given the observations. This is calculated using Bayes' theorem,
             which takes into account:
                 - the likelihood of the observations occurring:
-                    or (`match_likelihood`),
+                    or (`success_likelihood`),
                 - the prior probability of the event occurring:
                     or (`true positives`); and,
                 - the probability of the observations occurring given
@@ -87,7 +96,11 @@ class RelevanceCalculator:
         )
         target_probability: float = self.target_count / self.total_length
         bycatch_probability: float = self.bycatch_count / self.total_length
-        match_likelihood: float = self.get_likelihood(failure_margin)
+        success_likelihood: float = self.get_likelihood(failure_margin)
+        expectation: float = self.total_length * success_likelihood
+        variance: float = expectation * failure_margin
+        standard_deviation: float = sqrt(variance)
+        skewness: float = (failure_margin - success_likelihood) / standard_deviation
 
         # Positive posterior is a bayes equation, in which the match likelihood
         # is multiplied by the true positives ratio
@@ -95,7 +108,7 @@ class RelevanceCalculator:
         # The formula, therefore, is
         positive_posterior = self.bayes_theorem(
             prior=target_probability,
-            likelihood=match_likelihood,
+            likelihood=success_likelihood,
             margin=failure_margin,
         )
         # Negative posterior is also a bayes equation,
@@ -105,9 +118,8 @@ class RelevanceCalculator:
         neg_posterior = self.bayes_theorem(
             prior=bycatch_probability,
             likelihood=failure_margin,
-            margin=match_likelihood,
+            margin=success_likelihood,
         )
-
         # Note: Failure margin treated as likelihood because it's looking for bycatch, i.e. inverse
         # Moreover, success likelihood treated as margin because it's looking for bycatch, i.e. inverse
 
@@ -117,7 +129,14 @@ class RelevanceCalculator:
         unweighted_wordscore = positive_posterior - neg_posterior
         # The highest zero shot classification score
         # accounts for about 20% of the final wordscore
-        return self.calculate_wordscore(unweighted_wordscore)
+        wordscore = self.calculate_wordscore(unweighted_wordscore)
+        return Wordscore(
+            wordscore,
+            expectation,
+            variance,
+            standard_deviation,
+            skewness,
+        )
 
     def get_likelihood(self, failure_margin: float) -> float:
         """

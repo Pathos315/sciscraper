@@ -18,27 +18,52 @@ from sciscrape.log import logger
 
 SCRAPERS: dict[str, ScrapeFetcher] = {
     "pdf_lookup": ScrapeFetcher(
-        DocScraper(config.target_words, config.bycatch_words), serialize_from_directory
+        DocScraper(config.target_words, config.bycatch_words),
+        serialize_from_directory,
     ),
     "csv_lookup": ScrapeFetcher(
-        DimensionsScraper(config.dimensions_ai_dataset_url), serialize_from_csv
+        DimensionsScraper(config.dimensions_ai_dataset_url),
+        serialize_from_csv,
     ),
     "abstract_lookup": ScrapeFetcher(
-        DocScraper(config.target_words, config.bycatch_words, False),
-        partial(serialize_from_csv, column="abstract"),
+        DocScraper(
+            config.target_words,
+            config.bycatch_words,
+            is_pdf=False,
+        ),
+        partial(
+            serialize_from_csv,
+            column="abstract",
+        ),
     ),
 }
 
 STAGERS: dict[str, StagingFetcher] = {
     "abstracts": StagingFetcher(
-        DocScraper(config.target_words, config.bycatch_words, False), stage_from_series
+        DocScraper(
+            config.target_words,
+            config.bycatch_words,
+            False,
+        ),
+        stage_from_series,
+    ),
+    "relevance": StagingFetcher(
+        DocScraper(
+            config.target_words,
+            config.bycatch_words,
+            is_pdf=False,
+            use_api=True,
+        ),
+        stage_from_series,
     ),
     "citations": StagingFetcher(
-        DimensionsScraper(config.dimensions_ai_dataset_url), stage_with_reference
+        DimensionsScraper(config.dimensions_ai_dataset_url),
+        stage_with_reference,
     ),
     "references": StagingFetcher(
         DimensionsScraper(
-            config.dimensions_ai_dataset_url, query_subset_citations=True
+            config.dimensions_ai_dataset_url,
+            query_subset_citations=True,
         ),
         stage_with_reference,
     ),
@@ -58,6 +83,7 @@ SCISCRAPERS: dict[str, SciScraper] = {
     "reference": SciScraper(SCRAPERS["csv_lookup"], STAGERS["references"]),
     "download": SciScraper(SCRAPERS["csv_lookup"], STAGERS["download"]),
     "images": SciScraper(SCRAPERS["csv_lookup"], STAGERS["images"]),
+    "relevance": SciScraper(SCRAPERS["csv_lookup"], STAGERS["relevance"]),
     "_vfscore": SciScraper(SCRAPERS["abstract_lookup"], None),
 }
 

@@ -81,7 +81,11 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             "reference",
             "download",
             "images",
+            "relevance",
         ),
+        help="Specify the sciscraper to be used,\
+            if None is provided, the user will be prompted\
+            with an input: %(default)s)",
     )
     args = parser.parse_args(argv)
 

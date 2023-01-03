@@ -51,6 +51,10 @@ class DocumentResult:
     bycatch_terms: int
     total_length: int
     wordscore: float
+    expectation: float
+    variance: float
+    standard_deviation: float
+    skewness: float
     target_freq: list[tuple[str, int]] = field(default_factory=list)
     bycatch_freq: list[tuple[str, int]] = field(default_factory=list)
 
@@ -173,12 +177,17 @@ class DocScraper:
         )
         logger.debug(repr(wordcalc))
 
+        relevance_result = wordcalc()
         doc = DocumentResult(
             relevance_scores,
             matching_terms=target.term_count,
             bycatch_terms=bycatch.term_count,
             total_length=len(token_list),
-            wordscore=wordcalc(),
+            wordscore=relevance_result.probability,
+            expectation=relevance_result.expectation,
+            variance=relevance_result.variance,
+            standard_deviation=relevance_result.standard_deviation,
+            skewness=relevance_result.skewness,
             target_freq=target.frequency_dist,
             bycatch_freq=bycatch.frequency_dist,
         )
