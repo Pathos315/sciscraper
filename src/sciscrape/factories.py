@@ -58,7 +58,7 @@ SCISCRAPERS: dict[str, SciScraper] = {
     "reference": SciScraper(SCRAPERS["csv_lookup"], STAGERS["references"]),
     "download": SciScraper(SCRAPERS["csv_lookup"], STAGERS["download"]),
     "images": SciScraper(SCRAPERS["csv_lookup"], STAGERS["images"]),
-    "vfscore": SciScraper(SCRAPERS["abstract_lookup"], None),
+    "_vfscore": SciScraper(SCRAPERS["abstract_lookup"], None),
 }
 
 

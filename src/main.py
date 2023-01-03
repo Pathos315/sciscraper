@@ -8,7 +8,8 @@ from typing import Optional, Sequence
 from time import perf_counter
 
 from sciscrape.log import logger
-from sciscrape.factories import read_factory
+from sciscrape.profilers import run_benchmark, run_memory_profiler
+from sciscrape.factories import read_factory, SCISCRAPERS
 from sciscrape.config import config
 
 
@@ -49,32 +50,52 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         "-d",
         "--debug",
         default=False,
-        action="store_true",
         help="Specify debug logging output: default: %(default)s)",
     )
     parser.add_argument(
         "-e",
         "--export",
         default=True,
-        action="store_true",
         help="Specify if exporting dataframe\
             to .csv: default: %(default)s)",
     )
     parser.add_argument(
-        "-b",
-        "--benchmark",
-        default=False,
-        action="store_true",
+        "-p",
+        "--profilers",
+        default=None,
+        choices=(
+            "benchmark",
+            "memory",
+        ),
         help="Specify if benchmarking is to be conducted: default: %(default)s)",
+    )
+    parser.add_argument(
+        "-m",
+        "--mode",
+        default=None,
+        type=str,
+        choices=(
+            "directory",
+            "wordscore",
+            "citations",
+            "reference",
+            "download",
+            "images",
+        ),
     )
     args = parser.parse_args(argv)
 
     start = perf_counter()
-    sciscrape = read_factory()
+    sciscrape = read_factory() if args.mode is None else SCISCRAPERS[args.mode]
     logger.debug(repr(sciscrape))
     logger.debug(repr(args.file))
 
-    sciscrape(args.file, args.export, args.debug)
+    if args.profilers is "benchmark":
+        run_benchmark(args, sciscrape)
+    elif args.profilers is "memory":
+        run_memory_profiler(args, sciscrape)
+    else:
+        sciscrape(args.file, args.export, args.debug)
 
     elapsed = perf_counter() - start
     logger.info(f"Extraction finished in {elapsed:.2f} seconds.")
