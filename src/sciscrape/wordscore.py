@@ -36,21 +36,6 @@ class RelevanceCalculator:
     bycatch_count: int
     total_length: int
     implicature_score: Optional[float]
-    neutral_part: float = field(init=False)
-    failure_margin: float = field(init=False)
-    target_probability: float = field(init=False)
-    bycatch_probability: float = field(init=False)
-    match_likelihood: float = field(init=False)
-
-    def __post_init__(self):
-        self.neutral_part = self.total_length - self.target_count
-        self.failure_margin = self.get_margin(
-            self.neutral_part,
-            self.total_length,
-        )
-        self.target_probability: float = self.target_count / self.total_length
-        self.bycatch_probability: float = self.bycatch_count / self.total_length
-        self.match_likelihood: float = self.get_likelihood()
 
     def __call__(self) -> float:
         """
@@ -99,24 +84,32 @@ class RelevanceCalculator:
             which is calculated as the difference between
             the positive posterior and negative posterior.
         """
+        neutral_part: float = self.total_length - self.target_count
+        failure_margin: float = self.get_margin(
+            neutral_part,
+            self.total_length,
+        )
+        target_probability: float = self.target_count / self.total_length
+        bycatch_probability: float = self.bycatch_count / self.total_length
+        match_likelihood: float = self.get_likelihood(failure_margin)
 
         # Positive posterior is a bayes equation, in which the match likelihood
         # is multiplied by the true positives ratio
         # and then divided by the likelihood plus the failure margin
         # The formula, therefore, is
         positive_posterior = self.bayes_theorem(
-            prior=self.target_probability,
-            likelihood=self.match_likelihood,
-            margin=self.failure_margin,
+            prior=target_probability,
+            likelihood=match_likelihood,
+            margin=failure_margin,
         )
         # Negative posterior is also a bayes equation,
         # in which the match likelihood is multiplied by the failure margin
         # and then divided by the likelihood plus the failure margin
         # The formula, therefore, is
         neg_posterior = self.bayes_theorem(
-            prior=self.bycatch_probability,
-            likelihood=self.failure_margin,
-            margin=self.match_likelihood,
+            prior=bycatch_probability,
+            likelihood=failure_margin,
+            margin=match_likelihood,
         )
 
         # Note: Failure margin treated as likelihood because it's looking for bycatch, i.e. inverse
@@ -130,7 +123,7 @@ class RelevanceCalculator:
         # accounts for about 20% of the final wordscore
         return self.calculate_wordscore(unweighted_wordscore)
 
-    def get_likelihood(self) -> float:
+    def get_likelihood(self, failure_margin: float) -> float:
         """
         Applies the binomial probability mass function, given:
         - the total length `(y)`;
@@ -157,7 +150,7 @@ class RelevanceCalculator:
             self.target_count,
             self.total_length,
         )
-        model = total_combinations * success_margin * self.failure_margin
+        model = total_combinations * success_margin * failure_margin
         return model
 
     @staticmethod
@@ -207,7 +200,10 @@ class RelevanceCalculator:
         self.implicature_score = (
             likelihood if self.implicature_score is None else self.implicature_score
         )
-        return (likelihood * weight) + (self.implicature_score * (1 - weight))
+        wordscore: float = (likelihood * weight) + (
+            self.implicature_score * (1 - weight)
+        )
+        return wordscore
 
     @staticmethod
     def get_margin(

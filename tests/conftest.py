@@ -101,9 +101,9 @@ def mock_request():
 @pytest.fixture()
 def wordscore_calc():
     return RelevanceCalculator(
-        pos_part=64,
-        neg_part=32,
-        total_len=2048,
+        target_count=64,
+        bycatch_count=32,
+        total_length=2048,
         implicature_score=0.5,
     )
 
@@ -111,9 +111,9 @@ def wordscore_calc():
 @pytest.fixture()
 def wordscore_dict() -> dict[str, float | int]:
     return {
-        "pos_part": float(10),
-        "neg_part": float(10),
-        "total_len": 2048,
+        "target_count": 64,
+        "bycatch_count": 32,
+        "total_length": 2048,
         "implicature_score": 0.5,
     }
 
