@@ -1,6 +1,7 @@
 from dataclasses import (
     dataclass,
     asdict,
+    field,
 )
 from typing import Optional, Union
 from math import comb
@@ -19,11 +20,11 @@ class RelevanceCalculator:
     and a prior zero-shot classification score.
 
     Attributes:
-        pos_part (float): The number of times a target word
+        target_count (float): The number of times a target word
             appeared in the paper or abstract.
-        neg_part (float): The number of times a bycatch word
+        bycatch_count (float): The number of times a bycatch word
             appeared in the paper or abstract.
-        total_len (int): The total number of words in the paper or abstract.
+        total_length (int): The total number of words in the paper or abstract.
         implicature_score (float, Optional): The highest score
             from a prior `DocScraper` zero-shot classification.
 
@@ -31,39 +32,54 @@ class RelevanceCalculator:
         __call__ : returns wordscore value as a float
     """
 
-    pos_part: int
-    neg_part: int
-    total_len: int
+    target_count: int
+    bycatch_count: int
+    total_length: int
     implicature_score: Optional[float]
+    neutral_part: float = field(init=False)
+    failure_margin: float = field(init=False)
+    target_probability: float = field(init=False)
+    bycatch_probability: float = field(init=False)
+    match_likelihood: float = field(init=False)
+
+    def __post_init__(self):
+        self.neutral_part = self.total_length - self.target_count
+        self.failure_margin = self.get_margin(
+            self.neutral_part,
+            self.total_length,
+        )
+        self.target_probability: float = self.target_count / self.total_length
+        self.bycatch_probability: float = self.bycatch_count / self.total_length
+        self.match_likelihood: float = self.get_likelihood()
 
     def __call__(self) -> float:
         """
         Equation Variables
         ------------------
-        - `total_len`: the total number of words in the text.
-        - `pos_part`: the number of matches between the word and the search term.
-        - `neg_part` represents the number of "bycatch" occurrences
+        - `total_length`: the total number of words in the text.
+        - `target_count`: the number of matches between the word and the search term.
+        - `bycatch_count` represents the number of "bycatch" occurrences
             of the word, which are not matches to the search term.
         - `neutral_part`: the total number of words minus the number of matches.
         - `failure_margin`: the probability of the observations occurring
             given that the event has not occurred.
             This is calculated as the `neutral_part` divided by
-            the total number of words (`total_len`) to the power of the neutral part.
+            the total number of words (`total_length`) to the power of the neutral part.
         - `match_likelihood`: represents P(B|A), or the likelihood of
             the observations (B) occurring, given that the event (A) has occurred.
             This likelihood is calculated using a binomial distribution,
             which takes into account:
-                - the number of matches (`pos_part`),
-                - the total number of words (`total_len`), and
+                - the number of matches (`target_count`),
+                - the total number of words (`total_length`), and
                 - the number of neutral words (`neutral_part`).
         -`true positives`: the probability of a match occurring, given
             that the event has occurred.
-            This is calculated as the number of matches (`pos_part`)
-            divided by the total number of words (`total_len`).
+            This is calculated as the number of matches (`target_count`)
+            divided by the total number of words (`total_length`).
         - `false positives`: the probability of a "bycatch" occurrence happening,
             given that the event has not occurred.
-            This is calculated as the number of "bycatch" occurrences (`neg_part`)
-            divided by the total number of words (`total_len`).
+            This is calculated as the number of "bycatch" occurrences (`bycatch_count`)
+            divided by the total number of words (`total_length`).
         - `positive posterior`: the probability of the event occurring,
             given the observations. This is calculated using Bayes' theorem,
             which takes into account:
@@ -83,71 +99,69 @@ class RelevanceCalculator:
             which is calculated as the difference between
             the positive posterior and negative posterior.
         """
-        # Neutral Part is all the words that are not the matching words
-        neutral_part: int = self.total_len - self.pos_part
 
-        # Failure Margin is the neutral part (k) over the total length n to the power of k,
-        # i.e. (k/n)** k
-        failure_margin: float = self.get_probability(
-            neutral_part,
-            self.total_len,
-        )
-
-        # Success_likelihood is the binomial distribution formula
-        # Total combinations is total length choose matching words, nCx
-        # i.e. (n! / (x! * (n-x)!)
-        # i.e. total_length! / (positive_part! * (total_length - positive_part)!)
-        # success margin = (x/n)^x
-        # i.e. positive part / total length to the power of the positive part
-        # these all produce the match likelihood
-        match_likelihood: float = self.get_binomial_probability(failure_margin)
-
-        # True positives is the positive part over the total length
-        true_positive: float = self.pos_part / self.total_len
-
-        # False positives is the bycatch part over the total length
-        false_positive: float = self.neg_part / self.total_len
-
-        # positive posterior is a bayes equation, in which the match likelihood
+        # Positive posterior is a bayes equation, in which the match likelihood
         # is multiplied by the true positives ratio
         # and then divided by the likelihood plus the failure margin
         # The formula, therefore, is
-        pos_posterior = self.bayes_theorem(
-            true_positive,
-            match_likelihood,
-            failure_margin,
+        positive_posterior = self.bayes_theorem(
+            prior=self.target_probability,
+            likelihood=self.match_likelihood,
+            margin=self.failure_margin,
         )
-        # negative posterior is also a bayes equation,
+        # Negative posterior is also a bayes equation,
         # in which the match likelihood is multiplied by the failure margin
         # and then divided by the likelihood plus the failure margin
         # The formula, therefore, is
         neg_posterior = self.bayes_theorem(
-            false_positive,
-            failure_margin,  # failure margin treated as likelihood because it's inversed
-            match_likelihood,  # success likelihood treated as margin because it's inversed
+            prior=self.bycatch_probability,
+            likelihood=self.failure_margin,
+            margin=self.match_likelihood,
         )
+
+        # Note: Failure margin treated as likelihood because it's looking for bycatch, i.e. inverse
+        # Moreover, success likelihood treated as margin because it's looking for bycatch, i.e. inverse
+
         # The negative posterior is then subtracted
         # from the positive posterior
         # to produce the unweighted wordscore
-        unweighted_wordscore = pos_posterior - neg_posterior
+        unweighted_wordscore = positive_posterior - neg_posterior
         # The highest zero shot classification score
         # accounts for about 20% of the final wordscore
         return self.calculate_wordscore(unweighted_wordscore)
 
-    def get_binomial_probability(self, failure_margin) -> float:
-        # start binomial distribution i.e. (n! / (x! * (n-x)!) * (x/n)^x * ((n-x)/n)^(n-x))
+    def get_likelihood(self) -> float:
+        """
+        Applies the binomial probability mass function, given:
+        - the total length `(y)`;
+        - the total number of target matches `(n)`; and,
+        - the `failure margin` defined as: `((n-y)/y)**(n-y)`
+
+        Returns:
+            model (float) : The likelihood of a paper of length `y` being
+            relevant to our query, given the presense of `n` matches,
+            i.e. `P(y|n)`.
+
+        Further Explanation:
+            - Total combinations is total length choose matching words, `nCx`;
+            or `(n! / (x! * (n-x)!)`
+            -
+        Equation:
+        >>> P(y|n) = (n! / (y! * (n-y)!) * (y/n)**y * ((n-y)/n)**(n-y))
+        """
         total_combinations: int = comb(
-            self.total_len,
-            self.pos_part,
+            self.total_length,
+            self.target_count,
         )
-        success_probability: float = self.get_probability(
-            self.pos_part,
-            self.total_len,
+        success_margin: float = self.get_margin(
+            self.target_count,
+            self.total_length,
         )
-        return total_combinations * success_probability * failure_margin
+        model = total_combinations * success_margin * self.failure_margin
+        return model
 
     @staticmethod
-    def bayes_theorem(prior: float, likelihood: float, margin: float) -> float:
+    def bayes_theorem(*, prior: float, likelihood: float, margin: float) -> float:
         """
         bayes_theorem calculates the posterior using Bayes Theorem.
 
@@ -159,7 +173,7 @@ class RelevanceCalculator:
                 given the calculated binomial probability
 
         Returns:
-            float: posterior, or the likelihood of the paper
+            posterior (float): the likelihood of the paper
                 being a match given the words present.
         """
         hypothesis = prior * likelihood
@@ -181,9 +195,9 @@ class RelevanceCalculator:
         Example:
         >>> calculator =
             RelevanceCalculator(
-                pos_part=2,
-                neg_part=1,
-                total_len=100,
+                target_count=2,
+                bycatch_count=1,
+                total_length=100,
                 implicature_score=0.9
             )
         >>> calculator.calculate_wordscore(0.6)
@@ -191,17 +205,19 @@ class RelevanceCalculator:
         """
         weight = 0.85
         self.implicature_score = (
-            0.5 if self.implicature_score is None else self.implicature_score
+            likelihood if self.implicature_score is None else self.implicature_score
         )
         return (likelihood * weight) + (self.implicature_score * (1 - weight))
 
     @staticmethod
-    def get_probability(
+    def get_margin(
         part: Union[int, float],
         whole: Union[int, float],
     ) -> float:
         """
-        Calculates the probability of an event occurring based on the part and the whole.
+        Calculates the margin of an event occurring based on the part divided by the whole,
+        to the power of the part. e.g. Failure Margin is the neutral part `m`
+        over the total length `n` to the power of `m`, i.e. `(m/n)** m`
 
         Args:
             part (int or float): The part that represents the event of interest.
@@ -212,7 +228,7 @@ class RelevanceCalculator:
 
         Example
         ------
-        >>> RelevanceCalculator.get_probability(part=2, whole=4)
+        >>> RelevanceCalculator.get_margin(part=2, whole=4)
         (2 / 4) ** 2
         = 4 / 16
         = 1 / 4
