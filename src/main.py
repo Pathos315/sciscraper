@@ -90,9 +90,9 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     logger.debug(repr(sciscrape))
     logger.debug(repr(args.file))
 
-    if args.profilers is "benchmark":
+    if args.profilers == "benchmark":
         run_benchmark(args, sciscrape)
-    elif args.profilers is "memory":
+    elif args.profilers == "memory":
         run_memory_profiler(args, sciscrape)
     else:
         sciscrape(args.file, args.export, args.debug)

@@ -5,7 +5,7 @@ import random
 import tempfile
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, asdict
-from os import remove, path
+from os import path
 from time import sleep
 import re
 from typing import Optional
@@ -95,7 +95,7 @@ class Downloader(ABC):
 
     def create_document(
         self,
-        filename: str,
+        filename: FilePath,
         contents: bytes,
     ) -> None:
         """
