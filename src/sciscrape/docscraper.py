@@ -47,6 +47,9 @@ class DocumentResult:
     """
 
     relevance_scores: Optional[list[tuple[str, float]]]
+    matching_terms: int
+    bycatch_terms: int
+    total_length: int
     wordscore: float
     target_freq: list[tuple[str, int]] = field(default_factory=list)
     bycatch_freq: list[tuple[str, int]] = field(default_factory=list)
@@ -106,6 +109,7 @@ class DocScraper:
     target_words_file: str
     bycatch_words_file: str
     is_pdf: bool = True
+    use_api: bool = False
 
     def unpack_txt_files(self, txtfile: FilePath) -> set[str]:
         """
@@ -151,16 +155,16 @@ class DocScraper:
             if self.is_pdf
             else self.extract_text_from_summary(search_text)
         )
-
-        token_list = next(token_generator)
         classifier = ZeroShotClassifier(
             url=config.zero_classifier_url,
             sleep_val=1.1,
-        ).obtain(search_text)
+        )
+        token_list = next(token_generator)
+        labels = classifier.obtain(search_text) if self.use_api else None
         target: FreqDistAndCount = match_terms(token_list, target_set)
         bycatch: FreqDistAndCount = match_terms(token_list, bycatch_set)
-        relevance_scores = None if classifier is None else classifier[0]
-        implicature_score = None if classifier is None else classifier[1]
+        relevance_scores = None if labels is None else labels[0]
+        implicature_score = None if labels is None else labels[1]
         wordcalc = RelevanceCalculator(
             target.term_count,
             bycatch.term_count,
@@ -171,9 +175,12 @@ class DocScraper:
 
         doc = DocumentResult(
             relevance_scores,
-            wordcalc(),
-            target.frequency_dist,
-            bycatch.frequency_dist,
+            matching_terms=target.term_count,
+            bycatch_terms=bycatch.term_count,
+            total_length=len(token_list),
+            wordscore=wordcalc(),
+            target_freq=target.frequency_dist,
+            bycatch_freq=bycatch.frequency_dist,
         )
         logger.debug(repr(doc))
         return doc
