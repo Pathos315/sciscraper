@@ -55,7 +55,7 @@ class RelevanceCalculator:
             given that the event has not occurred.
             This is calculated as the `neutral_part` divided by
             the total number of words (`total_length`) to the power of the neutral part.
-        - `success_likelihood`: represents P(B|A), or the likelihood of
+        - `likelihood`: represents P(B|A), or the likelihood of
             the observations (B) occurring, given that the event (A) has occurred.
             This likelihood is calculated using a binomial distribution,
             which takes into account:
@@ -74,7 +74,7 @@ class RelevanceCalculator:
             given the observations. This is calculated using Bayes' theorem,
             which takes into account:
                 - the likelihood of the observations occurring:
-                    or (`success_likelihood`),
+                    or (`likelihood`),
                 - the prior probability of the event occurring:
                     or (`true positives`); and,
                 - the probability of the observations occurring given
@@ -90,17 +90,21 @@ class RelevanceCalculator:
             the positive posterior and negative posterior.
         """
         neutral_part: float = self.total_length - self.target_count
+        success_margin: float = self.get_margin(
+            self.target_count,
+            self.total_length,
+        )
         failure_margin: float = self.get_margin(
             neutral_part,
             self.total_length,
         )
         target_probability: float = self.target_count / self.total_length
         bycatch_probability: float = self.bycatch_count / self.total_length
-        success_likelihood: float = self.get_likelihood(failure_margin)
-        expectation: float = self.total_length * success_likelihood
-        variance: float = expectation * failure_margin
+        likelihood: float = self.get_likelihood(success_margin, failure_margin)
+        expectation: float = self.target_count * target_probability
+        variance: float = expectation * (1 - target_probability)
         standard_deviation: float = sqrt(variance)
-        skewness: float = (failure_margin - success_likelihood) / standard_deviation
+        skewness: float = (failure_margin - target_probability) / standard_deviation
 
         # Positive posterior is a bayes equation, in which the match likelihood
         # is multiplied by the true positives ratio
@@ -108,7 +112,7 @@ class RelevanceCalculator:
         # The formula, therefore, is
         positive_posterior = self.bayes_theorem(
             prior=target_probability,
-            likelihood=success_likelihood,
+            likelihood=likelihood,
             margin=failure_margin,
         )
         # Negative posterior is also a bayes equation,
@@ -118,7 +122,7 @@ class RelevanceCalculator:
         neg_posterior = self.bayes_theorem(
             prior=bycatch_probability,
             likelihood=failure_margin,
-            margin=success_likelihood,
+            margin=likelihood,
         )
         # Note: Failure margin treated as likelihood because it's looking for bycatch, i.e. inverse
         # Moreover, success likelihood treated as margin because it's looking for bycatch, i.e. inverse
@@ -138,7 +142,7 @@ class RelevanceCalculator:
             skewness,
         )
 
-    def get_likelihood(self, failure_margin: float) -> float:
+    def get_likelihood(self, success_margin: float, failure_margin: float) -> float:
         """
         Applies the binomial probability mass function, given:
         - the total length `(y)`;
@@ -160,10 +164,6 @@ class RelevanceCalculator:
         total_combinations: int = comb(
             self.total_length,
             self.target_count,
-        )
-        success_margin: float = self.get_margin(
-            self.target_count,
-            self.total_length,
         )
         model = total_combinations * success_margin * failure_margin
         return model
