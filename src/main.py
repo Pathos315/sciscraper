@@ -8,7 +8,10 @@ from typing import Optional, Sequence
 from time import perf_counter
 
 from sciscrape.log import logger
-from sciscrape.profilers import run_benchmark, run_memory_profiler
+from sciscrape.profilers import (
+    run_benchmark,
+    run_memory_profiler,
+)
 from sciscrape.factories import read_factory, SCISCRAPERS
 from sciscrape.config import config
 
@@ -94,10 +97,12 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     logger.debug(repr(sciscrape))
     logger.debug(repr(args.file))
 
-    if args.profilers == "benchmark":
-        run_benchmark(args, sciscrape)
-    elif args.profilers == "memory":
-        run_memory_profiler(args, sciscrape)
+    if args.profilers:
+        args.debug = True
+        args.export = False
+        run_benchmark(
+            args, sciscrape
+        ) if args.profilers == "benchmark" else run_memory_profiler(args, sciscrape)
     else:
         sciscrape(args.file, args.export, args.debug)
 
@@ -106,4 +111,4 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

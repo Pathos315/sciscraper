@@ -111,17 +111,17 @@ class ScrapeFetcher(Fetcher):
 @dataclass(slots=True)
 class StagingFetcher(Fetcher):
     """
-    StagingFetcher takes a dataframe, `prior_df` with one of its columns
+    StagingFetcher takes a dataframe, `prior_dataframe` with one of its columns
     isolated and staged, via `stager`, into a list of `staged_terms`.
     It then puts it into fetch, where it returns the final dataframe.
     """
 
     stager: StagingStrategyFunction
 
-    def __call__(self, prior_df: pd.DataFrame) -> pd.DataFrame:
-        staged_terms: Iterable[Any] = self.stager(prior_df)
+    def __call__(self, prior_dataframe: pd.DataFrame) -> pd.DataFrame:
+        staged_terms: Iterable[Any] = self.stager(prior_dataframe)
         if isinstance(staged_terms, list):
-            dataframe = self.fetch_from_staged_series(prior_df, staged_terms)
+            dataframe = self.fetch_from_staged_series(prior_dataframe, staged_terms)
         elif isinstance(staged_terms, tuple):
             dataframe = self.fetch_with_staged_reference(staged_terms)  # type: ignore
         else:
@@ -129,18 +129,18 @@ class StagingFetcher(Fetcher):
         return dataframe
 
     def fetch_from_staged_series(
-        self, prior_df: pd.DataFrame, staged_terms: list
+        self, prior_dataframe: pd.DataFrame, staged_terms: list
     ) -> pd.DataFrame:
-        df_ext: pd.DataFrame = self.fetch(staged_terms)
-        dataframe: pd.DataFrame = prior_df.join(df_ext)
+        dataframe_ext: pd.DataFrame = self.fetch(staged_terms)
+        dataframe: pd.DataFrame = prior_dataframe.join(dataframe_ext)
         return dataframe
 
     def fetch_with_staged_reference(
         self, staged_terms: tuple[list[Any], list[Any]]
     ) -> pd.DataFrame:
         citations, src_titles = staged_terms
-        ref_df: pd.DataFrame = self.fetch(citations, "references")
-        dataframe = ref_df.join(
+        ref_dataframe: pd.DataFrame = self.fetch(citations, "references")
+        dataframe = ref_dataframe.join(
             pd.Series(src_titles, dtype="string", name="src_titles")
         )
         return dataframe
@@ -164,16 +164,20 @@ class SciScraper:
         self.set_logging(debug)
         logger.info(f"Debug logging status: '{debug}'")
         logger.info("Commencing sciscraper...\n")
-        df: pd.DataFrame = self.scraper(target)
-        df = self.stager(df) if self.stager else df
-        df = self.df_casting(df) if self.downcast else df
-        self.export(df) if export else None
+        dataframe: pd.DataFrame = self.scraper(target)
+        dataframe = self.stager(dataframe) if self.stager else dataframe
+        dataframe = self.remove_empty_columns(dataframe)
+        dataframe = self.dataframe_casting(dataframe) if self.downcast else dataframe
+        self.export(dataframe) if export else None
 
     def set_logging(self, debug: bool) -> None:
         self.logger.setLevel(10) if debug else self.logger.setLevel(20)
 
+    def remove_empty_columns(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+        return dataframe.replace("", float("NaN")).dropna(how="all", axis=1)
+
     @classmethod
-    def df_casting(cls, df: pd.DataFrame) -> pd.DataFrame:
+    def dataframe_casting(cls, dataframe: pd.DataFrame) -> pd.DataFrame:
         """
         Formats and optimizes the final dataframe through converting datatypes
         and filling missing fields, where possible.
@@ -185,18 +189,18 @@ class SciScraper:
         """
 
         # Convert "pub_date" column to datetime data type
-        if "pub_date" in df:
-            df["pub_date"] = cls.downcast_available_datetimes(df)
+        if "pub_date" in dataframe:
+            dataframe["pub_date"] = cls.downcast_available_datetimes(dataframe)
 
         # Convert columns in KEY_TYPE_PAIRINGS dictionary to specified data types
         for scikey, value in KEY_TYPE_PAIRINGS.items():
-            if scikey in df:
-                df[scikey] = df[scikey].astype(value)
-        return df
+            if scikey in dataframe:
+                dataframe[scikey] = dataframe[scikey].astype(value)
+        return dataframe
 
     @classmethod
-    def downcast_available_datetimes(cls, df: pd.DataFrame | pd.Series):
-        return pd.to_datetime(df["pub_date"], infer_datetime_format=True)
+    def downcast_available_datetimes(cls, dataframe: pd.DataFrame | pd.Series):
+        return pd.to_datetime(dataframe["pub_date"], infer_datetime_format=True)
 
     @classmethod
     def export(
@@ -207,7 +211,7 @@ class SciScraper:
         export_name = cls.create_export_name()
         with change_dir(export_dir):
             logger.info(f"A spreadsheet was exported as {export_name} in {export_dir}.")
-            dataframe.to_csv(export_name)
+            dataframe.to_csv(export_name, index=False)
 
     @classmethod
     def dataframe_logging(cls, dataframe: pd.DataFrame) -> None:
