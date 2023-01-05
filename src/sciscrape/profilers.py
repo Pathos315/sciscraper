@@ -1,5 +1,5 @@
 import sys
-
+import dis
 from cProfile import Profile
 import pstats
 
@@ -19,15 +19,11 @@ def run_benchmark(args, sciscrape: SciScraper) -> None:
     sorted by time and printed, and the stats are also dumped to a file specified by `config.profiling_path`.
     Finally, the `snakeviz` module is used to visualize the profile stats in a web browser.
 
-    Parameters
-    ---------
-    args:
-        An object containing the arguments for the `sciscrape` function.
-    sciscrape:
-        An instance of the `SciScraper` class to be benchmarked.
+    Args:
+        args: An object containing the arguments for the `sciscrape` function.
+        sciscrape (SciScraper): An instance of the `SciScraper` class to be benchmarked.
 
-    Returns
-    -------
+    Returns:
         None
     """
     with Profile() as pr:
@@ -42,3 +38,8 @@ def run_benchmark(args, sciscrape: SciScraper) -> None:
 @memory_profiler.profile(precision=4)
 def run_memory_profiler(args, sciscrape: SciScraper) -> None:
     sciscrape(args.file, args.export, args.debug)
+
+
+# TODO: Fix this function to work.
+def _run_bytecode_profiler(args, sciscrape: SciScraper) -> None:
+    dis.dis(sciscrape(args.file, args.export))
