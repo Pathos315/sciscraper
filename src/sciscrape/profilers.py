@@ -40,6 +40,5 @@ def run_memory_profiler(args, sciscrape: SciScraper) -> None:
     sciscrape(args.file, args.export, args.debug)
 
 
-# TODO: Fix this function to work.
-def _run_bytecode_profiler(args, sciscrape: SciScraper) -> None:
-    dis.dis(sciscrape(args.file, args.export))
+def run_bytecode_profiler(sciscrape: SciScraper) -> None:
+    dis.dis(sciscrape.__call__)

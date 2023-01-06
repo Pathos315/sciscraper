@@ -157,8 +157,7 @@ class RelevanceCalculator:
         Further Explanation:
             - Total combinations is total length choose matching words, `nCx`;
             or `(n! / (x! * (n-x)!)`
-            -
-        Equation:
+        --------
         >>> P(y|n) = (n! / (y! * (n-y)!) * (y/n)**y * ((n-y)/n)**(n-y))
         """
         total_combinations: int = comb(
@@ -181,8 +180,11 @@ class RelevanceCalculator:
                 given the calculated binomial probability
 
         Returns:
-            posterior (float): the likelihood of the paper
-                being a match given the words present.
+            posterior (float): the likelihood of the paper being a match given the words present.
+        --------
+        >>> P(n|y) = (n! / (y! * (n-y)!) * (y/n)**y * ((n-y)/n)**(n-y)) * (y/n))
+            / ((n! / (y! * (n-y)!) * (y/n)**y * ((n-y)/n)**(n-y)) + ((n-y)/n)**(n-y)))
+        >>> P(n|y) = (P(y|n) * P(y)) / (P(y|n) + P(n-y))
         """
         hypothesis = prior * likelihood
         total_evidence = hypothesis + margin

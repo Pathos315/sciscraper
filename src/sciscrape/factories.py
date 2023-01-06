@@ -1,5 +1,4 @@
-"""
-`factories.py` is a module for constructing and executing scientific data scrapers.
+"""`factories.py` is a module for constructing and executing scientific data scrapers.
 
 This module contains functions and classes for scraping scientific data from various sources,
 including the Dimensions.ai API and local directories.
@@ -18,7 +17,10 @@ from sciscrape.log import logger
 
 SCRAPERS: dict[str, ScrapeFetcher] = {
     "pdf_lookup": ScrapeFetcher(
-        DocScraper(config.target_words, config.bycatch_words),
+        DocScraper(
+            config.target_words,
+            config.bycatch_words,
+        ),
         serialize_from_directory,
     ),
     "csv_lookup": ScrapeFetcher(

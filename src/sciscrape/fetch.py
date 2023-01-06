@@ -83,7 +83,7 @@ class Fetcher(ABC):
             A dataframe containing biliographic data.
         """
         data: Generator[
-            DocumentResult | WebScrapeResult | DownloadReceipt | None, None, None
+            Optional[DocumentResult | WebScrapeResult | DownloadReceipt], None, None
         ] = (
             self.scraper.obtain(term)
             for term in tqdm(search_terms, desc="[sciscraper]: ", unit=f"{tqdm_unit}")
@@ -162,8 +162,9 @@ class SciScraper:
         self, target: FilePath, export: bool = True, debug: bool = False
     ) -> None:
         self.set_logging(debug)
-        logger.info(f"Debug logging status: '{debug}'")
-        logger.info("Commencing sciscraper...\n")
+        logger.info(f"Debug logging status: '{debug}'\n\
+            Commencing sciscrape on file: '{target}'...\n"
+            )
         dataframe: pd.DataFrame = self.scraper(target)
         dataframe = self.stager(dataframe) if self.stager else dataframe
         dataframe = self.remove_empty_columns(dataframe)

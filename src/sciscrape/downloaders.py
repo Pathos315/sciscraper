@@ -2,7 +2,7 @@ r"""
 Downloads papers en masse
 """
 import random
-import tempfile
+from tempfile import TemporaryFile
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, asdict
 from os import path
@@ -116,7 +116,7 @@ class Downloader(ABC):
         -------
             A .pdf or .png file, depending on the `Downloader` in use.
         """
-        with (change_dir(self.export_dir), tempfile.TemporaryFile() as temp):
+        with (change_dir(self.export_dir), TemporaryFile() as temp):
             temp.write(contents)
             with open(filename, "wb") as file:
                 for line in temp:
@@ -233,7 +233,7 @@ class BulkPDFScraper(Downloader):
                 self.url,
                 e,
             )
-            return None
+            return
 
     def format_download_link(self, download_link: Optional[str]) -> Optional[str]:
         """

@@ -4,6 +4,7 @@ By John Fallot <john.fallot@gmail.com>
 """
 
 import argparse
+from functools import partial
 from typing import Optional, Sequence
 from time import perf_counter
 
@@ -11,6 +12,7 @@ from sciscrape.log import logger
 from sciscrape.profilers import (
     run_benchmark,
     run_memory_profiler,
+    run_bytecode_profiler,
 )
 from sciscrape.factories import read_factory, SCISCRAPERS
 from sciscrape.config import config
@@ -69,6 +71,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         choices=(
             "benchmark",
             "memory",
+            "bytecode",
         ),
         help="Specify if benchmarking is to be conducted: default: %(default)s)",
     )
@@ -97,18 +100,19 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     logger.debug(repr(sciscrape))
     logger.debug(repr(args.file))
 
-    if args.profilers:
-        args.debug = True
-        args.export = False
-        run_benchmark(
-            args, sciscrape
-        ) if args.profilers == "benchmark" else run_memory_profiler(args, sciscrape)
-    else:
-        sciscrape(args.file, args.export, args.debug)
+    profiler_dict = {
+        "benchmark": partial(run_benchmark,args=args),
+        "memory": partial(run_memory_profiler,args=args),
+        "bytecode": run_bytecode_profiler,
+    }
+
+    profiler_dict[args.profilers](sciscrape) if args.profilers else sciscrape(
+        args.file, args.export, args.debug
+    )
 
     elapsed = perf_counter() - start
     logger.info(f"Extraction finished in {elapsed:.2f} seconds.")
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()
