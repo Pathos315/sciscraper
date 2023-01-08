@@ -109,7 +109,7 @@ def test_fetch(mock_csv):
         assert isinstance(output, pd.DataFrame)
         assert output.empty is False
         assert output.dtypes["title"] == "object"
-        new_data = test_sciscraper.df_casting(output)
+        new_data = test_sciscraper.dataframe_casting(output)
         assert new_data.dtypes["title"] == "string"
 
 
