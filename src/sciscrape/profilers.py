@@ -2,12 +2,20 @@ import sys
 import dis
 from cProfile import Profile
 import pstats
+import memory_profiler
 
-from subprocess import Popen
+import subprocess
+import psutil
 from sciscrape.config import config
 from sciscrape.fetch import SciScraper
 
-import memory_profiler
+
+def _kill(proc_pid: int) -> None:
+    """Kill the current benchmark process with SIGKILL, pre-emptively checking whether PID has been reused."""
+    process = psutil.Process(proc_pid)
+    for proc in process.children(recursive=True):
+        proc.kill()
+    process.kill()
 
 
 def run_benchmark(args, sciscrape: SciScraper) -> None:
@@ -32,13 +40,27 @@ def run_benchmark(args, sciscrape: SciScraper) -> None:
     stats.sort_stats(pstats.SortKey.TIME)
     stats.print_stats()
     stats.dump_stats(config.profiling_path)
-    Popen([sys.executable, "-m", "snakeviz", config.profiling_path])
+    proc = subprocess.Popen(
+        [
+            sys.executable,
+            "-m",
+            "snakeviz",
+            config.profiling_path,
+        ],
+        shell=True,
+    )
+    try:
+        proc.wait(timeout=5.0)
+    except subprocess.TimeoutExpired:
+        _kill(proc.pid)
 
 
 @memory_profiler.profile(precision=4)
 def run_memory_profiler(args, sciscrape: SciScraper) -> None:
+    """Benchmark the line by line memory usage of the `sciscraper` program."""
     sciscrape(args.file, args.export, args.debug)
 
 
 def run_bytecode_profiler(sciscrape: SciScraper) -> None:
+    """Reproduce the bytecode of the entire `sciscraper` program."""
     dis.dis(sciscrape.__call__)
