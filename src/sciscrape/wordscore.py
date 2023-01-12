@@ -40,7 +40,6 @@ class RelevanceCalculator:
     target_count: int
     bycatch_count: int
     total_length: int
-    implicature_score: Optional[float]
 
     def __call__(self) -> Wordscore:
         """
@@ -130,10 +129,7 @@ class RelevanceCalculator:
         # The negative posterior is then subtracted
         # from the positive posterior
         # to produce the unweighted wordscore
-        unweighted_wordscore = positive_posterior - neg_posterior
-        # The highest zero shot classification score
-        # accounts for about 20% of the final wordscore
-        wordscore = self.calculate_wordscore(unweighted_wordscore)
+        wordscore = positive_posterior - neg_posterior
         return Wordscore(
             wordscore,
             expectation,
@@ -190,37 +186,6 @@ class RelevanceCalculator:
         total_evidence = hypothesis + margin
         posterior = hypothesis / total_evidence
         return posterior
-
-    def calculate_wordscore(self, likelihood: float) -> float:
-        """
-        Calculates the final word score based on the
-            raw probability and the implicature score.
-
-        Args:
-            raw_probability (float): The raw probability that the paper is relevant.
-
-        Returns:
-            float: The final word score, as a percentage.
-
-        Example:
-        >>> calculator =
-            RelevanceCalculator(
-                target_count=2,
-                bycatch_count=1,
-                total_length=100,
-                implicature_score=0.9
-            )
-        >>> calculator.calculate_wordscore(0.6)
-        0.74 # or 74%
-        """
-        weight = 0.85
-        self.implicature_score = (
-            likelihood if self.implicature_score is None else self.implicature_score
-        )
-        wordscore: float = (likelihood * weight) + (
-            self.implicature_score * (1 - weight)
-        )
-        return wordscore
 
     @staticmethod
     def get_margin(

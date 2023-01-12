@@ -10,16 +10,11 @@ from collections import Counter
 from dataclasses import dataclass, field
 from typing import Any, Generator, Optional
 from sciscrape.wordscore import RelevanceCalculator
-from sciscrape.webscrapers import WebScraper, client
 from sciscrape.log import logger
-from sciscrape.config import UTF, FilePath, config
+from sciscrape.config import UTF, FilePath, ScrapeResults
 
 
-load_dotenv()
-API_KEY = getenv("api_key")
-
-
-@dataclass(slots=True, frozen=True, order=True)
+@dataclass(frozen=True, order=True)
 class FreqDistAndCount:
     """FreqDistAndCount
 
@@ -38,15 +33,14 @@ class FreqDistAndCount:
     frequency_dist: list[tuple[str, int]] = field(default_factory=list)
 
 
-@dataclass(slots=True, frozen=True, order=True)
-class DocumentResult:
+@dataclass(frozen=True, order=True)
+class DocumentResult(ScrapeResults):
     """DocumentResult contains the RelevanceCalculator\
     scoring relevance, and two lists, each with\
     the three most frequent target and bycatch words respectively.\
     This gets passed back to a pandas dataframe.\
     """
 
-    relevance_scores: Optional[list[tuple[str, float]]]
     matching_terms: int
     bycatch_terms: int
     total_length: int
@@ -101,7 +95,7 @@ def match_terms(target: list[str], word_set: set[str]) -> FreqDistAndCount:
     return freq
 
 
-@dataclass(slots=True)
+@dataclass
 class DocScraper:
     """
     DocScraper takes two .txt files and either a full .pdf or an abstract.
@@ -159,27 +153,18 @@ class DocScraper:
             if self.is_pdf
             else self.extract_text_from_summary(search_text)
         )
-        classifier = ZeroShotClassifier(
-            url=config.zero_classifier_url,
-            sleep_val=1.1,
-        )
         token_list = next(token_generator)
-        labels = classifier.obtain(search_text) if self.use_api else None
         target: FreqDistAndCount = match_terms(token_list, target_set)
         bycatch: FreqDistAndCount = match_terms(token_list, bycatch_set)
-        relevance_scores = None if labels is None else labels[0]
-        implicature_score = None if labels is None else labels[1]
         wordcalc = RelevanceCalculator(
             target.term_count,
             bycatch.term_count,
             len(token_list),
-            implicature_score,
         )
         logger.debug(repr(wordcalc))
 
         relevance_result = wordcalc()
         doc = DocumentResult(
-            relevance_scores,
             matching_terms=target.term_count,
             bycatch_terms=bycatch.term_count,
             total_length=len(token_list),
@@ -284,69 +269,3 @@ class DocScraper:
             repr(output),
         )
         yield output
-
-
-@dataclass(slots=True)
-class ZeroShotClassifier(WebScraper):
-    """
-    The ZeroShotClassifier classifies text into one of several labels,
-        without any prior training or knowledge of the classes.
-    """
-
-    def obtain(
-        self, search_text: str
-    ) -> Optional[tuple[list[tuple[str, float]], float]]:
-        headers = {"Authorization": f"Bearer {API_KEY}"}
-        querystring = self.create_querystring(search_text)
-        sleep(self.sleep_val)
-        response = client.post(self.url, headers=headers, json=querystring)
-        logger.debug(
-            "search_text=%s, scraper=%s, status_code=%s",
-            search_text,
-            repr(self),
-            response.status_code,
-        )
-        raw_relevance = (
-            None
-            if response.status_code != 200
-            else self.get_raw_relevance(response.text)
-        )
-        return (
-            None
-            if raw_relevance is None
-            else self.zip_raw_relevance_values(raw_relevance)
-        )
-
-    def get_raw_relevance(self, response_text: str) -> dict[str, Any]:
-        return loads(response_text)
-
-    def create_querystring(
-        self,
-        search_text: str,
-        candidate_labels: list[str] = [
-            "prosocial behaviors",
-            "social media",
-            "design interventions",
-            "user experience design",
-            "cyberbullying",
-        ],
-    ) -> dict[str, Any]:
-        return {
-            "inputs": search_text,
-            "parameters": {"candidate_labels": candidate_labels},
-        }
-
-    def zip_raw_relevance_values(
-        self, raw_relevance: dict
-    ) -> Optional[tuple[list[tuple[str, float]], float]]:
-        try:
-            labels: list[str] = raw_relevance["labels"]
-            labels = [str.title(label) for label in labels]
-            scores: list[float] = raw_relevance["scores"]
-            implicature_score = scores[0]
-            relevance_scores = list(zip(labels, scores))
-            logger.debug(f"\n{labels}\n{scores}\n=>{relevance_scores}")
-            return relevance_scores, implicature_score
-        except KeyError as e:
-            logger.debug("The following error occurred, %e", e)
-            return None

@@ -8,18 +8,31 @@ Returns
 
 import json
 from datetime import date
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Union
 from pathlib import Path
-from dotenv import load_dotenv
 
 FilePath = Union[str, Path]
 UTF = "utf-8"
 
-load_dotenv()
+
+@dataclass(frozen=True)
+class ScrapeResults:
+    """
+    ScrapeResult is the superclass of all
+    results, and provides supplemental methods
+    for testing.
+    """
+
+    @classmethod
+    def from_dict(cls, dict_input: dict):
+        return ScrapeResults(**dict_input)
+
+    def to_dict(self):
+        return asdict(self)
 
 
-@dataclass(slots=True, order=True)
+@dataclass(order=True)
 class ScrapeConfig:
 
     """

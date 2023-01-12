@@ -4,7 +4,7 @@ Downloads papers en masse
 import random
 from tempfile import TemporaryFile
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from os import path
 from time import sleep
 import re
@@ -15,11 +15,11 @@ from selectolax.parser import HTMLParser
 from sciscrape.webscrapers import client
 from sciscrape.log import logger
 from sciscrape.change_dir import change_dir
-from sciscrape.config import FilePath, config
+from sciscrape.config import FilePath, config, ScrapeResults
 
 
-@dataclass(slots=True, frozen=True, order=True)
-class DownloadReceipt:
+@dataclass(frozen=True, order=True)
+class DownloadReceipt(ScrapeResults):
     """
     A representation of the receipt describing whether
     or not the download was successful, and,
@@ -40,15 +40,8 @@ class DownloadReceipt:
     success: bool = False
     filepath: str = "N/A"
 
-    @classmethod
-    def from_dict(cls, dict_input: dict):
-        return DownloadReceipt(**dict_input)
 
-    def to_dict(self):
-        return asdict(self)
-
-
-@dataclass(slots=True)
+@dataclass
 class Downloader(ABC):
     """An abstract representation of a scraper that downloads files."""
 
@@ -123,7 +116,7 @@ class Downloader(ABC):
                     file.write(line)
 
 
-@dataclass(slots=True)
+@dataclass
 class BulkPDFScraper(Downloader):
     """
     The BulkPDFScrape class takes the provided
@@ -281,7 +274,7 @@ class BulkPDFScraper(Downloader):
         return self.link_cleaning_pattern.match(download_link)
 
 
-@dataclass(slots=True)
+@dataclass
 class ImagesDownloader(Downloader):
     """
     The ImagesDownloader class takes the provided

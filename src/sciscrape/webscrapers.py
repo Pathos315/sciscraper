@@ -9,7 +9,7 @@ from json import loads
 from selectolax.parser import HTMLParser
 from requests import Response, Session
 from sciscrape.log import logger
-from sciscrape.config import config
+from sciscrape.config import config, ScrapeResults
 
 
 client = Session()
@@ -27,8 +27,8 @@ DIMENSIONS_AI_KEYS: dict[str, str] = {
 }
 
 
-@dataclass(slots=True, frozen=True, order=True)
-class WebScrapeResult:
+@dataclass(frozen=True, order=True)
+class WebScrapeResult(ScrapeResults):
     """Represents a result from a scrape to be passed back to the dataframe."""
 
     title: str
@@ -44,15 +44,8 @@ class WebScrapeResult:
     biblio: Optional[str] = None
     abstract: Optional[str] = None
 
-    @classmethod
-    def from_dict(cls, dict_input: dict):
-        return WebScrapeResult(**dict_input)
 
-    def to_dict(self):
-        return asdict(self)
-
-
-@dataclass(slots=True)
+@dataclass
 class WebScraper(ABC):
     """Abstract representation of a webscraper dataclass."""
 
@@ -90,7 +83,7 @@ class WebScraper(ABC):
         return doc[subkey]
 
 
-@dataclass(slots=True)
+@dataclass
 class DimensionsScraper(WebScraper):
     """
     Representation of a webscraper that makes requests to dimensions.ai.
@@ -204,7 +197,7 @@ class Style(Enum):
     CHI = "chicago-fullnote-bibliography"
 
 
-@dataclass(slots=True)
+@dataclass
 class CitationScraper(WebScraper):
     """
     CitationsScraper is a webscraper made exclusively for generating citations
@@ -242,7 +235,7 @@ class CitationScraper(WebScraper):
         }
 
 
-@dataclass(slots=True)
+@dataclass
 class OverviewScraper(WebScraper):
     """
     OverviewScraper is a webscraper made exclusively
@@ -271,7 +264,7 @@ class OverviewScraper(WebScraper):
         )
 
 
-@dataclass(slots=True)
+@dataclass
 class SemanticFigureScraper(WebScraper):
     """Scraper that queries
     semanticscholar.org for graphs and charts
