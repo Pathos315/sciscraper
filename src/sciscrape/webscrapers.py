@@ -9,7 +9,7 @@ from json import loads
 from selectolax.parser import HTMLParser
 from requests import Response, Session
 from sciscrape.log import logger
-from sciscrape.config import config, ScrapeResults
+from sciscrape.config import config
 
 
 client = Session()
@@ -28,7 +28,7 @@ DIMENSIONS_AI_KEYS: dict[str, str] = {
 
 
 @dataclass(frozen=True, order=True)
-class WebScrapeResult(ScrapeResults):
+class WebScrapeResult:
     """Represents a result from a scrape to be passed back to the dataframe."""
 
     title: str
@@ -43,6 +43,13 @@ class WebScrapeResult(ScrapeResults):
     figures: Optional[list[str]] = field(default_factory=list)
     biblio: Optional[str] = None
     abstract: Optional[str] = None
+
+    @classmethod
+    def from_dict(cls, dict_input: dict):
+        return WebScrapeResult(**dict_input)
+
+    def to_dict(self):
+        return asdict(self)
 
 
 @dataclass

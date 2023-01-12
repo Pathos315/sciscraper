@@ -4,7 +4,7 @@ import pandas as pd
 import requests
 from requests import Response
 from sciscrape.docscraper import DocScraper
-from sciscrape.wordscore import RelevanceCalculator
+from sciscrape.wordscore import Wordscore, WordscoreCalculator
 from sciscrape.config import config
 from sciscrape.downloaders import (
     BulkPDFScraper,
@@ -100,11 +100,10 @@ def mock_request():
 
 @pytest.fixture()
 def wordscore_calc():
-    return RelevanceCalculator(
+    return WordscoreCalculator(
         target_count=64,
         bycatch_count=32,
         total_length=2048,
-        implicature_score=0.5,
     )
 
 
@@ -114,7 +113,6 @@ def wordscore_dict() -> dict[str, float | int]:
         "target_count": 64,
         "bycatch_count": 32,
         "total_length": 2048,
-        "implicature_score": 0.5,
     }
 
 

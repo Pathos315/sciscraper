@@ -3,21 +3,23 @@ returning various dataframes for each"""
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, is_dataclass
-from typing import Generator, Optional, Callable, Iterable, Any
+from typing import Generator, Optional, Callable, Iterable, Any, Union
 
 from random import randint
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-from sciscrape.config import FilePath, config, ScrapeResults
-from sciscrape.docscraper import DocScraper
-from sciscrape.webscrapers import WebScraper
-from sciscrape.downloaders import Downloader
+from sciscrape.config import FilePath, config
+from sciscrape.docscraper import DocScraper, DocumentResult
+from sciscrape.webscrapers import WebScraper, WebScrapeResult
+from sciscrape.downloaders import Downloader, DownloadReceipt
 from sciscrape.change_dir import change_dir
 from sciscrape.log import logger
 
 SerializationStrategyFunction = Callable[[FilePath], list[str]]
 StagingStrategyFunction = Callable[[pd.DataFrame], Iterable[Any]]
+ScrapeResult = DocumentResult | WebScrapeResult | DownloadReceipt
+
 
 KEY_TYPE_PAIRINGS: dict[str, Any] = {
     "title": "string",
@@ -82,7 +84,7 @@ class Fetcher(ABC):
         pd.DataFrame
             A dataframe containing biliographic data.
         """
-        data: Generator[Optional[ScrapeResults], None, None] = (
+        data: Generator[Optional[ScrapeResult], None, None] = (
             self.scraper.obtain(term)
             for term in tqdm(search_terms, desc="[sciscraper]: ", unit=f"{tqdm_unit}")
         )

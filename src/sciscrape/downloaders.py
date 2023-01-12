@@ -4,7 +4,7 @@ Downloads papers en masse
 import random
 from tempfile import TemporaryFile
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from os import path
 from time import sleep
 import re
@@ -15,11 +15,11 @@ from selectolax.parser import HTMLParser
 from sciscrape.webscrapers import client
 from sciscrape.log import logger
 from sciscrape.change_dir import change_dir
-from sciscrape.config import FilePath, config, ScrapeResults
+from sciscrape.config import FilePath, config
 
 
 @dataclass(frozen=True, order=True)
-class DownloadReceipt(ScrapeResults):
+class DownloadReceipt:
     """
     A representation of the receipt describing whether
     or not the download was successful, and,
@@ -39,6 +39,13 @@ class DownloadReceipt(ScrapeResults):
     downloader: str
     success: bool = False
     filepath: str = "N/A"
+
+    @classmethod
+    def from_dict(cls, dict_input: dict):
+        return DownloadReceipt(**dict_input)
+
+    def to_dict(self):
+        return asdict(self)
 
 
 @dataclass

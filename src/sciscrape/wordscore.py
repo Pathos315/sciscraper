@@ -1,9 +1,9 @@
 from dataclasses import dataclass, asdict
-from typing import Optional, Union
+from typing import Union
 from math import comb, sqrt
 
 
-@dataclass(slots=True, frozen=True, order=True)
+@dataclass(frozen=True, order=True)
 class Wordscore:
     probability: float
     expectation: float
@@ -11,9 +11,16 @@ class Wordscore:
     standard_deviation: float
     skewness: float
 
+    @classmethod
+    def from_dict(cls, dict_input: dict):
+        return Wordscore(**dict_input)
 
-@dataclass(slots=True, order=True)
-class RelevanceCalculator:
+    def to_dict(self):
+        return asdict(self)
+
+
+@dataclass
+class WordscoreCalculator:
     """
     A class for calculating the relevance of a paper or
     abstract based on its target and bycatch words.
@@ -138,7 +145,11 @@ class RelevanceCalculator:
             skewness,
         )
 
-    def get_likelihood(self, success_margin: float, failure_margin: float) -> float:
+    def get_likelihood(
+        self,
+        success_margin: float,
+        failure_margin: float,
+    ) -> float:
         """
         Applies the binomial probability mass function, given:
         - the total length `(y)`;
@@ -163,8 +174,13 @@ class RelevanceCalculator:
         model = total_combinations * success_margin * failure_margin
         return model
 
-    @staticmethod
-    def bayes_theorem(*, prior: float, likelihood: float, margin: float) -> float:
+    def bayes_theorem(
+        self,
+        *,
+        prior: float,
+        likelihood: float,
+        margin: float,
+    ) -> float:
         """
         bayes_theorem calculates the posterior using Bayes Theorem.
 
@@ -187,8 +203,8 @@ class RelevanceCalculator:
         posterior = hypothesis / total_evidence
         return posterior
 
-    @staticmethod
     def get_margin(
+        self,
         part: Union[int, float],
         whole: Union[int, float],
     ) -> float:
@@ -206,7 +222,7 @@ class RelevanceCalculator:
 
         Example
         ------
-        >>> RelevanceCalculator.get_margin(part=2, whole=4)
+        >>> WordscoreCalculator.get_margin(part=2, whole=4)
         (2 / 4) ** 2
         = 4 / 16
         = 1 / 4
@@ -216,7 +232,7 @@ class RelevanceCalculator:
 
     @classmethod
     def from_dict(cls, dict_input: dict):
-        return RelevanceCalculator(**dict_input)
+        return cls(**dict_input)
 
     def to_dict(self):
         return asdict(self)

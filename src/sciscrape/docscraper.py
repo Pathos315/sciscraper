@@ -7,11 +7,11 @@ from json import loads
 import pdfplumber
 import re
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Any, Generator, Optional
-from sciscrape.wordscore import RelevanceCalculator
+from sciscrape.wordscore import WordscoreCalculator
 from sciscrape.log import logger
-from sciscrape.config import UTF, FilePath, ScrapeResults
+from sciscrape.config import UTF, FilePath
 
 
 @dataclass(frozen=True, order=True)
@@ -32,10 +32,17 @@ class FreqDistAndCount:
     term_count: int
     frequency_dist: list[tuple[str, int]] = field(default_factory=list)
 
+    @classmethod
+    def from_dict(cls, dict_input: dict):
+        return cls(**dict_input)
+
+    def to_dict(self):
+        return asdict(self)
+
 
 @dataclass(frozen=True, order=True)
-class DocumentResult(ScrapeResults):
-    """DocumentResult contains the RelevanceCalculator\
+class DocumentResult:
+    """DocumentResult contains the WordscoreCalculator\
     scoring relevance, and two lists, each with\
     the three most frequent target and bycatch words respectively.\
     This gets passed back to a pandas dataframe.\
@@ -101,13 +108,12 @@ class DocScraper:
     DocScraper takes two .txt files and either a full .pdf or an abstract.
     From these, it generates an analysis of its relevance,
     according to provided target and bycatch words, in the form of
-    a percentage grade called RelevanceCalculator.
+    a percentage grade called WordscoreCalculator.
     """
 
-    target_words_file: str
-    bycatch_words_file: str
+    target_words_file: FilePath
+    bycatch_words_file: FilePath
     is_pdf: bool = True
-    use_api: bool = False
 
     def unpack_txt_files(self, txtfile: FilePath) -> set[str]:
         """
@@ -156,7 +162,7 @@ class DocScraper:
         token_list = next(token_generator)
         target: FreqDistAndCount = match_terms(token_list, target_set)
         bycatch: FreqDistAndCount = match_terms(token_list, bycatch_set)
-        wordcalc = RelevanceCalculator(
+        wordcalc = WordscoreCalculator(
             target.term_count,
             bycatch.term_count,
             len(token_list),

@@ -49,15 +49,6 @@ STAGERS: dict[str, StagingFetcher] = {
         ),
         stage_from_series,
     ),
-    "relevance": StagingFetcher(
-        DocScraper(
-            config.target_words,
-            config.bycatch_words,
-            is_pdf=False,
-            use_api=True,
-        ),
-        stage_from_series,
-    ),
     "citations": StagingFetcher(
         DimensionsScraper(config.dimensions_ai_dataset_url),
         stage_with_reference,
@@ -85,7 +76,6 @@ SCISCRAPERS: dict[str, SciScraper] = {
     "reference": SciScraper(SCRAPERS["csv_lookup"], STAGERS["references"]),
     "download": SciScraper(SCRAPERS["csv_lookup"], STAGERS["download"]),
     "images": SciScraper(SCRAPERS["csv_lookup"], STAGERS["images"]),
-    "relevance": SciScraper(SCRAPERS["csv_lookup"], STAGERS["relevance"]),
     "_vfscore": SciScraper(SCRAPERS["abstract_lookup"], None),
 }
 
