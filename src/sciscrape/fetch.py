@@ -9,10 +9,10 @@ from random import randint
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-from sciscrape.config import FilePath, config
-from sciscrape.docscraper import DocScraper, DocumentResult
-from sciscrape.webscrapers import WebScraper, WebScrapeResult
-from sciscrape.downloaders import Downloader, DownloadReceipt
+from sciscrape.config import FilePath, config, ScrapeResults
+from sciscrape.docscraper import DocScraper
+from sciscrape.webscrapers import WebScraper
+from sciscrape.downloaders import Downloader
 from sciscrape.change_dir import change_dir
 from sciscrape.log import logger
 
@@ -40,7 +40,7 @@ KEY_TYPE_PAIRINGS: dict[str, Any] = {
 }
 
 
-@dataclass(slots=True)
+@dataclass
 class Fetcher(ABC):
     """
     Fetcher is the overarching abstract class for fetching data
@@ -82,9 +82,7 @@ class Fetcher(ABC):
         pd.DataFrame
             A dataframe containing biliographic data.
         """
-        data: Generator[
-            Optional[DocumentResult | WebScrapeResult | DownloadReceipt], None, None
-        ] = (
+        data: Generator[Optional[ScrapeResults], None, None] = (
             self.scraper.obtain(term)
             for term in tqdm(search_terms, desc="[sciscraper]: ", unit=f"{tqdm_unit}")
         )
@@ -93,7 +91,7 @@ class Fetcher(ABC):
         return pd.DataFrame(list(data), index=None)
 
 
-@dataclass(slots=True)
+@dataclass
 class ScrapeFetcher(Fetcher):
     """
     ScrapeFetcher takes a string `target`
@@ -108,7 +106,7 @@ class ScrapeFetcher(Fetcher):
         return self.fetch(search_terms)
 
 
-@dataclass(slots=True)
+@dataclass
 class StagingFetcher(Fetcher):
     """
     StagingFetcher takes a dataframe, `prior_dataframe` with one of its columns
@@ -131,22 +129,38 @@ class StagingFetcher(Fetcher):
     def fetch_from_staged_series(
         self, prior_dataframe: pd.DataFrame, staged_terms: list
     ) -> pd.DataFrame:
+        """If the terms are staged as a list, then the dataframe is extended
+        along the provided query, and then it is appended to the existing dataframe."""
         dataframe_ext: pd.DataFrame = self.fetch(staged_terms)
         dataframe: pd.DataFrame = prior_dataframe.join(dataframe_ext)
         return dataframe
 
     def fetch_with_staged_reference(
-        self, staged_terms: tuple[list[Any], list[Any]]
+        self,
+        staged_terms: tuple[
+            list[Any],
+            list[Any],
+        ],
     ) -> pd.DataFrame:
+        """If the terms are staged as a tuple of two lists,
+        then the first part of the tuple gets extended
+        along the provided query. Then the second part of the tuple gets
+        exploded out and appended. The default version of this
+        provide the source titles, from which the ensuing citations
+        were originally found. The prior dataframe is not kept."""
         citations, src_titles = staged_terms
         ref_dataframe: pd.DataFrame = self.fetch(citations, "references")
         dataframe = ref_dataframe.join(
-            pd.Series(src_titles, dtype="string", name="src_titles")
+            pd.Series(
+                src_titles,
+                dtype="string",
+                name="src_titles",
+            )
         )
         return dataframe
 
 
-@dataclass(slots=True)
+@dataclass
 class SciScraper:
     """
     Sciscraper is the base class for all
@@ -162,9 +176,10 @@ class SciScraper:
         self, target: FilePath, export: bool = True, debug: bool = False
     ) -> None:
         self.set_logging(debug)
-        logger.info(f"Debug logging status: '{debug}'\n\
+        logger.info(
+            f"Debug logging status: '{debug}'\n\
             Commencing sciscrape on file: '{target}'...\n"
-            )
+        )
         dataframe: pd.DataFrame = self.scraper(target)
         dataframe = self.stager(dataframe) if self.stager else dataframe
         dataframe = self.remove_empty_columns(dataframe)
@@ -172,9 +187,12 @@ class SciScraper:
         self.export(dataframe) if export else None
 
     def set_logging(self, debug: bool) -> None:
+        """Sets the logging level to debug if specified,
+        otherwise, it defaults to info logging."""
         self.logger.setLevel(10) if debug else self.logger.setLevel(20)
 
     def remove_empty_columns(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+        """Removes all empty columns in the dataframe before exporting to .csv."""
         return dataframe.replace("", float("NaN")).dropna(how="all", axis=1)
 
     @classmethod
@@ -201,6 +219,7 @@ class SciScraper:
 
     @classmethod
     def downcast_available_datetimes(cls, dataframe: pd.DataFrame | pd.Series):
+        """Converts all paper publication dates to the datetime format."""
         return pd.to_datetime(dataframe["pub_date"], infer_datetime_format=True)
 
     @classmethod
@@ -216,11 +235,15 @@ class SciScraper:
 
     @classmethod
     def dataframe_logging(cls, dataframe: pd.DataFrame) -> None:
+        """Returns the first ten rows of the dataframe into the logger."""
         dataframe.info(verbose=True)
         logger.info(f"\n\n{dataframe.head(10)}")
 
     @classmethod
     def create_export_name(cls) -> str:
+        """Returns a `export_name` for the spreadsheet with
+        both today's date and a randomly generated `print_id`
+        number."""
         print_id: int = randint(0, 100)
         export_name: str = f"{config.today}_sciscraper_{print_id}.csv"
         return export_name

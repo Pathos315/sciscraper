@@ -1,3 +1,4 @@
+from argparse import Namespace
 import sys
 import dis
 from cProfile import Profile
@@ -18,7 +19,7 @@ def _kill(proc_pid: int) -> None:
     process.kill()
 
 
-def run_benchmark(args, sciscrape: SciScraper) -> None:
+def run_benchmark(args: Namespace, sciscrape: SciScraper) -> None:
     """
     Run a benchmark on the given SciScraper instance by profiling its execution and printing the results.
 
@@ -56,7 +57,7 @@ def run_benchmark(args, sciscrape: SciScraper) -> None:
 
 
 @memory_profiler.profile(precision=4)
-def run_memory_profiler(args, sciscrape: SciScraper) -> None:
+def run_memory_profiler(args: Namespace, sciscrape: SciScraper) -> None:
     """Benchmark the line by line memory usage of the `sciscraper` program."""
     sciscrape(args.file, args.export, args.debug)
 
