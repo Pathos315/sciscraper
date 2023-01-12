@@ -3,7 +3,7 @@
 By John Fallot <john.fallot@gmail.com>
 """
 
-import argparse
+from argparse import Namespace
 from functools import partial
 from typing import Optional, Sequence
 from time import perf_counter
@@ -15,7 +15,7 @@ from sciscrape.profilers import (
     run_bytecode_profiler,
 )
 from sciscrape.factories import read_factory, SCISCRAPERS
-from sciscrape.config import config
+from sciscrape.argsbuilder import build_args
 
 
 def main(argv: Optional[Sequence[str]] = None) -> None:
@@ -37,77 +37,23 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     -------
     None
     """
-
-    parser = argparse.ArgumentParser(
-        prog=config.prog,
-        usage="%(prog)s [options] filepath",
-        description=config.description,
-    )
-    parser.add_argument(
-        "-f",
-        "--file",
-        metavar="FILE",
-        type=str,
-        default=config.source_file,
-        help="Specify the target file: default: %(default)s)",
-    )
-    parser.add_argument(
-        "-d",
-        "--debug",
-        default=False,
-        help="Specify debug logging output: default: %(default)s)",
-    )
-    parser.add_argument(
-        "-e",
-        "--export",
-        default=True,
-        help="Specify if exporting dataframe\
-            to .csv: default: %(default)s)",
-    )
-    parser.add_argument(
-        "-p",
-        "--profilers",
-        default=None,
-        choices=(
-            "benchmark",
-            "memory",
-            "bytecode",
-        ),
-        help="Specify if benchmarking is to be conducted: default: %(default)s)",
-    )
-    parser.add_argument(
-        "-m",
-        "--mode",
-        default=None,
-        type=str,
-        choices=(
-            "directory",
-            "wordscore",
-            "citations",
-            "reference",
-            "download",
-            "images",
-            "relevance",
-        ),
-        help="Specify the sciscraper to be used,\
-            if None is provided, the user will be prompted\
-            with an input: %(default)s)",
-    )
-    args = parser.parse_args(argv)
-
     start = perf_counter()
+    args: Namespace = build_args(argv)
+
     sciscrape = read_factory() if args.mode is None else SCISCRAPERS[args.mode]
     logger.debug(repr(sciscrape))
     logger.debug(repr(args.file))
 
     profiler_dict = {
-        "benchmark": partial(run_benchmark,args=args),
-        "memory": partial(run_memory_profiler,args=args),
+        "benchmark": partial(run_benchmark, args=args),
+        "memory": partial(run_memory_profiler, args=args),
         "bytecode": run_bytecode_profiler,
     }
 
     profiler_dict[args.profilers](sciscrape) if args.profilers else sciscrape(
-        args.file, args.export, args.debug
+        args.file,
+        args.export,
+        args.debug,
     )
 
     elapsed = perf_counter() - start

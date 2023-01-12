@@ -11,3 +11,4 @@ exports/**
 **/lib/**
 .DS_Store
 Pipfile
+**/_zeroshotscraper.py
