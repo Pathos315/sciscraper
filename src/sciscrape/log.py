@@ -1,4 +1,5 @@
 import logging
+from logging.handlers import RotatingFileHandler
 
 from sciscrape.change_dir import change_dir
 
@@ -9,10 +10,14 @@ stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
-FILENAME = ".logs"
+LOGDIR = ".logs"
 
 if logger.level == logging.DEBUG:
-    with change_dir(FILENAME):
-        doc_handler = logging.FileHandler("sciscraper.log")
+    with change_dir(LOGDIR):
+        doc_handler = RotatingFileHandler(
+            "sciscraper.log",
+            maxBytes=10,
+            backupCount=5,
+        )
         doc_handler.setFormatter(formatter)
         logger.addHandler(doc_handler)
