@@ -1,4 +1,5 @@
 from argparse import Namespace
+from functools import partial
 import sys
 import dis
 from cProfile import Profile
@@ -65,3 +66,19 @@ def run_memory_profiler(args: Namespace, sciscrape: SciScraper) -> None:
 def run_bytecode_profiler(sciscrape: SciScraper) -> None:
     """Reproduce the bytecode of the entire `sciscraper` program."""
     dis.dis(sciscrape.__call__)
+
+
+def get_profiler(args: Namespace, sciscrape: SciScraper):
+    profiler_dict = {
+        "benchmark": partial(run_benchmark, args=args),
+        "memory": partial(run_memory_profiler, args=args),
+        "bytecode": run_bytecode_profiler,
+    }
+    profiler_dict.get(
+        args.profilers,
+        sciscrape(
+            args.file,
+            args.export,
+            args.debug,
+        ),
+    )

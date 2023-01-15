@@ -8,7 +8,6 @@ from sciscrape.docscraper import DocScraper
 from sciscrape.downloaders import Downloader
 from sciscrape.fetch import SciScraper, StagingFetcher, ScrapeFetcher
 from sciscrape.factories import SCISCRAPERS, read_factory
-from sciscrape.stagers import stage_from_series, stage_with_reference
 from sciscrape.change_dir import change_dir
 from sciscrape.webscrapers import WebScraper
 from sciscrape.config import config
@@ -80,36 +79,36 @@ def test_none_downcast_available_datetimes():
     assert SciScraper.downcast_available_datetimes(df).isnull().all()
 
 
-def test_fetch_serializerstrategy(mock_csv, mock_dataframe):
+
+def test_fetch_serializerstrategy(fetch_scraper, mock_csv, mock_dataframe):
     with mock.patch(
         "sciscrape.fetch.ScrapeFetcher.fetch",
         return_value=mock_dataframe,
         autospec=True,
     ):
-        test_sciscraper = SCISCRAPERS["wordscore"]
-        assert isinstance(test_sciscraper.scraper.serializer, Callable)
-        search_terms = test_sciscraper.scraper.serializer(mock_csv)
+
+        assert isinstance(fetch_scraper.scraper.serializer, Callable)
+        search_terms = fetch_scraper.scraper.serializer(mock_csv)
         assert isinstance(search_terms, list)
-        output_a = test_sciscraper.scraper.fetch(search_terms)
-        output_b = test_sciscraper.scraper(mock_csv)
+        output_a = fetch_scraper.scraper.fetch(search_terms)
+        output_b = fetch_scraper.scraper(mock_csv)
         assert isinstance(output_a, pd.DataFrame)
         assert isinstance(output_b, pd.DataFrame)
 
 
-def test_fetch(mock_csv):
+def test_fetch(fetch_scraper, mock_csv):
     with mock.patch(
         "sciscrape.fetch.ScrapeFetcher.__call__",
         return_value=None,
         autospec=True,
     ):
-        test_sciscraper = SCISCRAPERS["wordscore"]
-        search_terms = test_sciscraper.scraper.serializer(mock_csv)
+        search_terms = fetch_scraper.scraper.serializer(mock_csv)
         assert isinstance(search_terms, list)
-        output = test_sciscraper.scraper.fetch(search_terms)
+        output = fetch_scraper.scraper.fetch(search_terms)
         assert isinstance(output, pd.DataFrame)
         assert output.empty is False
         assert output.dtypes["title"] == "object"
-        new_data = test_sciscraper.dataframe_casting(output)
+        new_data = fetch_scraper.dataframe_casting(output)
         assert new_data.dtypes["title"] == "string"
 
 

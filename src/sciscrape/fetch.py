@@ -3,7 +3,13 @@ returning various dataframes for each"""
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, is_dataclass
-from typing import Generator, Optional, Callable, Iterable, Any, Union
+from typing import (
+    Generator,
+    Optional,
+    Callable,
+    Iterable,
+    Any,
+)
 
 from random import randint
 import pandas as pd

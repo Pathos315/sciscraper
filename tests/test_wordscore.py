@@ -1,6 +1,5 @@
 import pytest
 from sciscrape.wordscore import WordscoreCalculator
-import unittest
 
 calculator = WordscoreCalculator(10, 5, 100)
 

@@ -233,7 +233,7 @@ class BulkPDFScraper(Downloader):
                 self.url,
                 e,
             )
-            return
+            return None
 
     def format_download_link(self, download_link: Optional[str]) -> Optional[str]:
         """

@@ -6,6 +6,7 @@ import argparse
 from typing import Optional, Sequence
 from sciscrape.config import config
 
+
 def build_args(argv: Optional[Sequence[str]]) -> argparse.Namespace:
     """
     build_args builds the argument parser for sciscraper.

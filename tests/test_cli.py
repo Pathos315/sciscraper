@@ -1,7 +1,6 @@
 import pytest
 from src.main import main
 from unittest.mock import Mock, patch, MagicMock
-from sciscrape.profilers import run_benchmark
 
 
 @pytest.mark.parametrize("option", ("-h", "--help"))
@@ -37,11 +36,11 @@ def mock_stats():
 def test_main_parses_command_line_arguments():
     # Set up mock objects
     mock_argv = ["prog", "-f", "test.txt", "-d", "-e"]
-    mock_args = Mock(file="test.txt", export=True, debug=True)
+    mock_args = Mock(file="test.txt", export=True, debug=True,)
 
     # Call the function with the mock objects
     with patch(
-        "argparse.ArgumentParser.parse_args", return_value=mock_args
+        "argparse.ArgumentParser.parse_args", return_value=mock_args,
     ) as mock_parse_args:
         main(mock_argv)
 

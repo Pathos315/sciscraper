@@ -3,7 +3,7 @@ import json
 import pytest
 from unittest import mock
 import requests
-import responses
+import requests_mock
 from sciscrape.webscrapers import (
     DimensionsScraper,
     CitationScraper,
@@ -117,17 +117,15 @@ def test_image_getter_sha(image_scraper):
         (config.downloader_url),
     ),
 )
-@responses.activate
 def test_obtain_status_codes(url):
-    with responses.RequestsMock() as rsps:
-        rsps.add(
-            responses.GET,
+    with requests_mock.Mocker(real_http=True) as rsps:
+        rsps.register_uri(
+            'GET',
             url,
-            body="{}",
-            status=200,
-            content_type="application/json",
+            text='resp',
         )
         resp = requests.get(url)
+        assert resp.text == 'resp'
         assert resp.status_code == 200
 
 

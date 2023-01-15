@@ -9,7 +9,6 @@ from sciscrape.downloaders import (
     ImagesDownloader,
 )
 from sciscrape.config import config
-from sciscrape.log import logger
 from selectolax.parser import HTMLParser
 
 
@@ -146,13 +145,6 @@ def test_img_downloader_etag(img_downloader, etag, extension):
     else:
         assert etag in filename
     assert extension in filename
-
-
-def test_get_response(mock_response):
-    downloader = BulkPDFScraper(url="https://httpstat.us/200")
-    output = downloader.obtain(mock_response.text)
-    assert isinstance(output, DownloadReceipt)
-    assert output.success == False
 
 
 def test_null_find_download_link(mock_bulkpdfscraper):

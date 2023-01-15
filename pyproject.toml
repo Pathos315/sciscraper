@@ -53,7 +53,7 @@ dev = [
     "mypy>=0.991",
     "flake8>=6.0.0",
     "tox>=4.0.9",
-    "responses>=0.22.0",
+    "requests-mock>=1.9.3",
 ]
 
 [project.scripts]
@@ -105,7 +105,8 @@ disable_error_code = [
     "import",
     "no-untyped-def",
     "override",
-    "assignment"
+    "assignment",
+    "func-returns-value",
 ]
 show_traceback = true
 show_error_context = true

@@ -1,9 +1,4 @@
-from time import sleep
-from dotenv import load_dotenv
-from os import getenv
-
 from itertools import chain
-from json import loads
 import pdfplumber
 import re
 from collections import Counter

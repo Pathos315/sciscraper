@@ -4,16 +4,12 @@ By John Fallot <john.fallot@gmail.com>
 """
 
 from argparse import Namespace
-from functools import partial
 from typing import Optional, Sequence
 from time import perf_counter
+from sciscrape.fetch import SciScraper
 
 from sciscrape.log import logger
-from sciscrape.profilers import (
-    run_benchmark,
-    run_memory_profiler,
-    run_bytecode_profiler,
-)
+from sciscrape.profilers import get_profiler
 from sciscrape.factories import read_factory, SCISCRAPERS
 from sciscrape.argsbuilder import build_args
 
@@ -37,24 +33,17 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     -------
     None
     """
-    start = perf_counter()
+
     args: Namespace = build_args(argv)
 
-    sciscrape = read_factory() if args.mode is None else SCISCRAPERS[args.mode]
+    start = perf_counter()
+    sciscrape: SciScraper = (
+        read_factory() if args.mode is None else SCISCRAPERS[args.mode]
+    )
     logger.debug(repr(sciscrape))
     logger.debug(repr(args.file))
 
-    profiler_dict = {
-        "benchmark": partial(run_benchmark, args=args),
-        "memory": partial(run_memory_profiler, args=args),
-        "bytecode": run_bytecode_profiler,
-    }
-
-    profiler_dict[args.profilers](sciscrape) if args.profilers else sciscrape(
-        args.file,
-        args.export,
-        args.debug,
-    )
+    get_profiler(args, sciscrape)
 
     elapsed = perf_counter() - start
     logger.info(f"Extraction finished in {elapsed:.2f} seconds.")

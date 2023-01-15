@@ -1,10 +1,8 @@
 import pytest
 import pandas as pd
-
-import requests
-from requests import Response
 from sciscrape.docscraper import DocScraper
-from sciscrape.wordscore import Wordscore, WordscoreCalculator
+from sciscrape.factories import SCISCRAPERS
+from sciscrape.wordscore import WordscoreCalculator
 from sciscrape.config import config
 from sciscrape.downloaders import (
     BulkPDFScraper,
@@ -15,8 +13,6 @@ from sciscrape.webscrapers import (
     WebScrapeResult,
     SemanticFigureScraper,
 )
-import responses
-from unittest import mock
 
 # File Path Fixtures
 @pytest.fixture()
@@ -69,33 +65,6 @@ def staged_terms():
 @pytest.fixture
 def staged_tuple():
     return ([1, 2, 3], [4, 5, 6])
-
-
-### Result Fixtures ###
-@pytest.fixture()
-def mock_response() -> Response:
-    response = requests.Response()
-    response.status_code = 200
-    response._content = b'{"results":[{"id":"12345"}]}'
-    return response
-
-
-@pytest.fixture()
-def mock_request():
-    # create a mock response object to simulate the request.get method
-    mock_response = mock.Mock()
-
-    mock_response.byte_content = b"some mock contents"
-
-    mock_response.dict_content = b'{"results":[{"id":"12345"}]}'
-
-    mock_response.status_code = 200
-
-    # create a mock request object to simulate the client.get method
-    mock_request = mock.Mock()
-
-    # set the return value of the mock request object to the mock response object
-    mock_request.return_value = mock_response
 
 
 @pytest.fixture()
@@ -162,16 +131,13 @@ def docscraper_pdf():
     return DocScraper(config.target_words, config.bycatch_words, True)
 
 
-@pytest.fixture
-def mocked_responses():
-    with responses.RequestsMock() as rsps:
-        yield rsps
-
-
 @pytest.fixture()
 def scraper():
     return DimensionsScraper(config.dimensions_ai_dataset_url, sleep_val=0.5)
 
+@pytest.fixture()
+def fetch_scraper():
+    return SCISCRAPERS["wordscore"]
 
 @pytest.fixture()
 def faulty_scraper():
