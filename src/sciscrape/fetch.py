@@ -203,8 +203,8 @@ class SciScraper:
         """Removes all empty columns in the dataframe before exporting to .csv."""
         return dataframe.replace("", float("NaN")).dropna(how="all", axis=1)
 
-    @classmethod
-    def dataframe_casting(cls, dataframe: pd.DataFrame) -> pd.DataFrame:
+    @staticmethod
+    def dataframe_casting(dataframe: pd.DataFrame) -> pd.DataFrame:
         """
         Formats and optimizes the final dataframe through converting datatypes
         and filling missing fields, where possible.
@@ -217,7 +217,7 @@ class SciScraper:
 
         # Convert "pub_date" column to datetime data type
         if "pub_date" in dataframe:
-            dataframe["pub_date"] = cls.downcast_available_datetimes(dataframe)
+            dataframe["pub_date"] = SciScraper.downcast_available_datetimes(dataframe)
 
         # Convert columns in KEY_TYPE_PAIRINGS dictionary to specified data types
         for scikey, value in KEY_TYPE_PAIRINGS.items():
@@ -225,30 +225,30 @@ class SciScraper:
                 dataframe[scikey] = dataframe[scikey].astype(value)
         return dataframe
 
-    @classmethod
-    def downcast_available_datetimes(cls, dataframe: pd.DataFrame | pd.Series):
+    @staticmethod
+    def downcast_available_datetimes(dataframe: pd.DataFrame | pd.Series):
         """Converts all paper publication dates to the datetime format."""
         return pd.to_datetime(dataframe["pub_date"], infer_datetime_format=True)
 
-    @classmethod
+    @staticmethod
     def export(
-        cls, dataframe: pd.DataFrame, export_dir: str = config.export_dir
+        dataframe: pd.DataFrame, export_dir: str = config.export_dir
     ) -> None:
         """Export data to the specified export directory."""
-        cls.dataframe_logging(dataframe)
-        export_name = cls.create_export_name()
+        SciScraper.dataframe_logging(dataframe)
+        export_name = SciScraper.create_export_name()
         with change_dir(export_dir):
             logger.info(f"A spreadsheet was exported as {export_name} in {export_dir}.")
             dataframe.to_csv(export_name, index=False)
 
-    @classmethod
-    def dataframe_logging(cls, dataframe: pd.DataFrame) -> None:
+    @staticmethod
+    def dataframe_logging(dataframe: pd.DataFrame) -> None:
         """Returns the first ten rows of the dataframe into the logger."""
         dataframe.info(verbose=True)
         logger.info(f"\n\n{dataframe.head(10)}")
 
-    @classmethod
-    def create_export_name(cls) -> str:
+    @staticmethod
+    def create_export_name() -> str:
         """Returns a `export_name` for the spreadsheet with
         both today's date and a randomly generated `print_id`
         number."""
