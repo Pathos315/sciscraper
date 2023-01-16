@@ -46,7 +46,7 @@ class WebScrapeResult:
 
     @classmethod
     def from_dict(cls, dict_input: dict):
-        return WebScrapeResult(**dict_input)
+        return cls(**dict_input)
 
     def to_dict(self):
         return asdict(self)
