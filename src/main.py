@@ -46,7 +46,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     get_profiler(args, sciscrape)
 
     elapsed = perf_counter() - start
-    logger.info(f"Extraction finished in {elapsed:.2f} seconds.")
+    logger.info("Extraction finished in %.2f seconds.", elapsed)
 
 
 if __name__ == "__main__":

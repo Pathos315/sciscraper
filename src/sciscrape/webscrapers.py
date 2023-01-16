@@ -300,7 +300,7 @@ class SemanticFigureScraper(WebScraper):
         paper_info: dict[str, Any] = loads(paper_searching_response.text)
         try:
             paper_url: Optional[str] = paper_info["data"][0]["url"]
-            logger.debug(f"\n{paper_url}\n")
+            logger.debug("\n%s\n", paper_url)
         except IndexError as e:
             logger.debug(
                 "error=%s, action_undertaken=%s",

@@ -156,7 +156,7 @@ class TestClass:
         cls.dataframe_logging(dataframe)
         export_name = cls.create_export_name()
         with change_dir(export_dir):
-            logger.info(f"A spreadsheet was exported as {export_name}.")
+            logger.info("A spreadsheet was exported as %s.", export_name)
             dataframe.to_csv(export_name)
 
 

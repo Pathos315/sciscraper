@@ -185,8 +185,10 @@ class SciScraper:
     ) -> None:
         self.set_logging(debug)
         logger.info(
-            f"Debug logging status: '{debug}'\n\
-            Commencing sciscrape on file: '{target}'...\n"
+            "Debug logging status: '%s'\n"
+            "Commencing sciscrape on file: '%s'...\n",
+            debug,
+            target
         )
         dataframe: pd.DataFrame = self.scraper(target)
         dataframe = self.stager(dataframe) if self.stager else dataframe
@@ -238,14 +240,18 @@ class SciScraper:
         cls.dataframe_logging(dataframe)
         export_name = cls.create_export_name()
         with change_dir(export_dir):
-            logger.info(f"A spreadsheet was exported as {export_name} in {export_dir}.")
+            logger.info(
+                "A spreadsheet was exported as %s in %s.",
+                export_name,
+                export_dir
+            )
             dataframe.to_csv(export_name, index=False)
 
     @classmethod
     def dataframe_logging(cls, dataframe: pd.DataFrame) -> None:
         """Returns the first ten rows of the dataframe into the logger."""
         dataframe.info(verbose=True)
-        logger.info(f"\n\n{dataframe.head(10)}")
+        logger.info("\n\n%s", dataframe.head(10))
 
     @classmethod
     def create_export_name(cls) -> str:
