@@ -37,7 +37,7 @@ def serialize_from_csv(target: FilePath, column: str = "doi") -> list[str]:
     data = data.fillna("N/A")
     data_list: list[str] = data[column].to_list()
     data_list = clean_any_nested_columns(data_list, column)
-    logger.debug("serializer=%s, terms=%s", repr(serialize_from_csv), data_list)
+    logger.debug("serializer=%s, terms=%s", serialize_from_csv, data_list)
     return data_list
 
 
@@ -68,7 +68,7 @@ def serialize_from_directory(target: FilePath, suffix: str = "pdf") -> list[str]
     if len(data_list) == 0:
         raise ValueError("This directory contains no valid files.")
 
-    logger.debug("serializer=%s, terms=%s", repr(serialize_from_directory), data_list)
+    logger.debug("serializer=%s, terms=%s", serialize_from_directory, data_list)
     return data_list
 
 

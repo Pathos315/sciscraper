@@ -314,7 +314,7 @@ def test_image_downloader_obtain():
             search_text, stream=True, allow_redirects=True
         )
         mock_logger_debug.assert_called_once_with(
-            "response=%s, scraper=%s",
-            repr(mock_client_get.return_value),
+            "response=%s, scraper=%r",
+            mock_client_get.return_value,
         )
         assert isinstance(output, DownloadReceipt)

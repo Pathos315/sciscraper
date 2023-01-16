@@ -196,9 +196,9 @@ class BulkPDFScraper(Downloader):
         )
         sleep(self.sleep_val)
         logger.debug(
-            "response=%s, scraper=%s, status_code=%s",
-            repr(response),
-            repr(self),
+            "response=%r, scraper=%r, status_code=%s",
+            response,
+            self,
             response.status_code,
         )
         return None if response.status_code != 200 else response.text
@@ -296,9 +296,9 @@ class ImagesDownloader(Downloader):
         search_ext = search_text.split(".")[-1]
         response: Response = client.get(search_text, stream=True, allow_redirects=True)
         logger.debug(
-            "response=%s, scraper=%s, status_code=%s",
-            repr(response),
-            repr(self),
+            "response=%r, scraper=%r, status_code=%s",
+            response,
+            self,
             response.status_code,
         )
 
