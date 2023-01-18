@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, asdict
 from math import comb, sqrt
+from typing import Any
 
 
 @dataclass(frozen=True, order=True)
@@ -13,10 +14,10 @@ class Wordscore:
     skewness: float
 
     @classmethod
-    def from_dict(cls, dict_input: dict):
+    def from_dict(cls, dict_input: dict[str, Any]) -> Wordscore:
         return cls(**dict_input)
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -232,8 +233,8 @@ class WordscoreCalculator:
         return (part / whole) ** part
 
     @classmethod
-    def from_dict(cls, dict_input: dict):
+    def from_dict(cls, dict_input: dict[str, Any]) -> WordscoreCalculator:
         return cls(**dict_input)
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)

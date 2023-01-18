@@ -48,10 +48,10 @@ class WebScrapeResult:
     abstract: str | None = None
 
     @classmethod
-    def from_dict(cls, dict_input: dict):
+    def from_dict(cls, dict_input: dict[str, Any]) -> WebScrapeResult:
         return cls(**dict_input)
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -118,7 +118,7 @@ class DimensionsScraper(WebScraper):
         data = self.enrich_response(response)
         return WebScrapeResult(**data)
 
-    def get_docs(self, querystring) -> Response:
+    def get_docs(self, querystring: dict[Any, Any]) -> Response:
         sleep(self.sleep_val)
         return client.get(self.url, params=querystring)
 
@@ -237,7 +237,7 @@ class CitationScraper(WebScraper):
         )
         return None if response.status_code != 200 else response.text
 
-    def create_querystring(self, search_text) -> dict[str, Any]:
+    def create_querystring(self, search_text: str) -> dict[str, Any]:
         return {
             "doi": search_text,
             "style": self.style.value,

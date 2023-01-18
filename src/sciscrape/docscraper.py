@@ -30,10 +30,10 @@ class FreqDistAndCount:
     frequency_dist: list[tuple[str, int]] = field(default_factory=list)
 
     @classmethod
-    def from_dict(cls, dict_input: dict):
+    def from_dict(cls, dict_input: dict[str, Any]) -> FreqDistAndCount:
         return cls(**dict_input)
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 

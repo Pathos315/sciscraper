@@ -57,7 +57,7 @@ class Fetcher(ABC):
     scraper: DocScraper | WebScraper | Downloader
 
     @abstractmethod
-    def __call__(self, *args, **kwargs) -> pd.DataFrame:
+    def __call__(self, *args: Any, **kwargs: Any) -> pd.DataFrame:
         """The __call__ method in ScrapeFetcher and StagingFetcher
         take a target FilePath or dataframe respectively.
         They are converted them into lists of entries.
@@ -134,7 +134,7 @@ class StagingFetcher(Fetcher):
         return dataframe
 
     def fetch_from_staged_series(
-        self, prior_dataframe: pd.DataFrame, staged_terms: list
+        self, prior_dataframe: pd.DataFrame, staged_terms: list[Any]
     ) -> pd.DataFrame:
         """If the terms are staged as a list, then the dataframe is extended
         along the provided query, and then it is appended to the existing dataframe."""
@@ -227,7 +227,7 @@ class SciScraper:
         return dataframe
 
     @staticmethod
-    def downcast_available_datetimes(dataframe: pd.DataFrame | pd.Series):
+    def downcast_available_datetimes(dataframe: pd.DataFrame | pd.Series) -> pd.Timestamp:
         """Converts all paper publication dates to the datetime format."""
         return pd.to_datetime(dataframe["pub_date"], infer_datetime_format=True)
 

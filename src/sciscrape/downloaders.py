@@ -10,6 +10,7 @@ from dataclasses import asdict, dataclass, field
 from os import path
 from time import sleep
 import re
+from typing import Any
 from requests import Response
 from selectolax.parser import HTMLParser
 
@@ -42,10 +43,10 @@ class DownloadReceipt:
     filepath: str = "N/A"
 
     @classmethod
-    def from_dict(cls, dict_input: dict):
+    def from_dict(cls, dict_input: dict[str, Any]) -> DownloadReceipt:
         return cls(**dict_input)
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
