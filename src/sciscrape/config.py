@@ -7,10 +7,12 @@ Returns
 """
 
 import json
-from datetime import date
 from dataclasses import dataclass, field
-from typing import Union
+from datetime import date
 from pathlib import Path
+from typing import Any, Union
+
+import numpy as np
 
 FilePath = Union[str, Path]
 UTF = "utf-8"
@@ -99,5 +101,36 @@ def read_config(config_file: str) -> ScrapeConfig:
         data = json.load(file)
         return ScrapeConfig(**data)
 
-
 config: ScrapeConfig = read_config("src/config_setup.json")
+
+DIMENSIONS_AI_KEYS: dict[str, str] = {
+    "title": "title",
+    "pub_date": "pub_date",
+    "doi": "doi",
+    "internal_id": "id",
+    "journal_title": "journal_title",
+    "times_cited": "times_cited",
+    "author_list": "author_list",
+    "citations": "cited_dimensions_ids",
+    "keywords": "mesh_terms",
+}
+
+KEY_TYPE_PAIRINGS: dict[str, Any] = {
+    "title": "string",
+    "doi": "string",
+    "internal_id": "string",
+    "times_cited": np.int16,
+    "matching_terms": np.int16,
+    "bycatch_terms": np.int16,
+    "total_length": np.int16,
+    "wordscore": np.float16,
+    "expectation": np.float16,
+    "variance": np.float16,
+    "standard_deviation": np.float16,
+    "skewness": np.float16,
+    "abstract": "string",
+    "biblio": "string",
+    "journal_title": "string",
+    "downloader": "string",
+    "filepath": "string",
+}
