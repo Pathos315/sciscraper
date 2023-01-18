@@ -4,12 +4,12 @@ processes for the sciscraper program.
 """
 from contextlib import contextmanager
 from os import chdir, getcwd, makedirs, path
-from typing import Generator
+from typing import Iterator
 from sciscrape.config import FilePath
 
 
 @contextmanager
-def change_dir(destination: FilePath) -> Generator[None, None, None]:
+def change_dir(destination: FilePath) -> Iterator[None]:
     """Sets a destination for exported files."""
     cwd = getcwd()
     try:

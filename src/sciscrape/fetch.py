@@ -4,7 +4,7 @@ returning various dataframes for each"""
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, is_dataclass
 from typing import (
-    Generator,
+    Iterator,
     Callable,
     Iterable,
     Any,
@@ -89,7 +89,7 @@ class Fetcher(ABC):
         pd.DataFrame
             A dataframe containing biliographic data.
         """
-        data: Generator[ScrapeResult | None, None, None] = (
+        data: Iterator[ScrapeResult | None] = (
             self.scraper.obtain(term)
             for term in tqdm(search_terms, desc="[sciscraper]: ", unit=f"{tqdm_unit}")
         )

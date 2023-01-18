@@ -5,7 +5,7 @@ import pdfplumber
 import re
 from collections import Counter
 from dataclasses import asdict, dataclass, field
-from typing import Any, Generator
+from typing import Any, Iterator
 from sciscrape.wordscore import WordscoreCalculator
 from sciscrape.log import logger
 from sciscrape.config import UTF, FilePath
@@ -151,7 +151,7 @@ class DocScraper:
         target_set = self.unpack_txt_files(self.target_words_file)
         bycatch_set = self.unpack_txt_files(self.bycatch_words_file)
 
-        token_generator: Generator[list[str], None, None] = (
+        token_generator: Iterator[list[str]] = (
             self.extract_text_from_pdf(search_text)
             if self.is_pdf
             else self.extract_text_from_summary(search_text)
@@ -184,7 +184,7 @@ class DocScraper:
 
     def extract_text_from_pdf(
         self, search_text: str
-    ) -> Generator[list[str], None, None]:
+    ) -> Iterator[list[str]]:
         """
         Given the provided filepath, `search_text`, it opens the .pdf
         file and cleans the text. Returning the words from each page
@@ -212,13 +212,13 @@ class DocScraper:
                 search_text,
             )
             # Goes through all pages and creates a continuous string of text from the entire document
-            preprints: Generator[str, None, None] = (
+            preprints: Iterator[str] = (
                 study_pages[page_number].extract_text(x_tolerance=1, y_tolerance=3)
                 for page_number, _ in enumerate(pages_to_check)
             )
 
             # Strips and lowers every word
-            manuscripts: Generator[Any, None, None] = (
+            manuscripts: Iterator[str] = (
                 preprint.strip().lower() for preprint in preprints
             )
 
@@ -228,7 +228,7 @@ class DocScraper:
             )
 
             # Splits each word along each white space to create a list of strings from each word
-            output: Generator[list[str], None, None] = (
+            output: Iterator[list[str]] = (
                 manuscript.split(" ") for manuscript in manuscripts
             )
             logger.debug(
@@ -242,7 +242,7 @@ class DocScraper:
 
     def extract_text_from_summary(
         self, search_text: str
-    ) -> Generator[list[str], None, None]:
+    ) -> Iterator[list[str]]:
         """
         Given the provided abstract, `search_text`, it reads the text
         and cleans it. Returning the words from each
