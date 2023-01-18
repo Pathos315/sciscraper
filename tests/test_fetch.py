@@ -142,19 +142,19 @@ class TestClass:
     def set_logging(self, debug: bool) -> None:
         logger.setLevel(10) if debug else logger.setLevel(20)
 
-    @classmethod
-    def dataframe_logging(cls, dataframe: pd.DataFrame) -> None:
+    @staticmethod
+    def dataframe_logging(dataframe: pd.DataFrame) -> None:
         pass
 
-    @classmethod
-    def create_export_name(cls) -> str:
+    @staticmethod
+    def create_export_name() -> str:
         return "test_50.csv"
 
-    @classmethod
-    def export(cls, dataframe: pd.DataFrame, export_dir: str = "export") -> None:
+    @staticmethod
+    def export(dataframe: pd.DataFrame, export_dir: str = "export") -> None:
         """Export data to the specified export directory."""
-        cls.dataframe_logging(dataframe)
-        export_name = cls.create_export_name()
+        TestClass.dataframe_logging(dataframe)
+        export_name = TestClass.create_export_name()
         with change_dir(export_dir):
             logger.info(f"A spreadsheet was exported as {export_name}.")
             dataframe.to_csv(export_name)

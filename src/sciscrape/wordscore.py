@@ -13,7 +13,7 @@ class Wordscore:
 
     @classmethod
     def from_dict(cls, dict_input: dict):
-        return Wordscore(**dict_input)
+        return cls(**dict_input)
 
     def to_dict(self):
         return asdict(self)
