@@ -1,10 +1,10 @@
-r"""
-change_dir.py governs the file creation
+"""change_dir.py governs the file creation
 processes for the sciscraper program.
 """
 from contextlib import contextmanager
 from os import chdir, getcwd, makedirs, path
 from typing import Iterator
+
 from sciscrape.config import FilePath
 
 
