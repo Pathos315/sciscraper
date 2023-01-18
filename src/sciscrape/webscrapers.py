@@ -1,34 +1,20 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field, asdict
-from typing import Any
+from dataclasses import asdict, dataclass, field
 from enum import Enum
+from json import loads
 from time import sleep
+from typing import Any
 from urllib.parse import urlencode
 
-from json import loads
-
-from selectolax.parser import HTMLParser
 from requests import Response, Session
-from sciscrape.log import logger
-from sciscrape.config import config
+from selectolax.parser import HTMLParser
 
+from sciscrape.config import DIMENSIONS_AI_KEYS, config
+from sciscrape.log import logger
 
 client = Session()
-
-DIMENSIONS_AI_KEYS: dict[str, str] = {
-    "title": "title",
-    "pub_date": "pub_date",
-    "doi": "doi",
-    "internal_id": "id",
-    "journal_title": "journal_title",
-    "times_cited": "times_cited",
-    "author_list": "author_list",
-    "citations": "cited_dimensions_ids",
-    "keywords": "mesh_terms",
-}
-
 
 @dataclass(frozen=True, order=True)
 class WebScrapeResult:

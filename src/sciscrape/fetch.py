@@ -5,49 +5,24 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, is_dataclass
-from typing import (
-    Iterator,
-    Callable,
-    Iterable,
-    Union,
-    Any,
-)
-
 from random import randint
-import pandas as pd
+from typing import Any, Callable, Iterable, Iterator, Union
+
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
-from sciscrape.config import FilePath, config
-from sciscrape.docscraper import DocScraper, DocumentResult
-from sciscrape.webscrapers import WebScraper, WebScrapeResult
-from sciscrape.downloaders import Downloader, DownloadReceipt
+
 from sciscrape.change_dir import change_dir
+from sciscrape.config import KEY_TYPE_PAIRINGS, FilePath, config
+from sciscrape.docscraper import DocScraper, DocumentResult
+from sciscrape.downloaders import Downloader, DownloadReceipt
 from sciscrape.log import logger
+from sciscrape.webscrapers import WebScraper, WebScrapeResult
 
 SerializationStrategyFunction = Callable[[FilePath], "list[str]"]
 StagingStrategyFunction = Callable[[pd.DataFrame], Iterable[Any]]
 ScrapeResult = Union[DocumentResult, WebScrapeResult, DownloadReceipt]
-
-
-KEY_TYPE_PAIRINGS: dict[str, Any] = {
-    "title": "string",
-    "doi": "string",
-    "internal_id": "string",
-    "times_cited": np.int16,
-    "matching_terms": np.int16,
-    "bycatch_terms": np.int16,
-    "total_length": np.int16,
-    "wordscore": np.float16,
-    "expectation": np.float16,
-    "variance": np.float16,
-    "standard_deviation": np.float16,
-    "skewness": np.float16,
-    "abstract": "string",
-    "biblio": "string",
-    "journal_title": "string",
-    "downloader": "string",
-    "filepath": "string",
-}
+Scraper = Union[DocScraper, WebScraper, Downloader]
 
 
 @dataclass
@@ -57,7 +32,7 @@ class Fetcher(ABC):
     from a given query.
     """
 
-    scraper: DocScraper | WebScraper | Downloader
+    scraper: Scraper
 
     @abstractmethod
     def __call__(self, *args: Any, **kwargs: Any) -> pd.DataFrame:
@@ -97,7 +72,7 @@ class Fetcher(ABC):
             for term in tqdm(search_terms, desc="[sciscraper]: ", unit=f"{tqdm_unit}")
         )
         logger.debug(data)
-        data = (item for item in data if is_dataclass(item) and item is not None)
+        data = filter(None, data)
         return pd.DataFrame(list(data), index=None)
 
 
@@ -181,27 +156,29 @@ class SciScraper:
     stager: StagingFetcher | None
     logger = logger
     downcast: bool = True
+    debug: bool = False
+    export: bool = True
 
     def __call__(
-        self, target: FilePath, export: bool = True, debug: bool = False
+        self, target: FilePath,
     ) -> None:
-        self.set_logging(debug)
+        self.set_logging(self.debug)
         logger.info(
             "Debug logging status: '%s'\n"
             "Commencing sciscrape on file: '%s'...\n",
-            debug,
+            self.debug,
             target
         )
         dataframe: pd.DataFrame = self.scraper(target)
         dataframe = self.stager(dataframe) if self.stager else dataframe
         dataframe = self.remove_empty_columns(dataframe)
         dataframe = self.dataframe_casting(dataframe) if self.downcast else dataframe
-        self.export(dataframe) if export else None
+        self.export_csv(dataframe) if self.export else None
 
-    def set_logging(self, debug: bool) -> None:
+    def set_logging(self) -> None:
         """Sets the logging level to debug if specified,
         otherwise, it defaults to info logging."""
-        self.logger.setLevel(10) if debug else self.logger.setLevel(20)
+        self.logger.setLevel(10) if self.debug else self.logger.setLevel(20)
 
     def remove_empty_columns(self, dataframe: pd.DataFrame) -> pd.DataFrame:
         """Removes all empty columns in the dataframe before exporting to .csv."""
@@ -235,7 +212,7 @@ class SciScraper:
         return pd.to_datetime(dataframe["pub_date"], infer_datetime_format=True)
 
     @staticmethod
-    def export(
+    def export_csv(
         dataframe: pd.DataFrame, export_dir: str = config.export_dir
     ) -> None:
         """Export data to the specified export directory."""
