@@ -2,11 +2,10 @@
 
 By John Fallot <john.fallot@gmail.com>
 """
+from __future__ import annotations
 
-from argparse import Namespace
-from typing import Optional, Sequence
+from typing import Sequence
 from time import perf_counter
-from sciscrape.fetch import SciScraper
 
 from sciscrape.log import logger
 from sciscrape.profilers import get_profiler
@@ -14,7 +13,7 @@ from sciscrape.factories import read_factory, SCISCRAPERS
 from sciscrape.argsbuilder import build_args
 
 
-def main(argv: Optional[Sequence[str]] = None) -> None:
+def main(argv: Sequence[str] | None = None) -> None:
     """
     Entry point for the `sciscraper` application. Parses command line arguments and executes the appropriate actions.
 
@@ -34,10 +33,10 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     None
     """
 
-    args: Namespace = build_args(argv)
+    args = build_args(argv)
 
     start = perf_counter()
-    sciscrape: SciScraper = (
+    sciscrape = (
         read_factory() if args.mode is None else SCISCRAPERS[args.mode]
     )
     logger.debug(repr(sciscrape))

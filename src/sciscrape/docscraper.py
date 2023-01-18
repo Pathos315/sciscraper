@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 from itertools import chain
 import pdfplumber
 import re
 from collections import Counter
 from dataclasses import asdict, dataclass, field
-from typing import Any, Generator, Optional
+from typing import Any, Iterator
 from sciscrape.wordscore import WordscoreCalculator
 from sciscrape.log import logger
 from sciscrape.config import UTF, FilePath
@@ -28,10 +30,10 @@ class FreqDistAndCount:
     frequency_dist: list[tuple[str, int]] = field(default_factory=list)
 
     @classmethod
-    def from_dict(cls, dict_input: dict):
+    def from_dict(cls, dict_input: dict[str, Any]) -> FreqDistAndCount:
         return cls(**dict_input)
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -83,11 +85,11 @@ def match_terms(target: list[str], word_set: set[str]) -> FreqDistAndCount:
     >>> output.term_count           = 7
     """
 
-    matching_terms: list[tuple[str, int]] = Counter(
+    matching_terms = Counter(
         (word for word in target if word in word_set)
     ).most_common(3)
-    term_count: int = sum(term[1] for term in matching_terms)
-    freq: FreqDistAndCount = FreqDistAndCount(term_count, matching_terms)
+    term_count = sum(term[1] for term in matching_terms)
+    freq = FreqDistAndCount(term_count, matching_terms)
     logger.debug(
         "match_terms=%r,\
         frequent_terms=%s",
@@ -123,12 +125,12 @@ class DocScraper:
             set[str]: A set of words against which the text will be compared.
         """
         with open(txtfile, encoding=UTF) as iowrapper:
-            textlines: list[str] = iowrapper.readlines()
-            wordset: set[str] = {word.strip().lower() for word in textlines}
+            textlines = iowrapper.readlines()
+            wordset = {word.strip().lower() for word in textlines}
             logger.debug("func=%s, word_set=%s", self.unpack_txt_files, wordset)
             return wordset
 
-    def obtain(self, search_text: str) -> Optional[DocumentResult]:
+    def obtain(self, search_text: str) -> DocumentResult | None:
         """
         Given the provided search string, it extracts the text from
         the pdf or abstract provided, it cleans the text in question,
@@ -149,14 +151,14 @@ class DocScraper:
         target_set = self.unpack_txt_files(self.target_words_file)
         bycatch_set = self.unpack_txt_files(self.bycatch_words_file)
 
-        token_generator: Generator[list[str], None, None] = (
+        token_generator: Iterator[list[str]] = (
             self.extract_text_from_pdf(search_text)
             if self.is_pdf
             else self.extract_text_from_summary(search_text)
         )
         token_list = next(token_generator)
-        target: FreqDistAndCount = match_terms(token_list, target_set)
-        bycatch: FreqDistAndCount = match_terms(token_list, bycatch_set)
+        target = match_terms(token_list, target_set)
+        bycatch = match_terms(token_list, bycatch_set)
         wordcalc = WordscoreCalculator(
             target.term_count,
             bycatch.term_count,
@@ -182,7 +184,7 @@ class DocScraper:
 
     def extract_text_from_pdf(
         self, search_text: str
-    ) -> Generator[list[str], None, None]:
+    ) -> Iterator[list[str]]:
         """
         Given the provided filepath, `search_text`, it opens the .pdf
         file and cleans the text. Returning the words from each page
@@ -199,8 +201,8 @@ class DocScraper:
         """
         with pdfplumber.open(search_text) as study:
             study_pages: list[Any] = study.pages
-            study_length: int = len(study_pages)
-            pages_to_check: list[Any] = [*study_pages][:study_length]
+            study_length = len(study_pages)
+            pages_to_check = [*study_pages][:study_length]
             logger.debug(
                 "func=%s,\
                 study_length=%s,\
@@ -210,13 +212,13 @@ class DocScraper:
                 search_text,
             )
             # Goes through all pages and creates a continuous string of text from the entire document
-            preprints: Generator[str, None, None] = (
+            preprints: Iterator[str] = (
                 study_pages[page_number].extract_text(x_tolerance=1, y_tolerance=3)
                 for page_number, _ in enumerate(pages_to_check)
             )
 
             # Strips and lowers every word
-            manuscripts: Generator[Any, None, None] = (
+            manuscripts: Iterator[str] = (
                 preprint.strip().lower() for preprint in preprints
             )
 
@@ -226,7 +228,7 @@ class DocScraper:
             )
 
             # Splits each word along each white space to create a list of strings from each word
-            output: Generator[list[str], None, None] = (
+            output: Iterator[list[str]] = (
                 manuscript.split(" ") for manuscript in manuscripts
             )
             logger.debug(
@@ -240,7 +242,7 @@ class DocScraper:
 
     def extract_text_from_summary(
         self, search_text: str
-    ) -> Generator[list[str], None, None]:
+    ) -> Iterator[list[str]]:
         """
         Given the provided abstract, `search_text`, it reads the text
         and cleans it. Returning the words from each
@@ -261,8 +263,8 @@ class DocScraper:
             self.extract_text_from_summary,
             search_text,
         )
-        manuscript: str = search_text.strip().lower()
-        output: list[str] = manuscript.split(" ")
+        manuscript = search_text.strip().lower()
+        output = manuscript.split(" ")
         logger.debug(
             "func=%s,\
             output=%s",

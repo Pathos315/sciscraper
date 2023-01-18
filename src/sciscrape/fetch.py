@@ -1,13 +1,15 @@
 r"""Contains methods that take various files and directories, which each
 returning various dataframes for each"""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, is_dataclass
 from typing import (
-    Generator,
-    Optional,
+    Iterator,
     Callable,
     Iterable,
+    Union,
     Any,
 )
 
@@ -22,9 +24,9 @@ from sciscrape.downloaders import Downloader, DownloadReceipt
 from sciscrape.change_dir import change_dir
 from sciscrape.log import logger
 
-SerializationStrategyFunction = Callable[[FilePath], list[str]]
+SerializationStrategyFunction = Callable[[FilePath], "list[str]"]
 StagingStrategyFunction = Callable[[pd.DataFrame], Iterable[Any]]
-ScrapeResult = DocumentResult | WebScrapeResult | DownloadReceipt
+ScrapeResult = Union[DocumentResult, WebScrapeResult, DownloadReceipt]
 
 
 KEY_TYPE_PAIRINGS: dict[str, Any] = {
@@ -58,7 +60,7 @@ class Fetcher(ABC):
     scraper: DocScraper | WebScraper | Downloader
 
     @abstractmethod
-    def __call__(self, *args, **kwargs) -> pd.DataFrame:
+    def __call__(self, *args: Any, **kwargs: Any) -> pd.DataFrame:
         """The __call__ method in ScrapeFetcher and StagingFetcher
         take a target FilePath or dataframe respectively.
         They are converted them into lists of entries.
@@ -90,7 +92,7 @@ class Fetcher(ABC):
         pd.DataFrame
             A dataframe containing biliographic data.
         """
-        data: Generator[Optional[ScrapeResult], None, None] = (
+        data: Iterator[ScrapeResult | None] = (
             self.scraper.obtain(term)
             for term in tqdm(search_terms, desc="[sciscraper]: ", unit=f"{tqdm_unit}")
         )
@@ -135,7 +137,7 @@ class StagingFetcher(Fetcher):
         return dataframe
 
     def fetch_from_staged_series(
-        self, prior_dataframe: pd.DataFrame, staged_terms: list
+        self, prior_dataframe: pd.DataFrame, staged_terms: list[Any]
     ) -> pd.DataFrame:
         """If the terms are staged as a list, then the dataframe is extended
         along the provided query, and then it is appended to the existing dataframe."""
@@ -157,7 +159,7 @@ class StagingFetcher(Fetcher):
         provide the source titles, from which the ensuing citations
         were originally found. The prior dataframe is not kept."""
         citations, src_titles = staged_terms
-        ref_dataframe: pd.DataFrame = self.fetch(citations, "references")
+        ref_dataframe = self.fetch(citations, "references")
         dataframe = ref_dataframe.join(
             pd.Series(
                 src_titles,
@@ -176,7 +178,7 @@ class SciScraper:
     """
 
     scraper: ScrapeFetcher
-    stager: Optional[StagingFetcher]
+    stager: StagingFetcher | None
     logger = logger
     downcast: bool = True
 
@@ -228,7 +230,7 @@ class SciScraper:
         return dataframe
 
     @staticmethod
-    def downcast_available_datetimes(dataframe: pd.DataFrame | pd.Series):
+    def downcast_available_datetimes(dataframe: pd.DataFrame | pd.Series) -> pd.Timestamp:
         """Converts all paper publication dates to the datetime format."""
         return pd.to_datetime(dataframe["pub_date"], infer_datetime_format=True)
 
@@ -258,6 +260,6 @@ class SciScraper:
         """Returns a `export_name` for the spreadsheet with
         both today's date and a randomly generated `print_id`
         number."""
-        print_id: int = randint(0, 100)
-        export_name: str = f"{config.today}_sciscraper_{print_id}.csv"
+        print_id = randint(0, 100)
+        export_name = f"{config.today}_sciscraper_{print_id}.csv"
         return export_name

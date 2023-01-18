@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, asdict
-from typing import Any, Optional
+from typing import Any
 from enum import Enum
 from time import sleep
 from urllib.parse import urlencode
@@ -35,21 +37,21 @@ class WebScrapeResult:
     title: str
     pub_date: str
     doi: str
-    internal_id: Optional[str]
-    journal_title: Optional[str]
-    times_cited: Optional[int]
+    internal_id: str | None
+    journal_title: str | None
+    times_cited: int | None
     author_list: list[str] = field(default_factory=list)
     citations: list[str] = field(default_factory=list)
-    keywords: Optional[list[str]] = field(default_factory=list)
-    figures: Optional[list[str]] = field(default_factory=list)
-    biblio: Optional[str] = None
-    abstract: Optional[str] = None
+    keywords: list[str] | None = field(default_factory=list)
+    figures: list[str] | None = field(default_factory=list)
+    biblio: str | None = None
+    abstract: str | None = None
 
     @classmethod
-    def from_dict(cls, dict_input: dict):
+    def from_dict(cls, dict_input: dict[str, Any]) -> WebScrapeResult:
         return cls(**dict_input)
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -61,7 +63,7 @@ class WebScraper(ABC):
     sleep_val: float = config.sleep_interval
 
     @abstractmethod
-    def obtain(self, search_text: str) -> Optional[WebScrapeResult]:
+    def obtain(self, search_text: str) -> WebScrapeResult | None:
         """
         obtain takes the requested identifier string, `search_text`
         normally a digital object identifier (DOI), or similar,
@@ -100,7 +102,7 @@ class DimensionsScraper(WebScraper):
 
     query_subset_citations: bool = False
 
-    def obtain(self, search_text: str) -> Optional[WebScrapeResult]:
+    def obtain(self, search_text: str) -> WebScrapeResult | None:
         querystring: dict[str, str] = self.create_querystring(search_text)
         response = self.get_docs(querystring)
         logger.debug(
@@ -116,12 +118,12 @@ class DimensionsScraper(WebScraper):
         data = self.enrich_response(response)
         return WebScrapeResult(**data)
 
-    def get_docs(self, querystring) -> Response:
+    def get_docs(self, querystring: dict[Any, Any]) -> Response:
         sleep(self.sleep_val)
         return client.get(self.url, params=querystring)
 
     def enrich_response(self, response: Response) -> dict[str, Any]:
-        api_keys: dict[str, str] = DIMENSIONS_AI_KEYS
+        api_keys = DIMENSIONS_AI_KEYS
 
         getters: dict[str, tuple[str, WebScraper]] = {
             "biblio": (
@@ -139,7 +141,7 @@ class DimensionsScraper(WebScraper):
         }
 
         item = self.get_items_from_response(response.text, "docs")
-        data: dict[str, Any] = {
+        data = {
             key: item.get(value) for (key, value) in api_keys.items()
         }
         for key, getter in getters.items():
@@ -148,7 +150,7 @@ class DimensionsScraper(WebScraper):
 
     def get_extra_variables(
         self, data: dict[str, Any], query: str, getter: WebScraper
-    ) -> Optional[WebScrapeResult]:
+    ) -> WebScrapeResult | None:
         """get_extra_variables queries
         subsidiary scrapers to get
         additional data
@@ -224,9 +226,9 @@ class CitationScraper(WebScraper):
     style: Style = Style.APA
     lang: str = "en-US"
 
-    def obtain(self, search_text: str) -> Optional[str]:
-        querystring: dict[str, Any] = self.create_querystring(search_text)
-        response: Response = client.get(self.url, params=querystring)
+    def obtain(self, search_text: str) -> str | None:
+        querystring = self.create_querystring(search_text)
+        response = client.get(self.url, params=querystring)
         logger.debug(
             "search_text=%s, scraper=%r, status_code=%s",
             search_text,
@@ -235,7 +237,7 @@ class CitationScraper(WebScraper):
         )
         return None if response.status_code != 200 else response.text
 
-    def create_querystring(self, search_text) -> dict[str, Any]:
+    def create_querystring(self, search_text: str) -> dict[str, Any]:
         return {
             "doi": search_text,
             "style": self.style.value,
@@ -251,9 +253,9 @@ class OverviewScraper(WebScraper):
     within the dimensions.ai website.
     """
 
-    def obtain(self, search_text: str) -> Optional[str]:
-        url: str = f"{self.url}/{search_text}/abstract.json"
-        response: Response = client.get(url)
+    def obtain(self, search_text: str) -> str | None:
+        url = f"{self.url}/{search_text}/abstract.json"
+        response = client.get(url)
         logger.debug(
             "search_text=%s, scraper=%r, status_code=%s",
             search_text,
@@ -279,11 +281,11 @@ class SemanticFigureScraper(WebScraper):
     from the paper in question.
     """
 
-    def obtain(self, search_text: str) -> Optional[list[Optional[str]]]:
+    def obtain(self, search_text: str) -> list[str | None] | None:
         paper_url = self.find_paper_url(search_text)
         if paper_url is None:
             return None
-        response: Response = client.get(paper_url)
+        response = client.get(paper_url)
         logger.debug(
             "paper_url=%s, scraper=%r, status_code=%s",
             paper_url,
@@ -294,12 +296,12 @@ class SemanticFigureScraper(WebScraper):
             None if response.status_code != 200 else self.parse_html_tree(response.text)
         )
 
-    def find_paper_url(self, search_text: str) -> Optional[str]:
+    def find_paper_url(self, search_text: str) -> str | None:
         paper_searching_url = self.url + urlencode({"query": search_text, "fields": "url", "limit": 1})
-        paper_searching_response: Response = client.get(paper_searching_url)
+        paper_searching_response = client.get(paper_searching_url)
         paper_info: dict[str, Any] = loads(paper_searching_response.text)
         try:
-            paper_url: Optional[str] = paper_info["data"][0]["url"]
+            paper_url: str | None = paper_info["data"][0]["url"]
             logger.debug("\n%s\n", paper_url)
         except IndexError as e:
             logger.debug(
@@ -310,7 +312,7 @@ class SemanticFigureScraper(WebScraper):
             paper_url = None
         return paper_url
 
-    def parse_html_tree(self, response_text: str) -> Optional[list[Any]]:
-        tree: HTMLParser = HTMLParser(response_text)
+    def parse_html_tree(self, response_text: str) -> list[Any] | None:
+        tree = HTMLParser(response_text)
         images: list[Any] = tree.css("li.figure-list__figure > a > figure > div > img")
         return [image.attributes.get("src") for image in images] if images else None

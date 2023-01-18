@@ -2,12 +2,14 @@ r"""argsbuilder constructs the argparser for sciscraper,
 for use in the `main` module.
 """
 
+from __future__ import annotations
+
 import argparse
-from typing import Optional, Sequence
+from typing import Sequence
 from sciscrape.config import config
 
 
-def build_args(argv: Optional[Sequence[str]]) -> argparse.Namespace:
+def build_args(argv: Sequence[str] | None) -> argparse.Namespace:
     """
     build_args builds the argument parser for sciscraper.
 

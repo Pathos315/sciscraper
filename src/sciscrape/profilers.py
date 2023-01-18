@@ -68,7 +68,7 @@ def run_bytecode_profiler(sciscrape: SciScraper) -> None:
     dis.dis(sciscrape.__call__)
 
 
-def get_profiler(args: Namespace, sciscrape: SciScraper):
+def get_profiler(args: Namespace, sciscrape: SciScraper) -> None:
     profiler_dict = {
         "benchmark": partial(run_benchmark, args=args),
         "memory": partial(run_memory_profiler, args=args),
