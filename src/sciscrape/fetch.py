@@ -4,11 +4,10 @@ returning various dataframes for each"""
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, is_dataclass
+from dataclasses import dataclass
 from random import randint
 from typing import Any, Callable, Iterable, Iterator, Union
 
-import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
