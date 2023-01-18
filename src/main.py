@@ -4,10 +4,8 @@ By John Fallot <john.fallot@gmail.com>
 """
 from __future__ import annotations
 
-from argparse import Namespace
 from typing import Sequence
 from time import perf_counter
-from sciscrape.fetch import SciScraper
 
 from sciscrape.log import logger
 from sciscrape.profilers import get_profiler
@@ -35,10 +33,10 @@ def main(argv: Sequence[str] | None = None) -> None:
     None
     """
 
-    args: Namespace = build_args(argv)
+    args = build_args(argv)
 
     start = perf_counter()
-    sciscrape: SciScraper = (
+    sciscrape = (
         read_factory() if args.mode is None else SCISCRAPERS[args.mode]
     )
     logger.debug(repr(sciscrape))

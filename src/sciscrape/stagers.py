@@ -108,17 +108,17 @@ def stage_with_reference(
     >>> stage_with_reference(df) =
     return (['a','b','c','d','e','f','g'],['apple','apple','apple','orange','orange','banana','banana'])
     """
-    data: pd.DataFrame = (
+    data = (
         target
         .copy()
         .explode(column_x)
     )
-    data_col_x: list[str] = clean_any_nested_columns(
+    data_col_x = clean_any_nested_columns(
         data[column_x].fillna("N/A").to_list(), column_x
     )
-    data_col_y: list[str] = clean_any_nested_columns(
+    data_col_y = clean_any_nested_columns(
         data[column_y].fillna("N/A").to_list(), column_y
     )
-    staged_terms: tuple[list[str], list[str]] = (data_col_x, data_col_y)
+    staged_terms = (data_col_x, data_col_y)
     logger.debug("stager=%s, terms=%s", stage_with_reference, staged_terms)
     return staged_terms

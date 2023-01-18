@@ -96,22 +96,22 @@ class WordscoreCalculator:
             which is calculated as the difference between
             the positive posterior and negative posterior.
         """
-        neutral_part: float = self.total_length - self.target_count
-        success_margin: float = self.get_margin(
+        neutral_part = self.total_length - self.target_count
+        success_margin = self.get_margin(
             self.target_count,
             self.total_length,
         )
-        failure_margin: float = self.get_margin(
+        failure_margin = self.get_margin(
             neutral_part,
             self.total_length,
         )
-        target_probability: float = self.target_count / self.total_length
-        bycatch_probability: float = self.bycatch_count / self.total_length
-        likelihood: float = self.get_likelihood(success_margin, failure_margin)
-        expectation: float = self.target_count * target_probability
-        variance: float = expectation * (1 - target_probability)
-        standard_deviation: float = sqrt(variance)
-        skewness: float = (failure_margin - target_probability) / standard_deviation
+        target_probability = self.target_count / self.total_length
+        bycatch_probability = self.bycatch_count / self.total_length
+        likelihood = self.get_likelihood(success_margin, failure_margin)
+        expectation = self.target_count * target_probability
+        variance = expectation * (1 - target_probability)
+        standard_deviation = sqrt(variance)
+        skewness = (failure_margin - target_probability) / standard_deviation
 
         # Positive posterior is a bayes equation, in which the match likelihood
         # is multiplied by the true positives ratio
@@ -168,7 +168,7 @@ class WordscoreCalculator:
         --------
         >>> P(y|n) = (n! / (y! * (n-y)!) * (y/n)**y * ((n-y)/n)**(n-y))
         """
-        total_combinations: int = comb(
+        total_combinations = comb(
             self.total_length,
             self.target_count,
         )

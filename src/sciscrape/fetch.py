@@ -156,7 +156,7 @@ class StagingFetcher(Fetcher):
         provide the source titles, from which the ensuing citations
         were originally found. The prior dataframe is not kept."""
         citations, src_titles = staged_terms
-        ref_dataframe: pd.DataFrame = self.fetch(citations, "references")
+        ref_dataframe = self.fetch(citations, "references")
         dataframe = ref_dataframe.join(
             pd.Series(
                 src_titles,
@@ -257,6 +257,6 @@ class SciScraper:
         """Returns a `export_name` for the spreadsheet with
         both today's date and a randomly generated `print_id`
         number."""
-        print_id: int = randint(0, 100)
-        export_name: str = f"{config.today}_sciscraper_{print_id}.csv"
+        print_id = randint(0, 100)
+        export_name = f"{config.today}_sciscraper_{print_id}.csv"
         return export_name

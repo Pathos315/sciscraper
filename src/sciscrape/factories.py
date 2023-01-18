@@ -90,7 +90,7 @@ def read_factory() -> SciScraper:
     """
 
     while True:
-        scrape_process: str = input(
+        scrape_process = input(
             f"Enter desired data scraping process ({', '.join(SCISCRAPERS)}): "
         )
         try:

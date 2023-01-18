@@ -170,7 +170,7 @@ class BulkPDFScraper(Downloader):
         """
         payload: dict[str, str] = {"request": search_text}
         paper_title: str = f'{config.today}_{search_text.replace("/","")}.pdf'
-        response_text: Optional[str] = self.get_response(payload)
+        response_text = self.get_response(payload)
 
         download_link: str | None = (
             None if response_text is None else self.find_download_link(response_text)
@@ -219,7 +219,7 @@ class BulkPDFScraper(Downloader):
         str
             A download link, which will download a link to the paper.
         """
-        html: HTMLParser = HTMLParser(search_text)
+        html = HTMLParser(search_text)
         try:
             download_link: str | None = html.css_first(
                 "#buttons button:nth-child(1)"
@@ -295,7 +295,7 @@ class ImagesDownloader(Downloader):
     def obtain(self, search_text: str) -> DownloadReceipt | None:
         sleep(self.sleep_val)
         search_ext = search_text.split(".")[-1]
-        response: Response = client.get(search_text, stream=True, allow_redirects=True)
+        response = client.get(search_text, stream=True, allow_redirects=True)
         logger.debug(
             "response=%r, scraper=%r, status_code=%s",
             response,
@@ -325,9 +325,9 @@ class ImagesDownloader(Downloader):
         DownloadReceipt:
             A receipt indicating whether the image was successfully downloaded and the path to the downloaded image.
         """
-        filename: str = self.format_filename(response.headers.get("Etag"), search_ext)
+        filename = self.format_filename(response.headers.get("Etag"), search_ext)
         self.create_document(filename, response.content)
-        fullpath: str = str(path.abspath(filename))
+        fullpath = str(path.abspath(filename))
         return DownloadReceipt(self.cls_name, True, fullpath)
 
     def format_filename(self, etag: str | None, ext: str) -> str:
@@ -346,10 +346,10 @@ class ImagesDownloader(Downloader):
             A filename to which the image will be downloaded.
         """
 
-        file_id: int = random.randint(1, 255)
+        file_id = random.randint(1, 255)
         if etag:
             etag = etag.strip('"')
-            filename: str = f"{config.today}_{etag}_{file_id}.{ext}"
+            filename = f"{config.today}_{etag}_{file_id}.{ext}"
         else:
             filename = f"{config.today}__NaN__{file_id}.{ext}"
         logger.debug("filename=%s", filename)

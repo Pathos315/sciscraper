@@ -123,7 +123,7 @@ class DimensionsScraper(WebScraper):
         return client.get(self.url, params=querystring)
 
     def enrich_response(self, response: Response) -> dict[str, Any]:
-        api_keys: dict[str, str] = DIMENSIONS_AI_KEYS
+        api_keys = DIMENSIONS_AI_KEYS
 
         getters: dict[str, tuple[str, WebScraper]] = {
             "biblio": (
@@ -141,7 +141,7 @@ class DimensionsScraper(WebScraper):
         }
 
         item = self.get_items_from_response(response.text, "docs")
-        data: dict[str, Any] = {
+        data = {
             key: item.get(value) for (key, value) in api_keys.items()
         }
         for key, getter in getters.items():
@@ -227,8 +227,8 @@ class CitationScraper(WebScraper):
     lang: str = "en-US"
 
     def obtain(self, search_text: str) -> str | None:
-        querystring: dict[str, Any] = self.create_querystring(search_text)
-        response: Response = client.get(self.url, params=querystring)
+        querystring = self.create_querystring(search_text)
+        response = client.get(self.url, params=querystring)
         logger.debug(
             "search_text=%s, scraper=%r, status_code=%s",
             search_text,
@@ -254,8 +254,8 @@ class OverviewScraper(WebScraper):
     """
 
     def obtain(self, search_text: str) -> str | None:
-        url: str = f"{self.url}/{search_text}/abstract.json"
-        response: Response = client.get(url)
+        url = f"{self.url}/{search_text}/abstract.json"
+        response = client.get(url)
         logger.debug(
             "search_text=%s, scraper=%r, status_code=%s",
             search_text,
@@ -285,7 +285,7 @@ class SemanticFigureScraper(WebScraper):
         paper_url = self.find_paper_url(search_text)
         if paper_url is None:
             return None
-        response: Response = client.get(paper_url)
+        response = client.get(paper_url)
         logger.debug(
             "paper_url=%s, scraper=%r, status_code=%s",
             paper_url,
@@ -298,7 +298,7 @@ class SemanticFigureScraper(WebScraper):
 
     def find_paper_url(self, search_text: str) -> str | None:
         paper_searching_url = self.url + urlencode({"query": search_text, "fields": "url", "limit": 1})
-        paper_searching_response: Response = client.get(paper_searching_url)
+        paper_searching_response = client.get(paper_searching_url)
         paper_info: dict[str, Any] = loads(paper_searching_response.text)
         try:
             paper_url: str | None = paper_info["data"][0]["url"]
@@ -313,6 +313,6 @@ class SemanticFigureScraper(WebScraper):
         return paper_url
 
     def parse_html_tree(self, response_text: str) -> list[Any] | None:
-        tree: HTMLParser = HTMLParser(response_text)
+        tree = HTMLParser(response_text)
         images: list[Any] = tree.css("li.figure-list__figure > a > figure > div > img")
         return [image.attributes.get("src") for image in images] if images else None

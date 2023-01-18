@@ -85,11 +85,11 @@ def match_terms(target: list[str], word_set: set[str]) -> FreqDistAndCount:
     >>> output.term_count           = 7
     """
 
-    matching_terms: list[tuple[str, int]] = Counter(
+    matching_terms = Counter(
         (word for word in target if word in word_set)
     ).most_common(3)
-    term_count: int = sum(term[1] for term in matching_terms)
-    freq: FreqDistAndCount = FreqDistAndCount(term_count, matching_terms)
+    term_count = sum(term[1] for term in matching_terms)
+    freq = FreqDistAndCount(term_count, matching_terms)
     logger.debug(
         "match_terms=%r,\
         frequent_terms=%s",
@@ -125,8 +125,8 @@ class DocScraper:
             set[str]: A set of words against which the text will be compared.
         """
         with open(txtfile, encoding=UTF) as iowrapper:
-            textlines: list[str] = iowrapper.readlines()
-            wordset: set[str] = {word.strip().lower() for word in textlines}
+            textlines = iowrapper.readlines()
+            wordset = {word.strip().lower() for word in textlines}
             logger.debug("func=%s, word_set=%s", self.unpack_txt_files, wordset)
             return wordset
 
@@ -157,8 +157,8 @@ class DocScraper:
             else self.extract_text_from_summary(search_text)
         )
         token_list = next(token_generator)
-        target: FreqDistAndCount = match_terms(token_list, target_set)
-        bycatch: FreqDistAndCount = match_terms(token_list, bycatch_set)
+        target = match_terms(token_list, target_set)
+        bycatch = match_terms(token_list, bycatch_set)
         wordcalc = WordscoreCalculator(
             target.term_count,
             bycatch.term_count,
@@ -201,8 +201,8 @@ class DocScraper:
         """
         with pdfplumber.open(search_text) as study:
             study_pages: list[Any] = study.pages
-            study_length: int = len(study_pages)
-            pages_to_check: list[Any] = [*study_pages][:study_length]
+            study_length = len(study_pages)
+            pages_to_check = [*study_pages][:study_length]
             logger.debug(
                 "func=%s,\
                 study_length=%s,\
@@ -263,8 +263,8 @@ class DocScraper:
             self.extract_text_from_summary,
             search_text,
         )
-        manuscript: str = search_text.strip().lower()
-        output: list[str] = manuscript.split(" ")
+        manuscript = search_text.strip().lower()
+        output = manuscript.split(" ")
         logger.debug(
             "func=%s,\
             output=%s",

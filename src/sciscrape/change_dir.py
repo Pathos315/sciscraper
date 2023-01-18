@@ -11,9 +11,9 @@ from sciscrape.config import FilePath
 @contextmanager
 def change_dir(destination: FilePath) -> Generator[None, None, None]:
     """Sets a destination for exported files."""
-    cwd: str = getcwd()
+    cwd = getcwd()
     try:
-        dest: str = path.realpath(destination)
+        dest = path.realpath(destination)
         makedirs(dest, exist_ok=True)
         chdir(dest)
         yield
