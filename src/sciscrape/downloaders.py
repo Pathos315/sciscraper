@@ -118,7 +118,7 @@ class Downloader(ABC):
         -------
             A .pdf or .png file, depending on the `Downloader` in use.
         """
-        with (change_dir(self.export_dir), TemporaryFile() as temp):
+        with change_dir(self.export_dir), TemporaryFile() as temp:
             temp.write(contents)
             with open(filename, "wb") as file:
                 for line in temp:
