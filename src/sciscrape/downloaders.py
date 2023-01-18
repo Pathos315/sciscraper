@@ -1,6 +1,8 @@
 r"""
 Downloads papers en masse
 """
+from __future__ import annotations
+
 import random
 from tempfile import TemporaryFile
 from abc import ABC, abstractmethod
@@ -8,7 +10,6 @@ from dataclasses import asdict, dataclass, field
 from os import path
 from time import sleep
 import re
-from typing import Optional
 from requests import Response
 from selectolax.parser import HTMLParser
 
@@ -61,7 +62,7 @@ class Downloader(ABC):
         self.cls_name = self.__class__.__name__
 
     @abstractmethod
-    def obtain(self, search_text: str) -> Optional[DownloadReceipt]:
+    def obtain(self, search_text: str) -> DownloadReceipt | None:
         """
         For downloaders, `obtain` submits a payload,
         as acquired from the prior search terms,
@@ -171,10 +172,10 @@ class BulkPDFScraper(Downloader):
         paper_title: str = f'{config.today}_{search_text.replace("/","")}.pdf'
         response_text: Optional[str] = self.get_response(payload)
 
-        download_link: Optional[str] = (
+        download_link: str | None = (
             None if response_text is None else self.find_download_link(response_text)
         )
-        formatted_src: Optional[str] = (
+        formatted_src: str | None = (
             None if download_link is None else self.format_download_link(download_link)
         )
         logger.debug("download_link=%s", formatted_src)
@@ -189,7 +190,7 @@ class BulkPDFScraper(Downloader):
         self.create_document(paper_title, paper_contents)
         return DownloadReceipt(self.cls_name, True, f"{self.export_dir}/{paper_title}")
 
-    def get_response(self, payload: dict[str, str]) -> Optional[str]:
+    def get_response(self, payload: dict[str, str]) -> str | None:
         response: Response = client.post(
             self.url,
             data=payload,
@@ -203,7 +204,7 @@ class BulkPDFScraper(Downloader):
         )
         return None if response.status_code != 200 else response.text
 
-    def find_download_link(self, search_text: str) -> Optional[str]:
+    def find_download_link(self, search_text: str) -> str | None:
         """
         create_querystring, within `BulkPDFScraper`,
         returns a link that will download the paper in question.
@@ -220,7 +221,7 @@ class BulkPDFScraper(Downloader):
         """
         html: HTMLParser = HTMLParser(search_text)
         try:
-            download_link: Optional[str] = html.css_first(
+            download_link: str | None = html.css_first(
                 "#buttons button:nth-child(1)"
             ).attributes["onclick"]
             logger.debug("download_link=%s", download_link)
@@ -235,7 +236,7 @@ class BulkPDFScraper(Downloader):
             )
             return None
 
-    def format_download_link(self, download_link: Optional[str]) -> Optional[str]:
+    def format_download_link(self, download_link: str | None) -> str | None:
         """
         format_download_link first cleans the download_link
         according to the provided regular expression pattern.
@@ -277,7 +278,7 @@ class BulkPDFScraper(Downloader):
             download_link = download_link.replace(seperator, self.url, 1)
         return download_link
 
-    def clean_link_with_regex(self, download_link: str) -> Optional[re.Match[str]]:
+    def clean_link_with_regex(self, download_link: str) -> re.Match[str] | None:
         return self.link_cleaning_pattern.match(download_link)
 
 
@@ -291,7 +292,7 @@ class ImagesDownloader(Downloader):
     file that appears as a result of that query.
     """
 
-    def obtain(self, search_text: str) -> Optional[DownloadReceipt]:
+    def obtain(self, search_text: str) -> DownloadReceipt | None:
         sleep(self.sleep_val)
         search_ext = search_text.split(".")[-1]
         response: Response = client.get(search_text, stream=True, allow_redirects=True)
@@ -329,7 +330,7 @@ class ImagesDownloader(Downloader):
         fullpath: str = str(path.abspath(filename))
         return DownloadReceipt(self.cls_name, True, fullpath)
 
-    def format_filename(self, etag: Optional[str], ext: str) -> str:
+    def format_filename(self, etag: str | None, ext: str) -> str:
         """
         format_filename, within `ImageDownloader`, generates a filename
         for the image to be downloaded.

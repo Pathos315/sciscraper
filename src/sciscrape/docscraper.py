@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 from itertools import chain
 import pdfplumber
 import re
 from collections import Counter
 from dataclasses import asdict, dataclass, field
-from typing import Any, Generator, Optional
+from typing import Any, Generator
 from sciscrape.wordscore import WordscoreCalculator
 from sciscrape.log import logger
 from sciscrape.config import UTF, FilePath
@@ -128,7 +130,7 @@ class DocScraper:
             logger.debug("func=%s, word_set=%s", self.unpack_txt_files, wordset)
             return wordset
 
-    def obtain(self, search_text: str) -> Optional[DocumentResult]:
+    def obtain(self, search_text: str) -> DocumentResult | None:
         """
         Given the provided search string, it extracts the text from
         the pdf or abstract provided, it cleans the text in question,

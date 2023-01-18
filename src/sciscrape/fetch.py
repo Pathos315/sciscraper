@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, is_dataclass
 from typing import (
     Generator,
-    Optional,
     Callable,
     Iterable,
     Any,
@@ -90,7 +89,7 @@ class Fetcher(ABC):
         pd.DataFrame
             A dataframe containing biliographic data.
         """
-        data: Generator[Optional[ScrapeResult], None, None] = (
+        data: Generator[ScrapeResult | None, None, None] = (
             self.scraper.obtain(term)
             for term in tqdm(search_terms, desc="[sciscraper]: ", unit=f"{tqdm_unit}")
         )
@@ -176,7 +175,7 @@ class SciScraper:
     """
 
     scraper: ScrapeFetcher
-    stager: Optional[StagingFetcher]
+    stager: StagingFetcher | None
     logger = logger
     downcast: bool = True
 

@@ -2,9 +2,10 @@
 
 By John Fallot <john.fallot@gmail.com>
 """
+from __future__ import annotations
 
 from argparse import Namespace
-from typing import Optional, Sequence
+from typing import Sequence
 from time import perf_counter
 from sciscrape.fetch import SciScraper
 
@@ -14,7 +15,7 @@ from sciscrape.factories import read_factory, SCISCRAPERS
 from sciscrape.argsbuilder import build_args
 
 
-def main(argv: Optional[Sequence[str]] = None) -> None:
+def main(argv: Sequence[str] | None = None) -> None:
     """
     Entry point for the `sciscraper` application. Parses command line arguments and executes the appropriate actions.
 

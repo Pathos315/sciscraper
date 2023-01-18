@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, asdict
-from typing import Any, Optional
+from typing import Any
 from enum import Enum
 from time import sleep
 from urllib.parse import urlencode
@@ -35,15 +37,15 @@ class WebScrapeResult:
     title: str
     pub_date: str
     doi: str
-    internal_id: Optional[str]
-    journal_title: Optional[str]
-    times_cited: Optional[int]
+    internal_id: str | None
+    journal_title: str | None
+    times_cited: int | None
     author_list: list[str] = field(default_factory=list)
     citations: list[str] = field(default_factory=list)
-    keywords: Optional[list[str]] = field(default_factory=list)
-    figures: Optional[list[str]] = field(default_factory=list)
-    biblio: Optional[str] = None
-    abstract: Optional[str] = None
+    keywords: list[str] | None = field(default_factory=list)
+    figures: list[str] | None = field(default_factory=list)
+    biblio: str | None = None
+    abstract: str | None = None
 
     @classmethod
     def from_dict(cls, dict_input: dict):
@@ -61,7 +63,7 @@ class WebScraper(ABC):
     sleep_val: float = config.sleep_interval
 
     @abstractmethod
-    def obtain(self, search_text: str) -> Optional[WebScrapeResult]:
+    def obtain(self, search_text: str) -> WebScrapeResult | None:
         """
         obtain takes the requested identifier string, `search_text`
         normally a digital object identifier (DOI), or similar,
@@ -100,7 +102,7 @@ class DimensionsScraper(WebScraper):
 
     query_subset_citations: bool = False
 
-    def obtain(self, search_text: str) -> Optional[WebScrapeResult]:
+    def obtain(self, search_text: str) -> WebScrapeResult | None:
         querystring: dict[str, str] = self.create_querystring(search_text)
         response = self.get_docs(querystring)
         logger.debug(
@@ -148,7 +150,7 @@ class DimensionsScraper(WebScraper):
 
     def get_extra_variables(
         self, data: dict[str, Any], query: str, getter: WebScraper
-    ) -> Optional[WebScrapeResult]:
+    ) -> WebScrapeResult | None:
         """get_extra_variables queries
         subsidiary scrapers to get
         additional data
@@ -224,7 +226,7 @@ class CitationScraper(WebScraper):
     style: Style = Style.APA
     lang: str = "en-US"
 
-    def obtain(self, search_text: str) -> Optional[str]:
+    def obtain(self, search_text: str) -> str | None:
         querystring: dict[str, Any] = self.create_querystring(search_text)
         response: Response = client.get(self.url, params=querystring)
         logger.debug(
@@ -251,7 +253,7 @@ class OverviewScraper(WebScraper):
     within the dimensions.ai website.
     """
 
-    def obtain(self, search_text: str) -> Optional[str]:
+    def obtain(self, search_text: str) -> str | None:
         url: str = f"{self.url}/{search_text}/abstract.json"
         response: Response = client.get(url)
         logger.debug(
@@ -279,7 +281,7 @@ class SemanticFigureScraper(WebScraper):
     from the paper in question.
     """
 
-    def obtain(self, search_text: str) -> Optional[list[Optional[str]]]:
+    def obtain(self, search_text: str) -> list[str | None] | None:
         paper_url = self.find_paper_url(search_text)
         if paper_url is None:
             return None
@@ -294,12 +296,12 @@ class SemanticFigureScraper(WebScraper):
             None if response.status_code != 200 else self.parse_html_tree(response.text)
         )
 
-    def find_paper_url(self, search_text: str) -> Optional[str]:
+    def find_paper_url(self, search_text: str) -> str | None:
         paper_searching_url = self.url + urlencode({"query": search_text, "fields": "url", "limit": 1})
         paper_searching_response: Response = client.get(paper_searching_url)
         paper_info: dict[str, Any] = loads(paper_searching_response.text)
         try:
-            paper_url: Optional[str] = paper_info["data"][0]["url"]
+            paper_url: str | None = paper_info["data"][0]["url"]
             logger.debug("\n%s\n", paper_url)
         except IndexError as e:
             logger.debug(
@@ -310,7 +312,7 @@ class SemanticFigureScraper(WebScraper):
             paper_url = None
         return paper_url
 
-    def parse_html_tree(self, response_text: str) -> Optional[list[Any]]:
+    def parse_html_tree(self, response_text: str) -> list[Any] | None:
         tree: HTMLParser = HTMLParser(response_text)
         images: list[Any] = tree.css("li.figure-list__figure > a > figure > div > img")
         return [image.attributes.get("src") for image in images] if images else None

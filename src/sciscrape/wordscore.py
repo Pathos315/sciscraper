@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, asdict
-from typing import Union
 from math import comb, sqrt
 
 
@@ -205,8 +206,8 @@ class WordscoreCalculator:
 
     def get_margin(
         self,
-        part: Union[int, float],
-        whole: Union[int, float],
+        part: int | float,
+        whole: int | float,
     ) -> float:
         """
         Calculates the margin of an event occurring based on the part divided by the whole,
