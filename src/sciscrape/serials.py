@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from ast import literal_eval
 from fnmatch import fnmatch
 from os import listdir, path
-from ast import literal_eval
+
 import pandas as pd
+
 from sciscrape.config import FilePath
 from sciscrape.log import logger
 
@@ -75,8 +77,11 @@ def serialize_from_directory(target: FilePath, suffix: str = "pdf") -> list[str]
 
 
 def clean_any_nested_columns(data_list: list[str], column: str) -> list[str]:
-    initial_terms = [term for term in data_list if not term.startswith("{")]
-    nested_terms: list[str] = [
-        literal_eval(term)[column] for term in data_list if term.startswith("{")
-    ]
+    initial_terms: list[str] = []
+    nested_terms: list[str] = []
+    for term in data_list:
+        if term.startswith("{"):
+            nested_terms.append(literal_eval(term)[column])
+        else:
+            initial_terms.append(term)
     return initial_terms + nested_terms

@@ -8,14 +8,15 @@ It also includes functions for serializing and staging the scraped data.
 from __future__ import annotations
 
 from functools import partial
-from sciscrape.docscraper import DocScraper
-from sciscrape.webscrapers import DimensionsScraper
-from sciscrape.downloaders import BulkPDFScraper, ImagesDownloader
-from sciscrape.stagers import stage_from_series, stage_with_reference
-from sciscrape.serials import serialize_from_csv, serialize_from_directory
-from sciscrape.fetch import SciScraper, ScrapeFetcher, StagingFetcher
+
 from sciscrape.config import config
+from sciscrape.docscraper import DocScraper
+from sciscrape.downloaders import BulkPDFScraper, ImagesDownloader
+from sciscrape.fetch import SciScraper, ScrapeFetcher, StagingFetcher
 from sciscrape.log import logger
+from sciscrape.serials import serialize_from_csv, serialize_from_directory
+from sciscrape.stagers import stage_from_series, stage_with_reference
+from sciscrape.webscrapers import DimensionsScraper
 
 SCRAPERS: dict[str, ScrapeFetcher] = {
     "pdf_lookup": ScrapeFetcher(

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pandas as pd
+
 from sciscrape.log import logger
 from sciscrape.serials import clean_any_nested_columns
 

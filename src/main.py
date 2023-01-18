@@ -4,13 +4,13 @@ By John Fallot <john.fallot@gmail.com>
 """
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 from time import perf_counter
 
+from sciscrape.argsbuilder import build_parser
+from sciscrape.factories import SCISCRAPERS, read_factory
 from sciscrape.log import logger
 from sciscrape.profilers import get_profiler
-from sciscrape.factories import read_factory, SCISCRAPERS
-from sciscrape.argsbuilder import build_args
 
 
 def main(argv: Sequence[str] | None = None) -> None:
@@ -33,9 +33,9 @@ def main(argv: Sequence[str] | None = None) -> None:
     None
     """
 
-    args = build_args(argv)
-
     start = perf_counter()
+    args = build_parser(argv)
+
     sciscrape = (
         read_factory() if args.mode is None else SCISCRAPERS[args.mode]
     )

@@ -1,13 +1,14 @@
-from argparse import Namespace
-from functools import partial
-import sys
 import dis
-from cProfile import Profile
 import pstats
-import memory_profiler
-
 import subprocess
+import sys
+from argparse import Namespace
+from cProfile import Profile
+from functools import partial
+
+import memory_profiler
 import psutil
+
 from sciscrape.config import config
 from sciscrape.fetch import SciScraper
 

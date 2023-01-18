@@ -1,23 +1,24 @@
-r"""
+"""
 Downloads papers en masse
 """
 from __future__ import annotations
 
 import random
-from tempfile import TemporaryFile
+import re
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
 from os import path
+from tempfile import TemporaryFile
 from time import sleep
-import re
 from typing import Any
+
 from requests import Response
 from selectolax.parser import HTMLParser
 
-from sciscrape.webscrapers import client
-from sciscrape.log import logger
 from sciscrape.change_dir import change_dir
 from sciscrape.config import FilePath, config
+from sciscrape.log import logger
+from sciscrape.webscrapers import client
 
 
 @dataclass(frozen=True, order=True)
