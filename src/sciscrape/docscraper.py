@@ -89,9 +89,9 @@ def match_terms(target: list[str], word_set: set[str]) -> FreqDistAndCount:
     term_count: int = sum(term[1] for term in matching_terms)
     freq: FreqDistAndCount = FreqDistAndCount(term_count, matching_terms)
     logger.debug(
-        "match_terms=%s,\
+        "match_terms=%r,\
         frequent_terms=%s",
-        repr(match_terms),
+        match_terms,
         freq,
     )
     return freq
@@ -125,7 +125,7 @@ class DocScraper:
         with open(txtfile, encoding=UTF) as iowrapper:
             textlines: list[str] = iowrapper.readlines()
             wordset: set[str] = {word.strip().lower() for word in textlines}
-            logger.debug("func=%s, word_set=%s", repr(self.unpack_txt_files), wordset)
+            logger.debug("func=%s, word_set=%s", self.unpack_txt_files, wordset)
             return wordset
 
     def obtain(self, search_text: str) -> Optional[DocumentResult]:
@@ -205,7 +205,7 @@ class DocScraper:
                 "func=%s,\
                 study_length=%s,\
                 query=%s",
-                repr(self.extract_text_from_pdf),
+                self.extract_text_from_pdf,
                 pages_to_check,
                 search_text,
             )
@@ -232,7 +232,7 @@ class DocScraper:
             logger.debug(
                 "func=%s,\
                 output=%s",
-                repr(self.extract_text_from_pdf),
+                self.extract_text_from_pdf,
                 output,
             )
 
@@ -258,7 +258,7 @@ class DocScraper:
         logger.debug(
             "func=%s,\
             query=%s",
-            repr(self.extract_text_from_summary),
+            self.extract_text_from_summary,
             search_text,
         )
         manuscript: str = search_text.strip().lower()
@@ -266,7 +266,7 @@ class DocScraper:
         logger.debug(
             "func=%s,\
             output=%s",
-            repr(self.extract_text_from_summary),
-            repr(output),
+            self.extract_text_from_summary,
+            output,
         )
         yield output

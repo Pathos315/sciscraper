@@ -96,4 +96,4 @@ def read_factory() -> SciScraper:
         try:
             return SCISCRAPERS[scrape_process]
         except KeyError:
-            logger.error(f"Unknown data scraping process option: {scrape_process}.")
+            logger.error("Unknown data scraping process option: %s.", scrape_process)

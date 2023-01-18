@@ -43,7 +43,7 @@ def stage_from_series(target: pd.DataFrame, column: str = "abstract") -> list[st
     staged_terms = clean_any_nested_columns(raw_terms, column)
     logger.debug(
         "stager=%s, terms=%s",
-        repr(stage_from_series),
+        stage_from_series,
         staged_terms,
     )
     return staged_terms
@@ -120,5 +120,5 @@ def stage_with_reference(
         data[column_y].fillna("N/A").to_list(), column_y
     )
     staged_terms: tuple[list[str], list[str]] = (data_col_x, data_col_y)
-    logger.debug("stager=%s, terms=%s", repr(stage_with_reference), staged_terms)
+    logger.debug("stager=%s, terms=%s", stage_with_reference, staged_terms)
     return staged_terms

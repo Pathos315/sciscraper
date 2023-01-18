@@ -103,9 +103,9 @@ class DimensionsScraper(WebScraper):
         querystring: dict[str, str] = self.create_querystring(search_text)
         response = self.get_docs(querystring)
         logger.debug(
-            "search_text=%s, scraper=%s, status_code=%s",
+            "search_text=%s, scraper=%r, status_code=%s",
             search_text,
-            repr(self),
+            self,
             response.status_code,
         )
 
@@ -166,8 +166,8 @@ class DimensionsScraper(WebScraper):
             return getter.obtain(data[query])
         except (KeyError, TypeError) as e:
             logger.debug(
-                "func_repr=%s, query=%s, error=%s, action_undertaken=%s",
-                repr(getter),
+                "func_repr=%r, query=%s, error=%s, action_undertaken=%s",
+                getter,
                 query,
                 e,
                 "Returning None",
@@ -227,9 +227,9 @@ class CitationScraper(WebScraper):
         querystring: dict[str, Any] = self.create_querystring(search_text)
         response: Response = client.get(self.url, params=querystring)
         logger.debug(
-            "search_text=%s, scraper=%s, status_code=%s",
+            "search_text=%s, scraper=%r, status_code=%s",
             search_text,
-            repr(self),
+            self,
             response.status_code,
         )
         return None if response.status_code != 200 else response.text
@@ -254,9 +254,9 @@ class OverviewScraper(WebScraper):
         url: str = f"{self.url}/{search_text}/abstract.json"
         response: Response = client.get(url)
         logger.debug(
-            "search_text=%s, scraper=%s, status_code=%s",
+            "search_text=%s, scraper=%r, status_code=%s",
             search_text,
-            repr(self),
+            self,
             response.status_code,
         )
 
@@ -284,9 +284,9 @@ class SemanticFigureScraper(WebScraper):
             return None
         response: Response = client.get(paper_url)
         logger.debug(
-            "paper_url=%s, scraper=%s, status_code=%s",
+            "paper_url=%s, scraper=%r, status_code=%s",
             paper_url,
-            repr(self),
+            self,
             response.status_code,
         )
         return (
@@ -300,7 +300,7 @@ class SemanticFigureScraper(WebScraper):
         paper_info: dict[str, Any] = loads(paper_searching_response.text)
         try:
             paper_url: Optional[str] = paper_info["data"][0]["url"]
-            logger.debug(f"\n{paper_url}\n")
+            logger.debug("\n%s\n", paper_url)
         except IndexError as e:
             logger.debug(
                 "error=%s, action_undertaken=%s",
