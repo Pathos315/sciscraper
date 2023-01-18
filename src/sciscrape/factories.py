@@ -5,6 +5,8 @@ including the Dimensions.ai API and local directories.
 It also includes functions for serializing and staging the scraped data.
 """
 
+from __future__ import annotations
+
 from functools import partial
 from sciscrape.docscraper import DocScraper
 from sciscrape.webscrapers import DimensionsScraper

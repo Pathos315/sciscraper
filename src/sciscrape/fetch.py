@@ -1,12 +1,15 @@
 r"""Contains methods that take various files and directories, which each
 returning various dataframes for each"""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, is_dataclass
 from typing import (
     Iterator,
     Callable,
     Iterable,
+    Union,
     Any,
 )
 
@@ -21,9 +24,9 @@ from sciscrape.downloaders import Downloader, DownloadReceipt
 from sciscrape.change_dir import change_dir
 from sciscrape.log import logger
 
-SerializationStrategyFunction = Callable[[FilePath], list[str]]
+SerializationStrategyFunction = Callable[[FilePath], "list[str]"]
 StagingStrategyFunction = Callable[[pd.DataFrame], Iterable[Any]]
-ScrapeResult = DocumentResult | WebScrapeResult | DownloadReceipt
+ScrapeResult = Union[DocumentResult, WebScrapeResult, DownloadReceipt]
 
 
 KEY_TYPE_PAIRINGS: dict[str, Any] = {

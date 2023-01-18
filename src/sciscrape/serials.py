@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from fnmatch import fnmatch
 from os import listdir, path
 from ast import literal_eval
