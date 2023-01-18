@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-from itertools import chain
-import pdfplumber
 import re
 from collections import Counter
 from dataclasses import asdict, dataclass, field
+from itertools import chain
 from typing import Any, Iterator
-from sciscrape.wordscore import WordscoreCalculator
-from sciscrape.log import logger
+
+import pdfplumber
+
 from sciscrape.config import UTF, FilePath
+from sciscrape.log import logger
+from sciscrape.wordscore import WordscoreCalculator
 
 
 @dataclass(frozen=True, order=True)
@@ -151,12 +153,11 @@ class DocScraper:
         target_set = self.unpack_txt_files(self.target_words_file)
         bycatch_set = self.unpack_txt_files(self.bycatch_words_file)
 
-        token_generator: Iterator[list[str]] = (
+        token_list: list[str] = (
             self.extract_text_from_pdf(search_text)
             if self.is_pdf
             else self.extract_text_from_summary(search_text)
         )
-        token_list = next(token_generator)
         target = match_terms(token_list, target_set)
         bycatch = match_terms(token_list, bycatch_set)
         wordcalc = WordscoreCalculator(
@@ -184,7 +185,7 @@ class DocScraper:
 
     def extract_text_from_pdf(
         self, search_text: str
-    ) -> Iterator[list[str]]:
+    ) -> list[str]:
         """
         Given the provided filepath, `search_text`, it opens the .pdf
         file and cleans the text. Returning the words from each page
@@ -218,19 +219,13 @@ class DocScraper:
             )
 
             # Strips and lowers every word
-            manuscripts: Iterator[str] = (
-                preprint.strip().lower() for preprint in preprints
-            )
+            manuscripts: list[str] = [preprint.strip().lower() for preprint in preprints]
 
             # Regularizes white spaces
-            manuscripts = (
-                re.sub(r"\W+", " ", manuscript) for manuscript in manuscripts
-            )
+            manuscripts = [re.sub(r"\W+", " ", manuscript) for manuscript in manuscripts]
 
             # Splits each word along each white space to create a list of strings from each word
-            output: Iterator[list[str]] = (
-                manuscript.split(" ") for manuscript in manuscripts
-            )
+            output = [manuscript.split(" ") for manuscript in manuscripts]
             logger.debug(
                 "func=%s,\
                 output=%s",
@@ -238,11 +233,11 @@ class DocScraper:
                 output,
             )
 
-            yield list(chain.from_iterable((output)))
+            return output
 
     def extract_text_from_summary(
         self, search_text: str
-    ) -> Iterator[list[str]]:
+    ) -> list[str]:
         """
         Given the provided abstract, `search_text`, it reads the text
         and cleans it. Returning the words from each
@@ -271,4 +266,4 @@ class DocScraper:
             self.extract_text_from_summary,
             output,
         )
-        yield output
+        return output
