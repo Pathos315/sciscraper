@@ -1,6 +1,8 @@
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
+
 from src.main import main
-from unittest.mock import Mock, patch, MagicMock
 
 
 @pytest.mark.parametrize("option", ("-h", "--help"))

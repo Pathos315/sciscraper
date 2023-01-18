@@ -1,18 +1,19 @@
 import logging
 from typing import Callable
+from unittest import mock
+
 import numpy as np
 import pandas as pd
 import pytest
 
+from sciscrape.change_dir import change_dir
+from sciscrape.config import config
 from sciscrape.docscraper import DocScraper
 from sciscrape.downloaders import Downloader
-from sciscrape.fetch import SciScraper, StagingFetcher, ScrapeFetcher
 from sciscrape.factories import SCISCRAPERS, read_factory
-from sciscrape.change_dir import change_dir
-from sciscrape.webscrapers import WebScraper
-from sciscrape.config import config
-from unittest import mock
+from sciscrape.fetch import SciScraper, ScrapeFetcher, StagingFetcher
 from sciscrape.log import logger
+from sciscrape.webscrapers import WebScraper
 
 
 @pytest.mark.parametrize(

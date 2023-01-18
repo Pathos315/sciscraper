@@ -1,4 +1,5 @@
 import pytest
+
 from sciscrape.wordscore import WordscoreCalculator
 
 calculator = WordscoreCalculator(10, 5, 100)

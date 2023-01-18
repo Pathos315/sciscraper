@@ -1,5 +1,7 @@
 from typing import Generator
+
 import pytest
+
 from sciscrape.docscraper import DocumentResult
 
 

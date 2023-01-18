@@ -1,5 +1,6 @@
-from sciscrape.change_dir import change_dir
 from os import getcwd
+
+from sciscrape.change_dir import change_dir
 
 
 def test_change_dir(mock_dirs):

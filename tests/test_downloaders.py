@@ -1,15 +1,13 @@
 import re
-from os import remove, path, getcwd
+from os import getcwd, path, remove
 from unittest import mock
+
 import pytest
 from requests import Response
-from sciscrape.downloaders import (
-    DownloadReceipt,
-    BulkPDFScraper,
-    ImagesDownloader,
-)
-from sciscrape.config import config
 from selectolax.parser import HTMLParser
+
+from sciscrape.config import config
+from sciscrape.downloaders import BulkPDFScraper, DownloadReceipt, ImagesDownloader
 
 
 def test_downloader_config(mock_bulkpdfscraper):

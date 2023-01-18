@@ -1,17 +1,19 @@
-from enum import Enum
 import json
-import pytest
+from enum import Enum
 from unittest import mock
+
+import pytest
 import requests
 import requests_mock
-from sciscrape.webscrapers import (
-    DimensionsScraper,
-    CitationScraper,
-    OverviewScraper,
-    WebScrapeResult,
-    SemanticFigureScraper,
-)
+
 from sciscrape.config import config
+from sciscrape.webscrapers import (
+    CitationScraper,
+    DimensionsScraper,
+    OverviewScraper,
+    SemanticFigureScraper,
+    WebScrapeResult,
+)
 
 
 @pytest.mark.parametrize(

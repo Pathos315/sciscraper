@@ -1,18 +1,17 @@
-import pytest
 import pandas as pd
-from sciscrape.docscraper import DocScraper
-from sciscrape.factories import SCISCRAPERS
-from sciscrape.wordscore import WordscoreCalculator
+import pytest
+
 from sciscrape.config import config
-from sciscrape.downloaders import (
-    BulkPDFScraper,
-    ImagesDownloader,
-)
+from sciscrape.docscraper import DocScraper
+from sciscrape.downloaders import BulkPDFScraper, ImagesDownloader
+from sciscrape.factories import SCISCRAPERS
 from sciscrape.webscrapers import (
     DimensionsScraper,
-    WebScrapeResult,
     SemanticFigureScraper,
+    WebScrapeResult,
 )
+from sciscrape.wordscore import WordscoreCalculator
+
 
 # File Path Fixtures
 @pytest.fixture()

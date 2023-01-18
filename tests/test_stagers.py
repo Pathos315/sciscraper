@@ -1,4 +1,5 @@
 import pytest
+
 from sciscrape.stagers import stage_from_series, stage_with_reference
 
 

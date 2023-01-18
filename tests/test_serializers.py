@@ -1,4 +1,5 @@
 import pytest
+
 from sciscrape.serials import serialize_from_csv, serialize_from_directory
 
 
