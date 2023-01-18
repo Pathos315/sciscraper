@@ -3,7 +3,6 @@ from __future__ import annotations
 import re
 from collections import Counter
 from dataclasses import asdict, dataclass, field
-from itertools import chain
 from typing import Any, Iterator
 
 import pdfplumber
