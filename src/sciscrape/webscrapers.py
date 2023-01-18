@@ -3,6 +3,7 @@ from dataclasses import dataclass, field, asdict
 from typing import Any, Optional
 from enum import Enum
 from time import sleep
+from urllib.parse import urlencode
 
 from json import loads
 
@@ -294,8 +295,7 @@ class SemanticFigureScraper(WebScraper):
         )
 
     def find_paper_url(self, search_text: str) -> Optional[str]:
-        title = search_text.replace(" ", "+")
-        paper_searching_url = f"{self.url}{title}&fields=url&limit=1"
+        paper_searching_url = self.url + urlencode({"query": search_text, "fields": "url", "limit": 1})
         paper_searching_response: Response = client.get(paper_searching_url)
         paper_info: dict[str, Any] = loads(paper_searching_response.text)
         try:
