@@ -193,8 +193,8 @@ class DocScraper:
         Parameters:
             search_text(str): The initially provided filepath from a prior list comprehension.
 
-        Yields:
-            Generator: A generator with cleaned words from each entire document.
+        Returns:
+            list[str]: A generator with cleaned words from each entire document.
 
         See Also:
             `extract_text_from_summary` : Extract text from academic paper abstracts.

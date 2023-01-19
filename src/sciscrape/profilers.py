@@ -31,7 +31,7 @@ def run_benchmark(args: Namespace, sciscrape: SciScraper) -> None:
     Finally, the `snakeviz` module is used to visualize the profile stats in a web browser.
 
     Args:
-        args: An object containing the arguments for the `sciscrape` function.
+        args (Namespace): An object containing the arguments for the `sciscrape` function.
         sciscrape (SciScraper): An instance of the `SciScraper` class to be benchmarked.
 
     Returns:

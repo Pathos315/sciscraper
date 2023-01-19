@@ -15,10 +15,10 @@ def build_parser(argv: Sequence[str] | None) -> Namespace:
     build_parser builds the argument parser for sciscraper.
 
     Args:
-        argv (Optional[Sequence[str]]): arguments passed in via the `main` method.
+        argv (Sequence[str] | None): arguments passed in via the `main` method.
 
     Returns:
-        argparse.Namespace: parsed arguments.
+        Namespace: parsed arguments.
     """
     parser = ArgumentParser(
         prog=config.prog,
