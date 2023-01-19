@@ -122,8 +122,7 @@ class Downloader(ABC):
         with change_dir(self.export_dir), TemporaryFile() as temp:
             temp.write(contents)
             with open(filename, "wb") as file:
-                for line in temp:
-                    file.write(line)
+                file.writelines(temp)
 
 
 @dataclass

@@ -126,8 +126,7 @@ class DocScraper:
             set[str]: A set of words against which the text will be compared.
         """
         with open(txtfile, encoding=UTF) as iowrapper:
-            textlines = iowrapper.readlines()
-            wordset = {word.strip().lower() for word in textlines}
+            wordset = {word.strip().lower() for word in iowrapper}
             logger.debug("func=%s, word_set=%s", self.unpack_txt_files, wordset)
             return wordset
 
