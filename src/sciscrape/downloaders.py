@@ -170,8 +170,8 @@ class BulkPDFScraper(Downloader):
             the download was successful, and,
             if so, where the ensuing .pdf may be found.
         """
-        payload: dict[str, str] = {"request": search_text}
-        paper_title: str = f"{config.today}_{search_text.replace('/','')}.pdf"
+        payload = {"request": search_text}
+        paper_title = f"{config.today}_{search_text.replace('/','')}.pdf"
         response_text = self.get_response(payload)
 
         download_link: str | None = self.find_download_link(response_text) if response_text else None
@@ -184,12 +184,12 @@ class BulkPDFScraper(Downloader):
         )
 
     def download_paper(self, paper_title: str, formatted_src: str) -> DownloadReceipt:
-        paper_contents: bytes = client.get(formatted_src, stream=True).content
+        paper_contents = client.get(formatted_src, stream=True).content
         self.create_document(paper_title, paper_contents)
         return DownloadReceipt(self.cls_name, True, f"{self.export_dir}/{paper_title}")
 
     def get_response(self, payload: dict[str, str]) -> str | None:
-        response: Response = client.post(
+        response = client.post(
             self.url,
             data=payload,
         )
