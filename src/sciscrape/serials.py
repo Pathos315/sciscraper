@@ -69,7 +69,7 @@ def serialize_from_directory(target: FilePath, suffix: str = "pdf") -> list[str]
         for file in listdir(target)
         if fnmatch(path.basename(file), f"*.{suffix}")
     ]
-    if len(data_list) == 0:
+    if not data_list:
         raise ValueError("This directory contains no valid files.")
 
     logger.debug("serializer=%s, terms=%s", serialize_from_directory, data_list)
