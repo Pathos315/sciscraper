@@ -61,7 +61,7 @@ class Downloader(ABC):
     export_dir: str = config.export_dir
 
     def __post_init__(self) -> None:
-        self.cls_name = self.__class__.__name__
+        self.cls_name = type(self).__name__
 
     @abstractmethod
     def obtain(self, search_text: str) -> DownloadReceipt | None:
