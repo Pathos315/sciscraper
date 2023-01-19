@@ -171,7 +171,7 @@ class BulkPDFScraper(Downloader):
             if so, where the ensuing .pdf may be found.
         """
         payload: dict[str, str] = {"request": search_text}
-        paper_title: str = f'{config.today}_{search_text.replace("/","")}.pdf'
+        paper_title: str = f"{config.today}_{search_text.replace('/','')}.pdf"
         response_text = self.get_response(payload)
 
         download_link: str | None = (
