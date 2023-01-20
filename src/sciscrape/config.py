@@ -6,6 +6,8 @@ Returns
 
 """
 
+from __future__ import annotations
+
 import json
 from dataclasses import dataclass, field
 from datetime import date
@@ -54,9 +56,9 @@ class ScrapeConfig:
     \n
     source_file : str
         The .csv file to be assessed, almost always via `DimensionsScraper`.
-    target_words :
+    target_words : str
         The .txt file of target words for `DocScraper`.
-    bycatch_words :
+    bycatch_words : str
         The .txt file containing the words that `DocScraper` will consider
         bycatch, i.e. words that suggest the Doc is not a match.
     sleep_interval : float

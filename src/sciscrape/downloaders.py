@@ -61,7 +61,7 @@ class Downloader(ABC):
     export_dir: str = config.export_dir
 
     def __post_init__(self) -> None:
-        self.cls_name = self.__class__.__name__
+        self.cls_name = type(self).__name__
 
     @abstractmethod
     def obtain(self, search_text: str) -> DownloadReceipt | None:
@@ -122,8 +122,7 @@ class Downloader(ABC):
         with change_dir(self.export_dir), TemporaryFile() as temp:
             temp.write(contents)
             with open(filename, "wb") as file:
-                for line in temp:
-                    file.write(line)
+                file.writelines(temp)
 
 
 @dataclass
@@ -170,30 +169,26 @@ class BulkPDFScraper(Downloader):
             the download was successful, and,
             if so, where the ensuing .pdf may be found.
         """
-        payload: dict[str, str] = {"request": search_text}
-        paper_title: str = f'{config.today}_{search_text.replace("/","")}.pdf'
+        payload = {"request": search_text}
+        paper_title = f"{config.today}_{search_text.replace('/','')}.pdf"
         response_text = self.get_response(payload)
 
-        download_link: str | None = (
-            None if response_text is None else self.find_download_link(response_text)
-        )
-        formatted_src: str | None = (
-            None if download_link is None else self.format_download_link(download_link)
-        )
+        download_link: str | None = self.find_download_link(response_text) if response_text else None
+        formatted_src: str | None = self.format_download_link(download_link) if download_link else None
         logger.debug("download_link=%s", formatted_src)
         return (
-            DownloadReceipt(self.cls_name)
-            if formatted_src is None
-            else self.download_paper(paper_title, formatted_src)
+            self.download_paper(paper_title, formatted_src)
+            if formatted_src
+            else DownloadReceipt(self.cls_name)
         )
 
     def download_paper(self, paper_title: str, formatted_src: str) -> DownloadReceipt:
-        paper_contents: bytes = client.get(formatted_src, stream=True).content
+        paper_contents = client.get(formatted_src, stream=True).content
         self.create_document(paper_title, paper_contents)
         return DownloadReceipt(self.cls_name, True, f"{self.export_dir}/{paper_title}")
 
     def get_response(self, payload: dict[str, str]) -> str | None:
-        response: Response = client.post(
+        response = client.post(
             self.url,
             data=payload,
         )
@@ -204,7 +199,7 @@ class BulkPDFScraper(Downloader):
             self,
             response.status_code,
         )
-        return None if response.status_code != 200 else response.text
+        return response.text if response.status_code == 200 else None
 
     def find_download_link(self, search_text: str) -> str | None:
         """
@@ -238,7 +233,7 @@ class BulkPDFScraper(Downloader):
             )
             return None
 
-    def format_download_link(self, download_link: str | None) -> str | None:
+    def format_download_link(self, download_link: str) -> str | None:
         """
         format_download_link first cleans the download_link
         according to the provided regular expression pattern.
@@ -256,13 +251,11 @@ class BulkPDFScraper(Downloader):
         str
             A link to the requested academic paper.
         """
-        link_match_object = (
-            None if download_link is None else self.clean_link_with_regex(download_link)
-        )
+        link_match_object = self.clean_link_with_regex(download_link)
         return (
-            None
-            if not link_match_object or not download_link
-            else self.adjust_download_link(download_link, link_match_object)
+            self.adjust_download_link(download_link, link_match_object)
+            if link_match_object and download_link
+            else None
         )
 
     def adjust_download_link(
@@ -306,9 +299,9 @@ class ImagesDownloader(Downloader):
         )
 
         return (
-            DownloadReceipt(self.cls_name)
-            if response.status_code != 200
-            else self.download_image(search_ext, response)
+            self.download_image(search_ext, response)
+            if response.status_code == 200
+            else DownloadReceipt(self.cls_name)
         )
 
     def download_image(self, search_ext: str, response: Response) -> DownloadReceipt:
@@ -349,10 +342,7 @@ class ImagesDownloader(Downloader):
         """
 
         file_id = random.randint(1, 255)
-        if etag:
-            etag = etag.strip('"')
-            filename = f"{config.today}_{etag}_{file_id}.{ext}"
-        else:
-            filename = f"{config.today}__NaN__{file_id}.{ext}"
+        etag = (etag or "_NaN_").strip('"')
+        filename = f"{config.today}_{etag}_{file_id}.{ext}"
         logger.debug("filename=%s", filename)
         return filename

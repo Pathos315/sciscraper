@@ -70,7 +70,7 @@ class WebScraper(ABC):
         """
 
     def get_items_from_response(self, response_text: str, key: str) -> Any:
-        return (loads(response_text)[key])[0]
+        return loads(response_text)[key][0]
 
     def get_singular_item_from_response(
         self, response_text: str, key: str, subkey: str
@@ -89,7 +89,7 @@ class DimensionsScraper(WebScraper):
     query_subset_citations: bool = False
 
     def obtain(self, search_text: str) -> WebScrapeResult | None:
-        querystring: dict[str, str] = self.create_querystring(search_text)
+        querystring = self.create_querystring(search_text)
         response = self.get_docs(querystring)
         logger.debug(
             "search_text=%s, scraper=%r, status_code=%s",
@@ -131,7 +131,7 @@ class DimensionsScraper(WebScraper):
             key: item.get(value) for (key, value) in api_keys.items()
         }
         for key, getter in getters.items():
-            data[key] = self.get_extra_variables(data, getter[0], getter[1])
+            data[key] = self.get_extra_variables(data, *getter)
         return data
 
     def get_extra_variables(
@@ -221,7 +221,7 @@ class CitationScraper(WebScraper):
             self,
             response.status_code,
         )
-        return None if response.status_code != 200 else response.text
+        return response.text if response.status_code == 200 else None
 
     def create_querystring(self, search_text: str) -> dict[str, Any]:
         return {
@@ -278,9 +278,7 @@ class SemanticFigureScraper(WebScraper):
             self,
             response.status_code,
         )
-        return (
-            None if response.status_code != 200 else self.parse_html_tree(response.text)
-        )
+        return self.parse_html_tree(response.text) if response.status_code == 200 else None
 
     def find_paper_url(self, search_text: str) -> str | None:
         paper_searching_url = self.url + urlencode({"query": search_text, "fields": "url", "limit": 1})

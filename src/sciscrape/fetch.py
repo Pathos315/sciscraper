@@ -161,7 +161,7 @@ class SciScraper:
     def __call__(
         self, target: FilePath,
     ) -> None:
-        self.set_logging(self.debug)
+        self.set_logging()
         logger.info(
             "Debug logging status: '%s'\n"
             "Commencing sciscrape on file: '%s'...\n",

@@ -4,23 +4,23 @@ for use in the `main` module.
 
 from __future__ import annotations
 
-import argparse
+from argparse import ArgumentParser, Namespace
 from typing import Sequence
 
 from sciscrape.config import config
 
 
-def build_parser(argv: Sequence[str] | None) -> argparse.Namespace:
+def build_parser(argv: Sequence[str] | None) -> Namespace:
     """
     build_parser builds the argument parser for sciscraper.
 
     Args:
-        argv (Optional[Sequence[str]]): arguments passed in via the `main` method.
+        argv (Sequence[str] | None): arguments passed in via the `main` method.
 
     Returns:
-        argparse.Namespace: parsed arguments.
+        Namespace: parsed arguments.
     """
-    parser = argparse.ArgumentParser(
+    parser = ArgumentParser(
         prog=config.prog,
         usage="%(prog)s [options] filepath",
         description=config.description,

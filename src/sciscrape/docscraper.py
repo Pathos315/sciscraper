@@ -126,8 +126,7 @@ class DocScraper:
             set[str]: A set of words against which the text will be compared.
         """
         with open(txtfile, encoding=UTF) as iowrapper:
-            textlines = iowrapper.readlines()
-            wordset = {word.strip().lower() for word in textlines}
+            wordset = {word.strip().lower() for word in iowrapper}
             logger.debug("func=%s, word_set=%s", self.unpack_txt_files, wordset)
             return wordset
 
@@ -193,8 +192,8 @@ class DocScraper:
         Parameters:
             search_text(str): The initially provided filepath from a prior list comprehension.
 
-        Yields:
-            Generator: A generator with cleaned words from each entire document.
+        Returns:
+            list[str]: A generator with cleaned words from each entire document.
 
         See Also:
             `extract_text_from_summary` : Extract text from academic paper abstracts.
