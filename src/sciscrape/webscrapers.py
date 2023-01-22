@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from enum import Enum
 from json import loads
 from time import sleep
@@ -16,7 +16,8 @@ from sciscrape.log import logger
 
 client = Session()
 
-@dataclass(frozen=True, order=True)
+
+@dataclass(frozen=True)
 class WebScrapeResult:
     """Represents a result from a scrape to be passed back to the dataframe."""
 
@@ -32,13 +33,6 @@ class WebScrapeResult:
     figures: list[str] | None = field(default_factory=list)
     biblio: str | None = None
     abstract: str | None = None
-
-    @classmethod
-    def from_dict(cls, dict_input: dict[str, Any]) -> WebScrapeResult:
-        return cls(**dict_input)
-
-    def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
 
 
 @dataclass

@@ -45,11 +45,6 @@ def test_scraper_inequality_with_diff_urls():
     assert scraper_1 != scraper_2
 
 
-def test_scraper_result_creation(result_data):
-    scrape_result = WebScrapeResult.from_dict(result_data)
-    assert scrape_result.to_dict() == result_data
-
-
 def test_citation_querystring_creation():
     citation_scraper = CitationScraper(config.citation_crosscite_url)
     output = citation_scraper.create_querystring("testing")

@@ -1,5 +1,3 @@
-from typing import Generator
-
 import pytest
 
 from sciscrape.docscraper import DocumentResult
@@ -16,14 +14,10 @@ def test_docscraper(docscraper_summary, test_file_2):
 
 def test_extract_text_from_summary(docscraper_summary, test_file_1):
     output = docscraper_summary.extract_text_from_summary(test_file_1)
-    for actual in output:
-        assert isinstance(actual, list)
+    assert isinstance(output, list)
 
 
-def test_extract_text_from_pdf(docscraper_pdf, test_pdf):
+def test_extract_text_from_pdf_list_str(docscraper_pdf, test_pdf):
     output = docscraper_pdf.extract_text_from_pdf(test_pdf)
-    assert isinstance(output, Generator)
-    for item in output:
-        assert isinstance(item, list)
-        assert len(item) != 1
-        assert all(isinstance(subitem, str) for subitem in item)
+    assert isinstance(output, list)
+    assert all(isinstance(item, str) for item in output)

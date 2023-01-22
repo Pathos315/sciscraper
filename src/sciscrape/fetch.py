@@ -6,7 +6,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from random import randint
-from typing import Any, Callable, Iterable, Iterator, Union
+from typing import Any, Callable, Iterable, Iterator
 
 import pandas as pd
 from tqdm import tqdm
@@ -20,8 +20,8 @@ from sciscrape.webscrapers import WebScraper, WebScrapeResult
 
 SerializationStrategyFunction = Callable[[FilePath], "list[str]"]
 StagingStrategyFunction = Callable[[pd.DataFrame], Iterable[Any]]
-ScrapeResult = Union[DocumentResult, WebScrapeResult, DownloadReceipt]
-Scraper = Union[DocScraper, WebScraper, Downloader]
+ScrapeResult = DocumentResult | WebScrapeResult | DownloadReceipt
+Scraper = DocScraper | WebScraper | Downloader
 
 
 @dataclass

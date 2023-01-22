@@ -113,7 +113,6 @@ def test_img_downloader_obtain(img_downloader):
             "location.href='/downloads/2022-11-06/46/li2022.pdf?download=true",
             "https://sci-hub.se/downloads/2022-11-06/46/li2022.pdf?download=true",
         ),
-        (None, None),
         (
             "location.href='//zero.sci-hub.se/7011/f4d76a25ca2ccd9ff38f46fd75b0b3bf/wang2017.pdf?download=true",
             "https://zero.sci-hub.se/7011/f4d76a25ca2ccd9ff38f46fd75b0b3bf/wang2017.pdf?download=true",
@@ -127,6 +126,11 @@ def test_img_downloader_obtain(img_downloader):
 def test_format_download_link(mock_bulkpdfscraper, download_link, expected):
     output = mock_bulkpdfscraper.format_download_link(download_link)
     assert output == expected
+
+
+def test_defective_download_link(mock_bulkpdfscraper):
+    with pytest.raises(TypeError):
+        mock_bulkpdfscraper.format_download_link(None)
 
 
 @pytest.mark.parametrize(
@@ -147,18 +151,6 @@ def test_img_downloader_etag(img_downloader, etag, extension):
 
 def test_null_find_download_link(mock_bulkpdfscraper):
     assert mock_bulkpdfscraper.find_download_link("asfd") == None
-
-
-@pytest.mark.parametrize(
-    ("data"),
-    (
-        {"downloader": "test", "success": True, "filepath": "file/path.txt"},
-        {"downloader": "test", "success": False, "filepath": "N/A"},
-    ),
-)
-def test_download_creation(data):
-    receipt = DownloadReceipt.from_dict(data)
-    assert receipt.to_dict() == data
 
 
 @pytest.mark.xfail

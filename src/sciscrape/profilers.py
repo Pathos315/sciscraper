@@ -38,7 +38,7 @@ def run_benchmark(args: Namespace, sciscrape: SciScraper) -> None:
         None
     """
     with Profile() as pr:
-        sciscrape(args.file, args.export, args.debug)
+        sciscrape(args.file)
     stats = pstats.Stats(pr)
     stats.sort_stats(pstats.SortKey.TIME)
     stats.print_stats()
@@ -61,7 +61,7 @@ def run_benchmark(args: Namespace, sciscrape: SciScraper) -> None:
 @memory_profiler.profile(precision=4)
 def run_memory_profiler(args: Namespace, sciscrape: SciScraper) -> None:
     """Benchmark the line by line memory usage of the `sciscraper` program."""
-    sciscrape(args.file, args.export, args.debug)
+    sciscrape(args.file)
 
 
 def run_bytecode_profiler(sciscrape: SciScraper) -> None:
@@ -75,11 +75,4 @@ def get_profiler(args: Namespace, sciscrape: SciScraper) -> None:
         "memory": partial(run_memory_profiler, args=args),
         "bytecode": run_bytecode_profiler,
     }
-    profiler_dict.get(
-        args.profilers,
-        sciscrape(
-            args.file,
-            args.export,
-            args.debug,
-        ),
-    )
+    profiler_dict.get(args.profilers, sciscrape(args.file))

@@ -6,11 +6,10 @@ from __future__ import annotations
 import random
 import re
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from os import path
 from tempfile import TemporaryFile
 from time import sleep
-from typing import Any
 
 from requests import Response
 from selectolax.parser import HTMLParser
@@ -21,7 +20,7 @@ from sciscrape.log import logger
 from sciscrape.webscrapers import client
 
 
-@dataclass(frozen=True, order=True)
+@dataclass(frozen=True)
 class DownloadReceipt:
     """
     A representation of the receipt describing whether
@@ -42,13 +41,6 @@ class DownloadReceipt:
     downloader: str
     success: bool = False
     filepath: str = "N/A"
-
-    @classmethod
-    def from_dict(cls, dict_input: dict[str, Any]) -> DownloadReceipt:
-        return cls(**dict_input)
-
-    def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
 
 
 @dataclass

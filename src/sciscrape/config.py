@@ -12,15 +12,15 @@ import json
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
 import numpy as np
 
-FilePath = Union[str, Path]
+FilePath = str | Path
 UTF = "utf-8"
 
 
-@dataclass(order=True)
+@dataclass
 class ScrapeConfig:
 
     """
@@ -102,6 +102,7 @@ def read_config(config_file: str) -> ScrapeConfig:
     with open(config_file, encoding=UTF) as file:
         data = json.load(file)
         return ScrapeConfig(**data)
+
 
 config: ScrapeConfig = read_config("src/config_setup.json")
 

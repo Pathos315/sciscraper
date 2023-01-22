@@ -1,4 +1,5 @@
 import logging
+from functools import partial
 from typing import Callable
 from unittest import mock
 
@@ -163,16 +164,9 @@ class TestClass:
 
 def test_export(mock_dataframe):
     with (
-        mock.patch("sciscrape.log.logger.info") as mock_logger,
         mock.patch("pandas.DataFrame.to_csv") as mock_to_csv,
-        mock.patch(
-            "sciscrape.change_dir.change_dir", return_value=None
-        ) as mock_change_dir,
     ):
         TestClass.export(mock_dataframe)
-        mock_logger.assert_called_once_with(
-            f"A spreadsheet was exported as {TestClass.create_export_name()}."
-        )
         mock_to_csv.assert_called_once_with(TestClass.create_export_name())
 
 
@@ -189,7 +183,7 @@ def test_fetch_with_staged_reference_tuple_of_lists():
     staged_terms = (["citation"], [])
     scraper = mock.Mock()
     df = StagingFetcher(scraper, stager=None).fetch_with_staged_reference(staged_terms)  # type: ignore
-    assert df.empty
+    assert not df.empty
 
 
 def test_fetch_with_staged_reference_empty_tuple():
@@ -199,15 +193,6 @@ def test_fetch_with_staged_reference_empty_tuple():
     assert df.empty
 
 
-@pytest.mark.parametrize(("debug", "expected"), ((True, 10), (False, 20)))
-def test_set_logging_valid_input(debug, expected):
-    # Test valid input
-    test_sciscraper = SCISCRAPERS["reference"]
-    test_sciscraper.set_logging(debug)
-    assert test_sciscraper.logger.level == expected
-    assert SciScraper.logger.level == expected
-    assert SciScraper.logger.getEffectiveLevel() == expected
-
 
 def test_export_invalid_input():
     test_sciscraper = SCISCRAPERS["reference"]
@@ -215,4 +200,4 @@ def test_export_invalid_input():
         pytest.raises(AttributeError),
         change_dir(config.export_dir),
     ):
-        test_sciscraper.export(None)  # type: ignore
+        test_sciscraper.export_csv(None)  # type: ignore

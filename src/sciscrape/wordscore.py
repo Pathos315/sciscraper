@@ -1,24 +1,16 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from math import comb, sqrt
-from typing import Any
 
 
-@dataclass(frozen=True, order=True)
+@dataclass(frozen=True)
 class Wordscore:
     probability: float
     expectation: float
     variance: float
     standard_deviation: float
     skewness: float
-
-    @classmethod
-    def from_dict(cls, dict_input: dict[str, Any]) -> Wordscore:
-        return cls(**dict_input)
-
-    def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
 
 
 @dataclass
@@ -127,7 +119,7 @@ class WordscoreCalculator:
         # in which the match likelihood is multiplied by the failure margin
         # and then divided by the likelihood plus the failure margin
         # The formula, therefore, is
-        neg_posterior = self.bayes_theorem(
+        negative_posterior = self.bayes_theorem(
             prior=bycatch_probability,
             likelihood=failure_margin,
             margin=likelihood,
@@ -138,7 +130,7 @@ class WordscoreCalculator:
         # The negative posterior is then subtracted
         # from the positive posterior
         # to produce the unweighted wordscore
-        wordscore = positive_posterior - neg_posterior
+        wordscore = positive_posterior - negative_posterior
         return Wordscore(
             wordscore,
             expectation,
@@ -231,10 +223,3 @@ class WordscoreCalculator:
         = 0.25
         """
         return (part / whole) ** part
-
-    @classmethod
-    def from_dict(cls, dict_input: dict[str, Any]) -> WordscoreCalculator:
-        return cls(**dict_input)
-
-    def to_dict(self) -> dict[str, Any]:
-        return asdict(self)

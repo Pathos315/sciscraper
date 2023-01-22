@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
+from itertools import chain
 from typing import Any, Iterator
 
 import pdfplumber
@@ -12,7 +13,7 @@ from sciscrape.log import logger
 from sciscrape.wordscore import WordscoreCalculator
 
 
-@dataclass(frozen=True, order=True)
+@dataclass(frozen=True)
 class FreqDistAndCount:
     """FreqDistAndCount
 
@@ -30,15 +31,8 @@ class FreqDistAndCount:
     term_count: int
     frequency_dist: list[tuple[str, int]] = field(default_factory=list)
 
-    @classmethod
-    def from_dict(cls, dict_input: dict[str, Any]) -> FreqDistAndCount:
-        return cls(**dict_input)
 
-    def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
-
-
-@dataclass(frozen=True, order=True)
+@dataclass(frozen=True)
 class DocumentResult:
     """DocumentResult contains the WordscoreCalculator\
     scoring relevance, and two lists, each with\
@@ -231,7 +225,7 @@ class DocScraper:
                 output,
             )
 
-            return output
+            return list(chain.from_iterable(output))
 
     def extract_text_from_summary(
         self, search_text: str
