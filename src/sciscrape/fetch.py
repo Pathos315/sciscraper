@@ -155,7 +155,7 @@ class SciScraper:
     stager: StagingFetcher | None
     logger = logger
     downcast: bool = True
-    debug: bool = False
+    debug: bool = True
     export: bool = True
 
     def __call__(
