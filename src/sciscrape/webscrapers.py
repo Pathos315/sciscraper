@@ -16,7 +16,6 @@ from sciscrape.log import logger
 
 client = Session()
 
-
 @dataclass(frozen=True)
 class WebScrapeResult:
     """Represents a result from a scrape to be passed back to the dataframe."""
@@ -244,13 +243,12 @@ class OverviewScraper(WebScraper):
         )
 
         return (
-            None
-            if response.status_code != 200
-            else self.get_singular_item_from_response(
+            self.get_singular_item_from_response(
                 response.text,
                 "docs",
                 "abstract",
             )
+            if response.status_code == 200 else None
         )
 
 
