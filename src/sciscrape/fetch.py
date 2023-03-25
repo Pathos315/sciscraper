@@ -66,13 +66,13 @@ class Fetcher(ABC):
         pd.DataFrame
             A dataframe containing biliographic data.
         """
-        data: Iterator[ScrapeResult | None] = (
+        data: Iterator[ScrapeResult] = [
             self.scraper.obtain(term)
             for term in tqdm(search_terms, desc="[sciscraper]: ", unit=f"{tqdm_unit}")
-        )
+            if self.scraper.obtain(term)
+        ]
         logger.debug(data)
-        data = filter(None, data)
-        return pd.DataFrame(list(data), index=None)
+        return pd.DataFrame(data, index=None)
 
 
 @dataclass
