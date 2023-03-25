@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from ast import literal_eval
 from fnmatch import fnmatch
+from json import loads as json_loads
 from os import listdir, path
 
 import pandas as pd
@@ -89,7 +89,8 @@ def clean_any_nested_columns(data_list: list[str], column: str) -> list[str]:
     nested_terms: list[str] = []
     for term in data_list:
         if term.startswith("{"):
-            nested_terms.append(literal_eval(term)[column])
+            loaded_term = json_loads(term)[column]
+            nested_terms.append(loaded_term)
         else:
             initial_terms.append(term)
     return initial_terms + nested_terms
