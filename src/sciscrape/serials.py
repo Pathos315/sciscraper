@@ -30,12 +30,6 @@ def serialize_from_csv(target: FilePath, column: str = "doi") -> list[str]:
     -------
     list[str]:
         A list of entries from the provided column, `column`.
-
-    Notes
-    ----
-    `literal_eval` is provided to account for when a json string
-    gets read into the .csv file. literal_eval converts the string
-    into a dict and then isolates the desired key from the dict.
     """
     data: pd.DataFrame = (
         pd.read_csv(
