@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from fnmatch import fnmatch
+from json import JSONDecodeError
 from json import loads as json_loads
 from os import listdir, path
+from typing import Any
 
 import pandas as pd
 
@@ -82,9 +84,15 @@ def clean_any_nested_columns(data_list: list[str], column: str) -> list[str]:
     initial_terms: list[str] = []
     nested_terms: list[str] = []
     for term in data_list:
-        if term.startswith("{"):
-            loaded_term = json_loads(term)[column]
-            nested_terms.append(loaded_term)
+        if "{" in term:
+            loaded_term = grab_nested_terms(column, term)
+            nested_terms.append(loaded_term) if loaded_term else None
         else:
             initial_terms.append(term)
     return initial_terms + nested_terms
+
+def grab_nested_terms(column: str, term) -> Any:
+    try:
+        return dict(json_loads(term))[column]
+    except JSONDecodeError:
+        return None

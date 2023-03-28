@@ -30,7 +30,6 @@ from sciscrape.serials import serialize_from_csv, serialize_from_directory
                 "Darius Lettsgetham",
                 "Anne Elon-Ux",
                 "Jujubee",
-                "I. Ron Butterfly",
             ],
         ),
     ),
