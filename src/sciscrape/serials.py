@@ -91,6 +91,7 @@ def clean_any_nested_columns(data_list: list[str], column: str) -> list[str]:
             initial_terms.append(term)
     return initial_terms + nested_terms
 
+
 def grab_nested_terms(column: str, term) -> Any:
     try:
         return dict(json_loads(term))[column]

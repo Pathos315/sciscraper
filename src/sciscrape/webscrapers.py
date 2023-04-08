@@ -16,6 +16,7 @@ from sciscrape.log import logger
 
 client = Session()
 
+
 @dataclass(frozen=True)
 class WebScrapeResult:
     """Represents a result from a scrape to be passed back to the dataframe."""
