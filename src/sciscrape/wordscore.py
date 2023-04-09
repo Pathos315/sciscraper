@@ -22,8 +22,7 @@ class WordscoreCalculator:
     This class contains attributes and methods for
     calculating the wordscore of a paper or abstract
     based on the number of times target and
-    bycatch words appear in it, its length,
-    and a prior zero-shot classification score.
+    bycatch words appear in it, and its overall length.
 
     Attributes:
         target_count (float): The number of times a target word
@@ -31,8 +30,6 @@ class WordscoreCalculator:
         bycatch_count (float): The number of times a bycatch word
             appeared in the paper or abstract.
         total_length (int): The total number of words in the paper or abstract.
-        implicature_score (float, Optional): The highest score
-            from a prior `DocScraper` zero-shot classification.
 
     Methods:
         __call__ : returns wordscore value as a float
