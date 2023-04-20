@@ -25,14 +25,26 @@ class WordscoreCalculator:
     bycatch words appear in it, and its overall length.
 
     Attributes:
-        target_count (float): The number of times a target word
+        `target_count` (float): The number of times a target word,
+            i.e. a word that indicates the paper is what we're looking for,
             appeared in the paper or abstract.
-        bycatch_count (float): The number of times a bycatch word
+            In the context of the binomial trials
+            this class will run, the `target_count` can be thought of as `k`
+        `bycatch_count` (float): The number of times a bycatch word,
+            i.e. a word that indicates the paper is
+            NOT what we're looking for,
             appeared in the paper or abstract.
-        total_length (int): The total number of words in the paper or abstract.
+            In the context of the binomial trials this class will run,
+            the `bycatch_count` can ALSO be thought of as `k`,
+            or even `k'`/`k-prime`.
+            I'm afraid this will likely lead to confusion.
+        `total_length` (int): The total number of words found in
+            the paper or abstract. In the context of the binomial
+            trial this class will run,
+            `total_length` can always be thought of as `n`.
 
     Methods:
-        __call__ : returns wordscore value as a float
+        __call__ : returns a wordscore value as a float.
     """
 
     target_count: int
@@ -41,50 +53,66 @@ class WordscoreCalculator:
 
     def __call__(self) -> Wordscore:
         """
-        Equation Variables
+        Intermediary Variables
         ------------------
-        - `total_length`: the total number of words in the text.
-        - `target_count`: the number of matches between the word and the search term.
-        - `bycatch_count` represents the number of "bycatch" occurrences
-            of the word, which are not matches to the search term.
-        - `neutral_part`: the total number of words minus the number of matches.
-        - `failure_margin`: the probability of the observations occurring
-            given that the event has not occurred.
-            This is calculated as the `neutral_part` divided by
-            the total number of words (`total_length`) to the power of the neutral part.
-        - `likelihood`: represents P(B|A), or the likelihood of
-            the observations (B) occurring, given that the event (A) has occurred.
-            This likelihood is calculated using a binomial distribution,
-            which takes into account:
-                - the number of matches (`target_count`),
-                - the total number of words (`total_length`), and
-                - the number of neutral words (`neutral_part`).
-        -`true positives`: the probability of a match occurring, given
-            that the event has occurred.
-            This is calculated as the number of matches (`target_count`)
-            divided by the total number of words (`total_length`).
-        - `false positives`: the probability of a "bycatch" occurrence happening,
-            given that the event has not occurred.
-            This is calculated as the number of "bycatch" occurrences (`bycatch_count`)
-            divided by the total number of words (`total_length`).
-        - `positive posterior`: the probability of the event occurring,
-            given the observations. This is calculated using Bayes' theorem,
-            which takes into account:
-                - the likelihood of the observations occurring:
-                    or (`likelihood`),
-                - the prior probability of the event occurring:
-                    or (`true positives`); and,
-                - the probability of the observations occurring given
-                    that the event has not occurred:
-                    or (`failure margin`).
-        - `negative posterior` represents the probability of
-            the event not occurring, given the observations.
+        - `neutral_part`: or `total_length` minus the `target_count`.
+            These are the words in the text that are either bycatch words,
+            or they're irrelevant to what we're looking for.
+        - `failure_margin`: the `neutral_part` divided by `total_length`
+            to the power of the `neutral_part`.\n
+            In other words:
+
+            ```
+            >>> failure_margin = (neutral part / total_length) ** neutral_part
+
+            ```
+            The `failure_margin` is derived from the probability mass function.
+
+        - `success_margin`: defined as the `target_count` and
+            the `total_length` to the power of the `target_count`.
+            In other words:
+
+            ```
+            >>> success_margin = (target_count / total_length) ** target_count
+
+            ```
+
+        - `likelihood`: defined as the likelihood, P(B|A) of our paper being
+            a match given the presence of `target_count` words.
+            This is calculated using a binomial distribution formula
+
+            ```
+            >>> P(target_count | total_length) =
+                (total_length! / (target_count! * (total_length - target_count)!)
+                * success_margin
+                * failure_margin
+            ```
+        - `target_probability`: defined as `target_count / total_length`
+        - `bycatch_probability`: defined as `bycatch_count / total_length`
+        - `positive posterior`: the probability of the `target_count` being present,
+            given the paper provided. This is calculated using Bayes' theorem, i.e.:
+
+            ```
+            >>>  positive_posterior = (likelihood * true positives) / failure_margin
+            ```
+
+        - `negative posterior` represents the probability of the event
+            not occurring, given the observations.
             This is calculated in a similar way to the positive posterior,
-            but with the likelihood and prior probability values reversed.
-        - `unweighted_wordscore` represents the penulimate
-            probability of the event occurring,
-            which is calculated as the difference between
-            the positive posterior and negative posterior.
+            but the `likelihood` and `failure_margin` swap places,
+            and `target_probability` is swapped out for `bycatch_probability`.
+            i.e.
+
+            ```
+            >>> negative_posterior = (failure_margin * bycatch_probability) / likelihood
+            ```
+
+        - `wordscore` is the final output as a float. It is simply:
+
+            ```
+            >>> wordscore = positive_posterior - negative posterior
+            ```
+
         """
         neutral_part = self.total_length - self.target_count
         success_margin = self.get_margin(
@@ -103,30 +131,24 @@ class WordscoreCalculator:
         standard_deviation = sqrt(variance)
         skewness = (failure_margin - target_probability) / standard_deviation
 
-        # Positive posterior is a bayes equation, in which the match likelihood
-        # is multiplied by the true positives ratio
-        # and then divided by the likelihood plus the failure margin
-        # The formula, therefore, is
         positive_posterior = self.bayes_theorem(
             prior=target_probability,
             likelihood=likelihood,
             margin=failure_margin,
         )
-        # Negative posterior is also a bayes equation,
-        # in which the match likelihood is multiplied by the failure margin
-        # and then divided by the likelihood plus the failure margin
-        # The formula, therefore, is
         negative_posterior = self.bayes_theorem(
             prior=bycatch_probability,
             likelihood=failure_margin,
             margin=likelihood,
         )
-        # Note: Failure margin treated as likelihood because it's looking for bycatch, i.e. inverse
-        # Moreover, success likelihood treated as margin because it's looking for bycatch, i.e. inverse
+        # Note: Failure margin treated as likelihood because it's
+        # looking for bycatch, i.e. inverse
+        # Moreover, success likelihood treated as
+        # margin because it's looking for bycatch, i.e. inverse
 
         # The negative posterior is then subtracted
         # from the positive posterior
-        # to produce the unweighted wordscore
+        # to produce the final wordscore
         wordscore = positive_posterior - negative_posterior
         return Wordscore(
             wordscore,
@@ -142,28 +164,31 @@ class WordscoreCalculator:
         failure_margin: float,
     ) -> float:
         """
-        Applies the binomial probability mass function, given:
-        - the total length `(y)`;
-        - the total number of target matches `(n)`; and,
-        - the `failure margin` defined as: `((n-y)/y)**(n-y)`
+        Args:
+        - `success_margin` (float): defined as
+            `(target_matches/total_length)**target_matches`; and
+        - `failure margin` (float): defined as
+            `((total_length-target_matches)/total_length)**(total_length-target_matches)`
 
         Returns:
-            model (float) : The likelihood of a paper of length `y` being
-            relevant to our query, given the presense of `n` matches,
-            i.e. `P(y|n)`.
+            likelihood (float) : The likelihood of a paper of `total_length` being
+            relevant to our query, given the presense of `target_matches` matches.
 
         Further Explanation:
-            - Total combinations is total length choose matching words, `nCx`;
-            or `(n! / (x! * (n-x)!)`
+            - `total_combinations` is `total length` choose `target_matches`; i.e. `nCx`
+            or `(target_matches! / (total_length! * (total_length-target_matches)!)`
         --------
-        >>> P(y|n) = (n! / (y! * (n-y)!) * (y/n)**y * ((n-y)/n)**(n-y))
+
+        >>> total_combinations = (target_matches! / (total_length! * (total_length-target_matches)!)
+        >>> P(total_length|target_matches) = total_combinations * success_margin * failure_margin
+
         """
         total_combinations = comb(
             self.total_length,
             self.target_count,
         )
-        model = total_combinations * success_margin * failure_margin
-        return model
+        likelihood = total_combinations * success_margin * failure_margin
+        return likelihood
 
     def bayes_theorem(
         self,
@@ -173,21 +198,18 @@ class WordscoreCalculator:
         margin: float,
     ) -> float:
         """
-        bayes_theorem calculates the posterior using Bayes Theorem.
+        `bayes_theorem` calculates the posterior using Bayes Theorem.
 
         Args:
-            prior (float): The total number of true positive words found.
-            likelihood (float): The likelihood of this outcome,
-                given the calculated binomial probability
-            margin (float): The probability of failure,
-                given the calculated binomial probability
+            `prior` (float): The *probability* of a match,
+                which here is the `target_words` or `bycatch_words` / `total_length`.
+            `likelihood` (float): The likelihood of this outcome,
+                given the previously calculated binomial probability
+            `margin` (float): The probability of failure
 
         Returns:
-            posterior (float): the likelihood of the paper being a match given the words present.
-        --------
-        >>> P(n|y) = (n! / (y! * (n-y)!) * (y/n)**y * ((n-y)/n)**(n-y)) * (y/n))
-            / ((n! / (y! * (n-y)!) * (y/n)**y * ((n-y)/n)**(n-y)) + ((n-y)/n)**(n-y)))
-        >>> P(n|y) = (P(y|n) * P(y)) / (P(y|n) + P(n-y))
+            posterior (float): the likelihood of the paper being
+                a match given the words present.
         """
         hypothesis = prior * likelihood
         total_evidence = hypothesis + margin
@@ -201,11 +223,12 @@ class WordscoreCalculator:
     ) -> float:
         """
         Calculates the margin of an event occurring based on the part divided by the whole,
-        to the power of the part. e.g. Failure Margin is the neutral part `m`
-        over the total length `n` to the power of `m`, i.e. `(m/n)** m`
+        to the power of the part. e.g. `failure_margin` is the `neutral part`
+        over the `total length`  to the power of `neutral part`.
 
         Args:
-            part (int or float): The part that represents the event of interest.
+            part (int or float): The part that represents
+                the event being looked into.
             whole (int or float): The total amount or size.
 
         Returns:
