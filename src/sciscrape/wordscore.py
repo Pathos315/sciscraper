@@ -19,29 +19,26 @@ class WordscoreCalculator:
     A class for calculating the relevance of a paper or
     abstract based on its target and bycatch words.
 
-    This class contains attributes and methods for
+    This class contains variables and methods for
     calculating the wordscore of a paper or abstract
     based on the number of times target and
     bycatch words appear in it, and its overall length.
 
-    Attributes:
+    # Variables
         `target_count` (float): The number of times a target word,
             i.e. a word that indicates the paper is what we're looking for,
             appeared in the paper or abstract.
             In the context of the binomial trials
             this class will run, the `target_count` can be thought of as `k`
-        `bycatch_count` (float): The number of times a bycatch word,
-            i.e. a word that indicates the paper is
-            NOT what we're looking for,
+        `bycatch_count` (float): A bycatch word is a word that indicates the paper is
+            NOT what we're looking for. It is called bycatch because, like its namesake
+            of inedible fish varieties caught in nets with edible fish, these
+            are words that often appear alongside the words we do want, like 'prosocial'
+            appearing alongside 'pediatric'. In short, this is the total number of times that bycatch words
             appeared in the paper or abstract.
-            In the context of the binomial trials this class will run,
-            the `bycatch_count` can ALSO be thought of as `k`,
-            or even `k'`/`k-prime`.
-            I'm afraid this will likely lead to confusion.
         `total_length` (int): The total number of words found in
             the paper or abstract. In the context of the binomial
-            trial this class will run,
-            `total_length` can always be thought of as `n`.
+            trial this class will run, `total_length` can always be thought of as `n`.
 
     Methods:
         __call__ : returns a wordscore value as a float.
@@ -53,13 +50,12 @@ class WordscoreCalculator:
 
     def __call__(self) -> Wordscore:
         """
-        Intermediary Variables
-        ------------------
+        ## Variables:
         - `neutral_part`: or `total_length` minus the `target_count`.
             These are the words in the text that are either bycatch words,
             or they're irrelevant to what we're looking for.
         - `failure_margin`: the `neutral_part` divided by `total_length`
-            to the power of the `neutral_part`.\n
+            to the power of the `neutral_part`.
             In other words:
 
             ```
@@ -90,11 +86,20 @@ class WordscoreCalculator:
         - `target_probability`: defined as `target_count / total_length`
         - `bycatch_probability`: defined as `bycatch_count / total_length`
         - `positive posterior`: the probability of the `target_count` being present,
-            given the paper provided. This is calculated using Bayes' theorem, i.e.:
+            given all of the words in the paper provided.
+            This is calculated using Bayes' theorem, i.e.:
 
             ```
             >>>  positive_posterior = (likelihood * true positives) / failure_margin
             ```
+            \n
+            Note: The previous `likelihood` from the binomial distribution formula was asking: \n
+            "What is the probability of these matches occurring given the total number of words. \n
+
+            Here, the positive posterior is asking the opposite, which is a bit nonsensical. i.e. \n
+            "What is the probability of total words given the probability of matches." \n
+            If there are any matches, this number would be close to or exactly 1. Therefore, we need
+            to calculate...
 
         - `negative posterior` represents the probability of the event
             not occurring, given the observations.
@@ -106,13 +111,21 @@ class WordscoreCalculator:
             ```
             >>> negative_posterior = (failure_margin * bycatch_probability) / likelihood
             ```
+            \n
+            Note: Failure margin treated as likelihood because it's looking for `bycatch_count`
+            and not `target_count`. It's the inverse of what we were looking for in the `positive_posterior`.
+            For the same reason, the success likelihood treated as though it were the margin.
+            This finally brings us to...
 
-        - `wordscore` is the final output as a float. It is simply:
+        ## Returns
+        - `wordscore` is the final output as a float. This is the percent likelihood that the paper is a match.
+            It is simply:
 
             ```
             >>> wordscore = positive_posterior - negative posterior
             ```
 
+        - `
         """
         neutral_part = self.total_length - self.target_count
         success_margin = self.get_margin(
@@ -141,14 +154,6 @@ class WordscoreCalculator:
             likelihood=failure_margin,
             margin=likelihood,
         )
-        # Note: Failure margin treated as likelihood because it's
-        # looking for bycatch, i.e. inverse
-        # Moreover, success likelihood treated as
-        # margin because it's looking for bycatch, i.e. inverse
-
-        # The negative posterior is then subtracted
-        # from the positive posterior
-        # to produce the final wordscore
         wordscore = positive_posterior - negative_posterior
         return Wordscore(
             wordscore,
@@ -164,23 +169,30 @@ class WordscoreCalculator:
         failure_margin: float,
     ) -> float:
         """
-        Args:
-        - `success_margin` (float): defined as
-            `(target_matches/total_length)**target_matches`; and
-        - `failure margin` (float): defined as
-            `((total_length-target_matches)/total_length)**(total_length-target_matches)`
+        Gets the `likelihood` of our paper being a match, given the presence of `target_count` words.\n
+        This is calculated using a binomial distribution formula.\n
 
-        Returns:
-            likelihood (float) : The likelihood of a paper of `total_length` being
-            relevant to our query, given the presense of `target_matches` matches.
+        ## Args
+        `success_margin` (float): defined as `(target_matches/total_length)**target_matches`; and
+        `failure margin` (float): defined as `((total_length-target_matches)/total_length)**(total_length-target_matches)`
 
-        Further Explanation:
-            - `total_combinations` is `total length` choose `target_matches`; i.e. `nCx`
-            or `(target_matches! / (total_length! * (total_length-target_matches)!)`
-        --------
+        ## Returns
+        `likelihood` (float) : The likelihood of a paper of `total_length` being
+        relevant to our query, given the presense of `target_matches` matches.
 
-        >>> total_combinations = (target_matches! / (total_length! * (total_length-target_matches)!)
-        >>> P(total_length|target_matches) = total_combinations * success_margin * failure_margin
+        ## Note
+        `total_combinations` is `total length` choose `target_matches`; i.e. `nCx`
+        or `(target_matches! / (total_length! * (total_length-target_matches)!)`
+
+        ## Example
+        ------
+        ```
+
+        total_combinations = (target_matches! / (total_length! * (total_length-target_matches)!)
+        likelihood = total_combinations * success_margin * failure_margin
+        # likelihood is P(total_length|target_matches)
+        return likelihood
+        ```
 
         """
         total_combinations = comb(
@@ -234,7 +246,7 @@ class WordscoreCalculator:
         Returns:
             float: The probability of the event occurring.
 
-        Example
+        ## Example
         ------
         >>> WordscoreCalculator.get_margin(part=2, whole=4)
         (2 / 4) ** 2
