@@ -9,7 +9,7 @@ from typing import Any
 from urllib.parse import urlencode
 
 from requests import Response, Session
-from selectolax.parser import HTMLParser
+from selectolax.parser import HTMLParser, Node
 
 from sciscrape.config import DIMENSIONS_AI_KEYS, config
 from sciscrape.log import logger
@@ -278,8 +278,8 @@ class SemanticFigureScraper(WebScraper):
         paper_searching_response = client.get(paper_searching_url)
         paper_info: dict[str, Any] = loads(paper_searching_response.text)
         try:
-            paper_url: str | None = paper_info["data"][0]["url"]
             logger.debug("\n%s\n", paper_url)
+            paper_url: str | None = paper_info["data"][0]["url"]
         except IndexError as e:
             logger.debug(
                 "error=%s, action_undertaken=%s",
@@ -289,7 +289,7 @@ class SemanticFigureScraper(WebScraper):
             paper_url = None
         return paper_url
 
-    def parse_html_tree(self, response_text: str) -> list[Any] | None:
+    def parse_html_tree(self, response_text: str) -> list[Node] | None:
         tree = HTMLParser(response_text)
-        images: list[Any] = tree.css("li.figure-list__figure > a > figure > div > img")
+        images: list[Node] = tree.css("li.figure-list__figure > a > figure > div > img")
         return [image.attributes.get("src") for image in images] if images else None

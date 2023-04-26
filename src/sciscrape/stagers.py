@@ -117,10 +117,16 @@ def stage_with_reference(
         .explode(column_x)
     )
     data_col_x = clean_any_nested_columns(
-        data[column_x].fillna("N/A").to_list(), column_x
+        data[column_x]
+            .fillna("N/A")
+            .to_list(),
+        column_x,
     )
     data_col_y = clean_any_nested_columns(
-        data[column_y].fillna("N/A").to_list(), column_y
+        data[column_y]
+            .fillna("N/A")
+            .to_list(),
+        column_y,
     )
     staged_terms = (data_col_x, data_col_y)
     logger.debug("stager=%s, terms=%s", stage_with_reference, staged_terms)
