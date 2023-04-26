@@ -3,15 +3,15 @@ from __future__ import annotations
 import re
 from collections import Counter
 from dataclasses import dataclass, field
-from itertools import chain
-from typing import Any, Iterator
+from math import log
+from typing import Any
 
 import pdfplumber
 
 from sciscrape.config import UTF, FilePath
 from sciscrape.log import logger
-from sciscrape.wordscore import WordscoreCalculator
 
+PAPER_STATISTIC = re.compile(r'\(.*(?:\=|\>|\<).*\)')
 
 @dataclass(frozen=True)
 class FreqDistAndCount:
@@ -42,14 +42,11 @@ class DocumentResult:
 
     matching_terms: int
     bycatch_terms: int
-    total_length: int
+    total_word_count: int
     wordscore: float
-    expectation: float
-    variance: float
-    standard_deviation: float
-    skewness: float
     target_freq: list[tuple[str, int]] = field(default_factory=list)
     bycatch_freq: list[tuple[str, int]] = field(default_factory=list)
+    paper_parentheticals: list[Any] = field(default_factory=list)
 
 
 def match_terms(target: list[str], word_set: set[str]) -> FreqDistAndCount:
@@ -144,40 +141,35 @@ class DocScraper:
 
         target_set = self.unpack_txt_files(self.target_words_file)
         bycatch_set = self.unpack_txt_files(self.bycatch_words_file)
-
+        preprint: str = self.extract_text_from_pdf(search_text) if self.is_pdf else search_text
+        paper_parentheticals: list[Any] = PAPER_STATISTIC.findall(preprint)
         token_list: list[str] = (
-            self.extract_text_from_pdf(search_text)
-            if self.is_pdf
-            else self.extract_text_from_summary(search_text)
+            preprint
+                .strip()
+                .lower()
+                .split(" ")
         )
         target = match_terms(token_list, target_set)
         bycatch = match_terms(token_list, bycatch_set)
-        wordcalc = WordscoreCalculator(
-            target.term_count,
-            bycatch.term_count,
-            len(token_list),
-        )
-        logger.debug(repr(wordcalc))
-
-        relevance_result = wordcalc()
+        total_word_count = len(token_list)
+        target_frequency = target.term_count / total_word_count
+        bycatch_frequency = bycatch.term_count / total_word_count
+        wordscore = 100 + (log(target_frequency) * log(1/bycatch_frequency))
         doc = DocumentResult(
             matching_terms=target.term_count,
             bycatch_terms=bycatch.term_count,
-            total_length=len(token_list),
-            wordscore=relevance_result.probability,
-            expectation=relevance_result.expectation,
-            variance=relevance_result.variance,
-            standard_deviation=relevance_result.standard_deviation,
-            skewness=relevance_result.skewness,
+            total_word_count=total_word_count,
+            wordscore=wordscore,
             target_freq=target.frequency_dist,
             bycatch_freq=bycatch.frequency_dist,
+            paper_parentheticals=paper_parentheticals
         )
         logger.debug(repr(doc))
         return doc
 
     def extract_text_from_pdf(
         self, search_text: str
-    ) -> list[str]:
+    ) -> str:
         """
         Given the provided filepath, `search_text`, it opens the .pdf
         file and cleans the text. Returning the words from each page
@@ -187,10 +179,7 @@ class DocScraper:
             search_text(str): The initially provided filepath from a prior list comprehension.
 
         Returns:
-            list[str]: A generator with cleaned words from each entire document.
-
-        See Also:
-            `extract_text_from_summary` : Extract text from academic paper abstracts.
+            str: A string of unformatted words from the entire document.
         """
         with pdfplumber.open(search_text) as study:
             study_pages: list[Any] = study.pages
@@ -205,57 +194,10 @@ class DocScraper:
                 search_text,
             )
             # Goes through all pages and creates a continuous string of text from the entire document
-            preprints: Iterator[str] = (
-                study_pages[page_number].extract_text(x_tolerance=1, y_tolerance=3)
+            preprints: list[str] = [
+                study_pages[page_number]
+                    .extract_text(x_tolerance=1, y_tolerance=3)
                 for page_number, _ in enumerate(pages_to_check)
-            )
-
-            # Strips and lowers every word
-            manuscripts: list[str] = [preprint.strip().lower() for preprint in preprints]
-
-            # Regularizes white spaces
-            manuscripts = [re.sub(r"\W+", " ", manuscript) for manuscript in manuscripts]
-
-            # Splits each word along each white space to create a list of strings from each word
-            output = [manuscript.split(" ") for manuscript in manuscripts]
-            logger.debug(
-                "func=%s,\
-                output=%s",
-                self.extract_text_from_pdf,
-                output,
-            )
-
-            return list(chain.from_iterable(output))
-
-    def extract_text_from_summary(
-        self, search_text: str
-    ) -> list[str]:
-        """
-        Given the provided abstract, `search_text`, it reads the text
-        and cleans it. Returning the words from each
-        abstract as a generator object.
-
-        Parameters:
-            search_text(str): The initially provided abstract from a prior list comprehension.
-
-        Yields:
-            Generator: A generator with cleaned words from each paper's abstract.
-
-        See Also:
-            `extract_text_from_pdf`: Extract text from PDF files.
-        """
-        logger.debug(
-            "func=%s,\
-            query=%s",
-            self.extract_text_from_summary,
-            search_text,
-        )
-        manuscript = search_text.strip().lower()
-        output = manuscript.split(" ")
-        logger.debug(
-            "func=%s,\
-            output=%s",
-            self.extract_text_from_summary,
-            output,
-        )
-        return output
+                ]
+            preprint:str = " ".join(preprint for preprint in preprints)
+            return preprint

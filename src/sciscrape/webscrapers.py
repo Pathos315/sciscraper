@@ -114,10 +114,6 @@ class DimensionsScraper(WebScraper):
                 "internal_id",
                 OverviewScraper(config.abstract_getting_url, sleep_val=0.1),
             ),
-            "figures": (
-                "title",
-                SemanticFigureScraper(config.semantic_scholar_url_stub, sleep_val=0.1),
-            ),
         }
 
         item = self.get_items_from_response(response.text, "docs")
@@ -148,7 +144,7 @@ class DimensionsScraper(WebScraper):
         try:
             return getter.obtain(data[query])
         except (KeyError, TypeError) as e:
-            logger.debug(
+            logger.error(
                 "func_repr=%r, query=%s, error=%s, action_undertaken=%s",
                 getter,
                 query,
@@ -252,7 +248,8 @@ class OverviewScraper(WebScraper):
             if response.status_code == 200 else None
         )
 
-
+# TODO: Figure out how to make requests to SemanticScholar without causing 429 Errors.
+# Possibility of a post request according to their API?
 @dataclass
 class SemanticFigureScraper(WebScraper):
     """Scraper that queries
@@ -275,13 +272,16 @@ class SemanticFigureScraper(WebScraper):
 
     def find_paper_url(self, search_text: str) -> str | None:
         paper_searching_url = self.url + urlencode({"query": search_text, "fields": "url", "limit": 1})
+        logger.info(paper_searching_url)
         paper_searching_response = client.get(paper_searching_url)
+        logger.info(paper_searching_response)
         paper_info: dict[str, Any] = loads(paper_searching_response.text)
+        logger.info(paper_info)
         try:
-            logger.debug("\n%s\n", paper_url)
             paper_url: str | None = paper_info["data"][0]["url"]
+            logger.debug("\n%s\n", paper_url)
         except IndexError as e:
-            logger.debug(
+            logger.error(
                 "error=%s, action_undertaken=%s",
                 e,
                 "Returning None",
