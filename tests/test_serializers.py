@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from sciscrape.serials import serialize_from_csv, serialize_from_directory
@@ -48,7 +50,8 @@ def test_serialize_from_csv_attr_error(mock_csv):
 
 @pytest.mark.xfail
 def test_serialize_from_directory():
-    test_dir = "tests/test_dirs"
-    file = "tests/test_dirs/test_pdf_1.pdf"
-    output = serialize_from_directory(test_dir)
-    assert output == [file]
+    test_path = Path("tests/test_dirs/")
+    test_path = test_path / "test.pdf"
+    output = serialize_from_directory(test_path)
+
+    assert output == test_path

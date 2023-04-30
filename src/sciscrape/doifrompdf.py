@@ -66,10 +66,10 @@ def find_identifier_in_pdf_info(metadata: dict[str, str]) -> DOIFromPDFResult:
             result = find_identifier_in_text(value, ARXIV_VERSIONS, "arxiv")
         if result.identifier:
             logger.info(f"A valid {result.identifier_type} was found in the document info labelled \'{value}\'.")
-            break
+            return result
         else:
             logger.info("Could not find a valid identifier in the document info.")
-    return result
+
 
 
 def extract_metadata(file: pathlib.Path) -> dict:
@@ -173,4 +173,3 @@ def find_identifier_in_google_search(query: str, num_results: int = 3) -> DOIFro
     except Exception as e:
         logger.error('Some error occured while doing a google search (maybe the string is too long?) %s' % e)
     return result
-

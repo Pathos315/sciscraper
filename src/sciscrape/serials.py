@@ -3,7 +3,7 @@ from __future__ import annotations
 from json import JSONDecodeError
 from json import loads as json_loads
 from pathlib import Path
-from typing import Any
+from typing import Any, Generator
 
 import pandas as pd
 
@@ -52,7 +52,7 @@ def serialize_from_csv(target: FilePath, column: str = "doi") -> list[str]:
     return data_list
 
 
-def serialize_from_directory(target: FilePath, suffix: str = "pdf") -> list[str]:
+def serialize_from_directory(target: FilePath, suffix: str = "pdf") -> Generator[Path, None, None]:
     """
     serialize_directory takes a directory `target` and returns a list[str]
     of its contents to be scraped.

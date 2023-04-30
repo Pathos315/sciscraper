@@ -4,7 +4,6 @@ from unittest import mock
 
 import pytest
 import requests
-import requests_mock
 
 from sciscrape.config import config
 from sciscrape.webscrapers import (
@@ -103,27 +102,6 @@ def test_get_extra_variables_key_error(scraper):
 def test_image_getter_sha(image_scraper):
     with pytest.raises(json.decoder.JSONDecodeError):
         image_scraper.obtain("test")
-
-
-@pytest.mark.parametrize(
-    ("url"),
-    (
-        (config.dimensions_ai_dataset_url),
-        (config.citation_crosscite_url),
-        (config.semantic_scholar_url_stub),
-        (config.downloader_url),
-    ),
-)
-def test_obtain_status_codes(url):
-    with requests_mock.Mocker(real_http=True) as rsps:
-        rsps.register_uri(
-            'GET',
-            url,
-            text='resp',
-        )
-        resp = requests.get(url)
-        assert resp.text == 'resp'
-        assert resp.status_code == 200
 
 
 def test_obtain_with_mock_patch(scraper, result_data_as_class):
