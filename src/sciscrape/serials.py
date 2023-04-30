@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from fnmatch import fnmatch
 from json import JSONDecodeError
 from json import loads as json_loads
-from os import listdir, path
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -11,6 +10,9 @@ import pandas as pd
 from sciscrape.config import FilePath
 from sciscrape.log import logger
 
+
+def path_normalization(target: FilePath) -> Path:
+    return Path(target) if not isinstance(target, Path) else target
 
 def serialize_from_csv(target: FilePath, column: str = "doi") -> list[str]:
     """
@@ -23,7 +25,7 @@ def serialize_from_csv(target: FilePath, column: str = "doi") -> list[str]:
 
     Parameters
     ---------
-    target : FilePath
+    target : Path
         The target .csv file, always as a pathname
     column : str
         The specific column of interest. Defaults to "doi".
@@ -33,6 +35,7 @@ def serialize_from_csv(target: FilePath, column: str = "doi") -> list[str]:
     list[str]:
         A list of entries from the provided column, `column`.
     """
+    target = path_normalization(target)
     data: pd.DataFrame = (
         pd.read_csv(
             target,
@@ -68,17 +71,8 @@ def serialize_from_directory(target: FilePath, suffix: str = "pdf") -> list[str]
         A list of files from the provided directory, `target` that adhere
         to the requested format `suffix`.
     """
-    data_list = [
-        path.join(target, file)
-        for file in listdir(target)
-        if fnmatch(path.basename(file), f"*.{suffix}")
-    ]
-    if not data_list:
-        raise ValueError("This directory contains no valid files.")
-
-    logger.debug("serializer=%s, terms=%s", serialize_from_directory, data_list)
-    return data_list
-
+    target = path_normalization(target)
+    return target.glob(f'*.{suffix}')
 
 def clean_any_nested_columns(data_list: list[str], column: str) -> list[str]:
     initial_terms: list[str] = []
@@ -97,3 +91,4 @@ def grab_nested_terms(column: str, term) -> Any:
         return dict(json_loads(term))[column]
     except JSONDecodeError:
         return None
+

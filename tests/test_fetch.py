@@ -1,5 +1,4 @@
 import logging
-from functools import partial
 from typing import Callable
 from unittest import mock
 

@@ -4,14 +4,15 @@ import re
 from collections import Counter
 from dataclasses import dataclass, field
 from math import log
-from typing import Any
+from typing import Any, Generator
 
 import pdfplumber
 
 from sciscrape.config import UTF, FilePath
+from sciscrape.doifrompdf import doi_from_pdf
 from sciscrape.log import logger
 
-PAPER_STATISTIC = re.compile(r'\(.*(?:\=|\>|\<).*\)')
+PAPER_STATISTIC = re.compile(r'\(.*\=.*\)')
 
 @dataclass(frozen=True)
 class FreqDistAndCount:
@@ -40,12 +41,13 @@ class DocumentResult:
     This gets passed back to a pandas dataframe.\
     """
 
+    doi_from_pdf: str | None
     matching_terms: int
     bycatch_terms: int
     total_word_count: int
     wordscore: float
-    target_freq: list[tuple[str, int]] = field(default_factory=list)
-    bycatch_freq: list[tuple[str, int]] = field(default_factory=list)
+    target_terms_top_3: list[tuple[str, int]] = field(default_factory=list)
+    bycatch_terms_top_3: list[tuple[str, int]] = field(default_factory=list)
     paper_parentheticals: list[Any] = field(default_factory=list)
 
 
@@ -138,37 +140,44 @@ class DocScraper:
         """
 
         logger.debug(repr(self))
-
         target_set = self.unpack_txt_files(self.target_words_file)
         bycatch_set = self.unpack_txt_files(self.bycatch_words_file)
         preprint: str = self.extract_text_from_pdf(search_text) if self.is_pdf else search_text
-        paper_parentheticals: list[Any] = PAPER_STATISTIC.findall(preprint)
-        token_list: list[str] = (
-            preprint
-                .strip()
-                .lower()
-                .split(" ")
-        )
+        digital_object_identifier = doi_from_pdf(search_text, preprint).identifier if self.is_pdf else None
+        token_list: list[str] = self.format_manuscript(preprint)
         target = match_terms(token_list, target_set)
         bycatch = match_terms(token_list, bycatch_set)
         total_word_count = len(token_list)
         target_frequency = target.term_count / total_word_count
         bycatch_frequency = bycatch.term_count / total_word_count
-        wordscore = 100 + (log(target_frequency) * log(1/bycatch_frequency))
         doc = DocumentResult(
+            doi_from_pdf=digital_object_identifier,
             matching_terms=target.term_count,
             bycatch_terms=bycatch.term_count,
             total_word_count=total_word_count,
-            wordscore=wordscore,
-            target_freq=target.frequency_dist,
-            bycatch_freq=bycatch.frequency_dist,
-            paper_parentheticals=paper_parentheticals
+            wordscore=self.calculate_wordscore(target_frequency, bycatch_frequency),
+            target_terms_top_3=target.frequency_dist,
+            bycatch_terms_top_3=bycatch.frequency_dist,
+            paper_parentheticals=PAPER_STATISTIC.findall(preprint)
         )
         logger.debug(repr(doc))
         return doc
 
+    def format_manuscript(self, preprint: str) -> list[str]:
+        return (
+            preprint
+                .strip()
+                .lower()
+                .split(" ")
+        )
+
+    def calculate_wordscore(self, target_frequency, bycatch_frequency):
+        return 100 + (log(target_frequency) * log(1/bycatch_frequency))
+
+
     def extract_text_from_pdf(
-        self, search_text: str
+        self,
+        search_text: str
     ) -> str:
         """
         Given the provided filepath, `search_text`, it opens the .pdf
@@ -185,19 +194,11 @@ class DocScraper:
             study_pages: list[Any] = study.pages
             study_length = len(study_pages)
             pages_to_check = [*study_pages][:study_length]
-            logger.debug(
-                "func=%s,\
-                study_length=%s,\
-                query=%s",
-                self.extract_text_from_pdf,
-                pages_to_check,
-                search_text,
-            )
             # Goes through all pages and creates a continuous string of text from the entire document
-            preprints: list[str] = [
+            preprints: Generator[str, None, None] = (
                 study_pages[page_number]
                     .extract_text(x_tolerance=1, y_tolerance=3)
                 for page_number, _ in enumerate(pages_to_check)
-                ]
-            preprint:str = " ".join(preprint for preprint in preprints)
+            )
+            preprint: str = " ".join(preprint for preprint in preprints)
             return preprint

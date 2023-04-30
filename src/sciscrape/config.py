@@ -119,6 +119,7 @@ DIMENSIONS_AI_KEYS: dict[str, str] = {
 }
 
 KEY_TYPE_PAIRINGS: dict[str, Any] = {
+    "doi_from_pdf": "string",
     "title": "string",
     "doi": "string",
     "internal_id": "string",

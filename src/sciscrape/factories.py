@@ -69,11 +69,15 @@ STAGERS: dict[str, StagingFetcher] = {
     "images": StagingFetcher(
         ImagesDownloader(url=""), partial(stage_with_reference, column_x="figures")
     ),
+    "pdf_expanded": StagingFetcher(
+        DimensionsScraper(config.dimensions_ai_dataset_url),
+        partial(stage_from_series, column="doi_from_pdf")
+    ),
 }
 
 
 SCISCRAPERS: dict[str, SciScraper] = {
-    "directory": SciScraper(SCRAPERS["pdf_lookup"], None),
+    "directory": SciScraper(SCRAPERS["pdf_lookup"], STAGERS["pdf_expanded"]),
     "wordscore": SciScraper(SCRAPERS["csv_lookup"], STAGERS["abstracts"]),
     "citations": SciScraper(SCRAPERS["csv_lookup"], STAGERS["citations"]),
     "reference": SciScraper(SCRAPERS["csv_lookup"], STAGERS["references"]),

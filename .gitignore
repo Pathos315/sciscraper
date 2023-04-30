@@ -12,3 +12,4 @@ exports/**
 .DS_Store
 Pipfile
 **/_zeroshotscraper.py
+**/sciscrape/local_bibtexparser.py
