@@ -52,7 +52,7 @@ def serialize_from_csv(target: FilePath, column: str = "doi") -> list[str]:
     return data_list
 
 
-def serialize_from_directory(target: FilePath, suffix: str = "pdf") -> Generator[Path, None, None]:
+def serialize_from_directory(target: FilePath, suffix: str = "pdf") -> list[str]:
     """
     serialize_directory takes a directory `target` and returns a list[str]
     of its contents to be scraped.
@@ -72,7 +72,7 @@ def serialize_from_directory(target: FilePath, suffix: str = "pdf") -> Generator
         to the requested format `suffix`.
     """
     target = path_normalization(target)
-    return target.glob(f'*.{suffix}')
+    return [str(file) for file in target.glob(f'*.{suffix}')]
 
 def clean_any_nested_columns(data_list: list[str], column: str) -> list[str]:
     initial_terms: list[str] = []
