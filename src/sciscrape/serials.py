@@ -3,7 +3,7 @@ from __future__ import annotations
 from json import JSONDecodeError
 from json import loads as json_loads
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import pandas as pd
 
@@ -13,6 +13,7 @@ from sciscrape.log import logger
 
 def path_normalization(target: FilePath) -> Path:
     return Path(target) if not isinstance(target, Path) else target
+
 
 def serialize_from_csv(target: FilePath, column: str = "doi") -> list[str]:
     """
@@ -74,6 +75,7 @@ def serialize_from_directory(target: FilePath, suffix: str = "pdf") -> list[str]
     target = path_normalization(target)
     return [str(file) for file in target.glob(f'*.{suffix}')]
 
+
 def clean_any_nested_columns(data_list: list[str], column: str) -> list[str]:
     initial_terms: list[str] = []
     nested_terms: list[str] = []
@@ -91,4 +93,3 @@ def grab_nested_terms(column: str, term) -> Any:
         return dict(json_loads(term))[column]
     except JSONDecodeError:
         return None
-
