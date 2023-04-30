@@ -13,7 +13,6 @@ from sciscrape.webscrapers import (
     SemanticFigureScraper,
     WebScrapeResult,
 )
-from sciscrape.wordscore import WordscoreCalculator
 
 
 # File Path Fixtures
@@ -67,24 +66,6 @@ def staged_terms():
 @pytest.fixture
 def staged_tuple():
     return ([1, 2, 3], [4, 5, 6])
-
-
-@pytest.fixture()
-def wordscore_calc():
-    return WordscoreCalculator(
-        target_count=64,
-        bycatch_count=32,
-        total_length=2048,
-    )
-
-
-@pytest.fixture()
-def wordscore_dict() -> dict[str, float | int]:
-    return {
-        "target_count": 64,
-        "bycatch_count": 32,
-        "total_length": 2048,
-    }
 
 
 @pytest.fixture()

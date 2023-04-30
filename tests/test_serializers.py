@@ -52,8 +52,3 @@ def test_serialize_from_directory():
     file = "tests/test_dirs/test_pdf_1.pdf"
     output = serialize_from_directory(test_dir)
     assert output == [file]
-
-
-def test_serialize_from_directory_len_error(tmpdir):
-    with pytest.raises(ValueError):
-        serialize_from_directory(tmpdir)

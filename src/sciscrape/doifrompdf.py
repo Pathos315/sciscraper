@@ -3,7 +3,6 @@ from __future__ import annotations
 import pathlib
 import re
 from dataclasses import dataclass
-from typing import Any
 
 import pdfplumber
 import requests
