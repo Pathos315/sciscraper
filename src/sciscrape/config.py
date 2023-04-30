@@ -74,8 +74,6 @@ class ScrapeConfig:
     semantic_scholar_url_stub: str
     citation_crosscite_url: str
     abstract_getting_url: str
-    sci_tldr_url: str
-    zero_classifier_url: str
     downloader_url: str = field(repr=False)
     export_dir: str
     target_words: str
