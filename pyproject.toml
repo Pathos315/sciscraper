@@ -7,7 +7,7 @@ name = "sciscraper"
 description = " A bulk academic PDF extractor program, designed specifically for papers about behavioral science and design."
 license = {file = "LICENSE"}
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.8"
 version = "1.0.0"
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -75,9 +75,8 @@ sciscraper = [
 
 [tool.pytest.ini_options]
 addopts = "--cov=src --cov-report term-missing -v"
-testpaths = [
-    "test",
-]
+pythonpath = "."
+testpaths = ".test"
 
 [tool.mypy]
 mypy_path = "src"

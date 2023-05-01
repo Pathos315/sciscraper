@@ -14,5 +14,3 @@ Pipfile
 **/_zeroshotscraper.py
 **/sciscrape/local_bibtexparser.py
 **src/config_setup.json
-src/config_setup.json
-y

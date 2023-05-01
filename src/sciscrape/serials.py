@@ -73,7 +73,7 @@ def serialize_from_directory(target: FilePath, suffix: str = "pdf") -> list[str]
         to the requested format `suffix`.
     """
     target = path_normalization(target)
-    return [str(file) for file in target.glob(f'*.{suffix}')]
+    return [file for file in target.glob(f'*.{suffix}')]
 
 
 def clean_any_nested_columns(data_list: list[str], column: str) -> list[str]:
