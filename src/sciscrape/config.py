@@ -14,7 +14,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-import numpy as np
+from numpy import float16, int16
 
 FilePath = str | Path
 UTF = "utf-8"
@@ -121,11 +121,11 @@ KEY_TYPE_PAIRINGS: dict[str, Any] = {
     "title": "string",
     "doi": "string",
     "internal_id": "string",
-    "times_cited": np.int16,
-    "matching_terms": np.int16,
-    "bycatch_terms": np.int16,
-    "total_word_count": np.int16,
-    "wordscore": np.float16,
+    "times_cited": int16,
+    "matching_terms": int16,
+    "bycatch_terms": int16,
+    "total_word_count": int16,
+    "wordscore": float16,
     "abstract": "string",
     "biblio": "string",
     "journal_title": "string",

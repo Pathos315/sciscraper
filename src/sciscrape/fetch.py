@@ -49,7 +49,7 @@ class Fetcher(ABC):
         """
 
     def fetch(
-        self, search_terms: list[str], tqdm_unit: str = "abstracts"
+        self, search_terms: list[str], tqdm_unit: str = "file"
     ) -> pd.DataFrame:
         """
         fetch runs a scrape using the given
@@ -208,7 +208,7 @@ class SciScraper:
     @staticmethod
     def downcast_available_datetimes(dataframe: pd.DataFrame | pd.Series) -> pd.Timestamp:
         """Converts all paper publication dates to the datetime format."""
-        return pd.to_datetime(dataframe["pub_date"], infer_datetime_format=True)
+        return pd.to_datetime(dataframe["pub_date"], errors="ignore")
 
     @staticmethod
     def export_csv(

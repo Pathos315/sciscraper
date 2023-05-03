@@ -117,9 +117,7 @@ class DimensionsScraper(WebScraper):
         }
 
         item = self.get_items_from_response(response.text, "docs")
-        data = {
-            key: item.get(value) for (key, value) in api_keys.items()
-        }
+        data = {key: item.get(value) for (key, value) in api_keys.items()}
         for key, getter in getters.items():
             data[key] = self.get_extra_variables(data, *getter)
         return data
@@ -245,8 +243,10 @@ class OverviewScraper(WebScraper):
                 "docs",
                 "abstract",
             )
-            if response.status_code == 200 else None
+            if response.status_code == 200
+            else None
         )
+
 
 # TODO: Figure out how to make requests to SemanticScholar without causing 429 Errors.
 # Possibility of a post request according to their API?
@@ -268,10 +268,14 @@ class SemanticFigureScraper(WebScraper):
             self,
             response.status_code,
         )
-        return self.parse_html_tree(response.text) if response.status_code == 200 else None
+        return (
+            self.parse_html_tree(response.text) if response.status_code == 200 else None
+        )
 
     def find_paper_url(self, search_text: str) -> str | None:
-        paper_searching_url = self.url + urlencode({"query": search_text, "fields": "url", "limit": 1})
+        paper_searching_url = self.url + urlencode(
+            {"query": search_text, "fields": "url", "limit": 1}
+        )
         logger.info(paper_searching_url)
         paper_searching_response = client.get(paper_searching_url)
         logger.info(paper_searching_response)

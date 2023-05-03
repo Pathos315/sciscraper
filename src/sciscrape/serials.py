@@ -3,7 +3,6 @@ from __future__ import annotations
 from json import JSONDecodeError
 from json import loads as json_loads
 from pathlib import Path
-from typing import Any
 
 import pandas as pd
 
@@ -82,14 +81,15 @@ def clean_any_nested_columns(data_list: list[str], column: str) -> list[str]:
     for term in data_list:
         if "{" in term:
             loaded_term = grab_nested_terms(column, term)
-            nested_terms.append(loaded_term) if loaded_term else None
+            nested_terms.append(loaded_term) or None
         else:
             initial_terms.append(term)
     return initial_terms + nested_terms
 
 
-def grab_nested_terms(column: str, term) -> Any:
+def grab_nested_terms(column: str, term) -> dict | None:
     try:
-        return dict(json_loads(term))[column]
+        nested_term = dict(json_loads(term))[column]
     except JSONDecodeError:
-        return None
+        logger.error("No nested terms found in %s" % column)
+    return nested_term or None

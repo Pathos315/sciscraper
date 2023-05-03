@@ -12,7 +12,8 @@ from sciscrape.config import UTF, FilePath
 from sciscrape.doifrompdf import doi_from_pdf
 from sciscrape.log import logger
 
-PAPER_STATISTIC = re.compile(r'\(.*\=.*\)')
+PAPER_STATISTIC = re.compile(r"\(.*\=.*\)")
+
 
 @dataclass(frozen=True)
 class FreqDistAndCount:
@@ -79,9 +80,9 @@ def match_terms(target: list[str], word_set: set[str]) -> FreqDistAndCount:
     >>> output.term_count           = 7
     """
 
-    matching_terms = Counter(
-        (word for word in target if word in word_set)
-    ).most_common(3)
+    matching_terms = Counter((word for word in target if word in word_set)).most_common(
+        3
+    )
     term_count = sum(term[1] for term in matching_terms)
     freq = FreqDistAndCount(term_count, matching_terms)
     logger.debug(
@@ -142,8 +143,12 @@ class DocScraper:
         logger.debug(repr(self))
         target_set = self.unpack_txt_files(self.target_words_file)
         bycatch_set = self.unpack_txt_files(self.bycatch_words_file)
-        preprint: str = self.extract_text_from_pdf(search_text) if self.is_pdf else search_text
-        digital_object_identifier = doi_from_pdf(search_text, preprint).identifier if self.is_pdf else None
+        preprint: str = (
+            self.extract_text_from_pdf(search_text) if self.is_pdf else search_text
+        )
+        digital_object_identifier = (
+            doi_from_pdf(search_text, preprint).identifier if self.is_pdf else None
+        )
         token_list: list[str] = self.format_manuscript(preprint)
         target = match_terms(token_list, target_set)
         bycatch = match_terms(token_list, bycatch_set)
@@ -158,27 +163,18 @@ class DocScraper:
             wordscore=self.calculate_wordscore(target_frequency, bycatch_frequency),
             target_terms_top_3=target.frequency_dist,
             bycatch_terms_top_3=bycatch.frequency_dist,
-            paper_parentheticals=PAPER_STATISTIC.findall(preprint)
+            paper_parentheticals=PAPER_STATISTIC.findall(preprint),
         )
         logger.debug(repr(doc))
         return doc
 
     def format_manuscript(self, preprint: str) -> list[str]:
-        return (
-            preprint
-                .strip()
-                .lower()
-                .split(" ")
-        )
+        return preprint.strip().lower().split(" ")
 
     def calculate_wordscore(self, target_frequency, bycatch_frequency):
-        return 100 + (log(target_frequency) * log(1/bycatch_frequency))
+        return 100 + (log(target_frequency) * log(1 / bycatch_frequency))
 
-
-    def extract_text_from_pdf(
-        self,
-        search_text: str
-    ) -> str:
+    def extract_text_from_pdf(self, search_text: str) -> str:
         """
         Given the provided filepath, `search_text`, it opens the .pdf
         file and cleans the text. Returning the words from each page
@@ -196,8 +192,7 @@ class DocScraper:
             pages_to_check = [*study_pages][:study_length]
             # Goes through all pages and creates a continuous string of text from the entire document
             preprints: Generator[str, None, None] = (
-                study_pages[page_number]
-                    .extract_text(x_tolerance=1, y_tolerance=3)
+                study_pages[page_number].extract_text(x_tolerance=1, y_tolerance=3)
                 for page_number, _ in enumerate(pages_to_check)
             )
             preprint: str = " ".join(preprint for preprint in preprints)

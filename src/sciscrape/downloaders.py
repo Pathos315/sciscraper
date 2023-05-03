@@ -7,9 +7,9 @@ import random
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from os import path
 from tempfile import TemporaryFile
 from time import sleep
+from pathlib import Path
 
 from requests import Response
 from selectolax.parser import HTMLParser
@@ -19,6 +19,9 @@ from sciscrape.config import FilePath, config
 from sciscrape.log import logger
 from sciscrape.webscrapers import client
 
+LINK_CLEANING_PATTERN = re.compile(
+        r"(?P<location>location\.href=\')(?P<sep>/+)?"
+    )
 
 @dataclass(frozen=True)
 class DownloadReceipt:
@@ -132,9 +135,7 @@ class BulkPDFScraper(Downloader):
         the regex pattern that cleans the download link
     """
 
-    link_cleaning_pattern: re.Pattern[str] = re.compile(
-        r"(?P<location>location\.href=\')(?P<sep>/+)?"
-    )
+    link_cleaning_pattern: re.Pattern[str] = LINK_CLEANING_PATTERN
 
     def obtain(self, search_text: str) -> DownloadReceipt:
         """
@@ -165,14 +166,10 @@ class BulkPDFScraper(Downloader):
         paper_title = f"{config.today}_{search_text.replace('/','')}.pdf"
         response_text = self.get_response(payload)
 
-        download_link: str | None = self.find_download_link(response_text) if response_text else None
-        formatted_src: str | None = self.format_download_link(download_link) if download_link else None
+        download_link: str | None = self.find_download_link(response_text) or None
+        formatted_src: str | None = self.format_download_link(download_link) or None
         logger.debug("download_link=%s", formatted_src)
-        return (
-            self.download_paper(paper_title, formatted_src)
-            if formatted_src
-            else DownloadReceipt(self.cls_name)
-        )
+        return self.download_paper(paper_title, formatted_src) or DownloadReceipt(self.cls_name)
 
     def download_paper(self, paper_title: str, formatted_src: str) -> DownloadReceipt:
         paper_contents = client.get(formatted_src, stream=True).content
@@ -191,7 +188,7 @@ class BulkPDFScraper(Downloader):
             self,
             response.status_code,
         )
-        return response.text if response.status_code == 200 else None
+        return response.text or None
 
     def find_download_link(self, search_text: str) -> str | None:
         """
@@ -214,7 +211,6 @@ class BulkPDFScraper(Downloader):
                 "#buttons button:nth-child(1)"
             ).attributes["onclick"]
             logger.debug("download_link=%s", download_link)
-            return download_link
         except (AttributeError, ValueError) as e:
             logger.error(
                 'No "onclick" attribute found within downloader=%s DOM attributes.\
@@ -223,7 +219,8 @@ class BulkPDFScraper(Downloader):
                 self.url,
                 e,
             )
-            return None
+        
+        return download_link or None
 
     def format_download_link(self, download_link: str) -> str | None:
         """
@@ -244,11 +241,7 @@ class BulkPDFScraper(Downloader):
             A link to the requested academic paper.
         """
         link_match_object = self.clean_link_with_regex(download_link)
-        return (
-            self.adjust_download_link(download_link, link_match_object)
-            if link_match_object and download_link
-            else None
-        )
+        return self.adjust_download_link(download_link, link_match_object) or None
 
     def adjust_download_link(
         self, download_link: str, link_match_object: re.Match[str]
@@ -257,16 +250,11 @@ class BulkPDFScraper(Downloader):
         seperator = link_match_object.group(2)
 
         download_link = download_link.replace(location_href, "")
-
-        if seperator == "//":
-            download_link = download_link.replace(seperator, "https://", 1)
-        else:
-            # Replace the `seperator` with `self.url`
-            download_link = download_link.replace(seperator, self.url, 1)
+        download_link = download_link.replace(seperator, "https://", 1) if seperator == "//" else download_link.replace(seperator, self.url, 1)
         return download_link
 
     def clean_link_with_regex(self, download_link: str) -> re.Match[str] | None:
-        return self.link_cleaning_pattern.match(download_link)
+        return self.link_cleaning_pattern.match(download_link) or None
 
 
 @dataclass
@@ -279,7 +267,7 @@ class ImagesDownloader(Downloader):
     file that appears as a result of that query.
     """
 
-    def obtain(self, search_text: str) -> DownloadReceipt | None:
+    def obtain(self, search_text: str) -> DownloadReceipt:
         sleep(self.sleep_val)
         search_ext = search_text.split(".")[-1]
         response = client.get(search_text, stream=True, allow_redirects=True)
@@ -291,9 +279,7 @@ class ImagesDownloader(Downloader):
         )
 
         return (
-            self.download_image(search_ext, response)
-            if response.status_code == 200
-            else DownloadReceipt(self.cls_name)
+            self.download_image(search_ext, response) or DownloadReceipt(self.cls_name)
         )
 
     def download_image(self, search_ext: str, response: Response) -> DownloadReceipt:
@@ -312,12 +298,12 @@ class ImagesDownloader(Downloader):
         DownloadReceipt:
             A receipt indicating whether the image was successfully downloaded and the path to the downloaded image.
         """
-        filename = self.format_filename(response.headers.get("Etag"), search_ext)
-        self.create_document(filename, response.content)
-        fullpath = str(path.abspath(filename))
+        filename: Path = self.format_filename(response.headers.get("Etag"), search_ext)
+        self.create_document(filename.name, response.content)
+        fullpath = (filename.resolve()).name
         return DownloadReceipt(self.cls_name, True, fullpath)
 
-    def format_filename(self, etag: str | None, ext: str) -> str:
+    def format_filename(self, etag: str | None, ext: str) -> Path:
         """
         format_filename, within `ImageDownloader`, generates a filename
         for the image to be downloaded.
@@ -335,6 +321,6 @@ class ImagesDownloader(Downloader):
 
         file_id = random.randint(1, 255)
         etag = (etag or "_NaN_").strip('"')
-        filename = f"{config.today}_{etag}_{file_id}.{ext}"
+        filename = Path(f"{config.today}_{etag}_{file_id}.{ext}")
         logger.debug("filename=%s", filename)
         return filename

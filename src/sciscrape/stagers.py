@@ -38,11 +38,7 @@ def stage_from_series(target: pd.DataFrame, column: str = "abstract") -> list[st
         ['apple','orange','N/A']
     """
 
-    raw_terms: list[str] = (
-        target.copy()[column]
-        .fillna("N/A")
-        .to_list()
-    )
+    raw_terms: list[str] = target.copy()[column].fillna("N/A").to_list()
     staged_terms = clean_any_nested_columns(raw_terms, column)
     logger.debug(
         "stager=%s, terms=%s",
@@ -111,21 +107,13 @@ def stage_with_reference(
     >>> stage_with_reference(df) =
     return (['a','b','c','d','e','f','g'],['apple','apple','apple','orange','orange','banana','banana'])
     """
-    data = (
-        target
-        .copy()
-        .explode(column_x)
-    )
+    data = target.copy().explode(column_x)
     data_col_x = clean_any_nested_columns(
-        data[column_x]
-            .fillna("N/A")
-            .to_list(),
+        data[column_x].fillna("N/A").to_list(),
         column_x,
     )
     data_col_y = clean_any_nested_columns(
-        data[column_y]
-            .fillna("N/A")
-            .to_list(),
+        data[column_y].fillna("N/A").to_list(),
         column_y,
     )
     staged_terms = (data_col_x, data_col_y)

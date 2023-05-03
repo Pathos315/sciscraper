@@ -36,9 +36,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     start = perf_counter()
     args = build_parser(argv)
 
-    sciscrape = (
-        read_factory() if args.mode is None else SCISCRAPERS[args.mode]
-    )
+    sciscrape = read_factory() if args.mode is None else SCISCRAPERS[args.mode]
     logger.debug(repr(sciscrape))
     logger.debug(repr(args.file))
 
