@@ -111,8 +111,8 @@ def find_identifier_in_text(
 
     """
 
-    title_search_var: str = "title" if title_search is True else "text"
     for pattern, id_type in pattern_dict.items():
+        title_search_var: str = "title" if title_search else "text"
         logger.debug(pattern)
         logger.info(
             f"Method #2-{id_type} in {title_search_var}: Looking for a valid {id_type.upper()} in the document {title_search_var}..."
@@ -160,10 +160,10 @@ def find_identifier_by_googling_first_N_characters_in_pdf(
     """
     Parameters
     ----------
-    file : object file
-    func_validate : function, optional
+    text : str
     num_results : int
     num_characters : int
+    websearch : bool
     """
     logger.info(
         f"Method #4: Trying to do a google search with the first {num_characters} characters of this pdf file..."

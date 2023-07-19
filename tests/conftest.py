@@ -115,9 +115,11 @@ def docscraper_pdf():
 def scraper():
     return DimensionsScraper(config.dimensions_ai_dataset_url, sleep_val=0.5)
 
+
 @pytest.fixture()
 def fetch_scraper():
     return SCISCRAPERS["wordscore"]
+
 
 @pytest.fixture()
 def faulty_scraper():

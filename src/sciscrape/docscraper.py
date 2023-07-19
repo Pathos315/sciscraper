@@ -3,7 +3,6 @@ from __future__ import annotations
 import re
 from collections import Counter
 from dataclasses import dataclass, field
-from math import log
 from typing import Any, Generator
 
 import pdfplumber
@@ -153,14 +152,16 @@ class DocScraper:
         target = match_terms(token_list, target_set)
         bycatch = match_terms(token_list, bycatch_set)
         total_word_count = len(token_list)
-        target_frequency = target.term_count / total_word_count
-        bycatch_frequency = bycatch.term_count / total_word_count
+        initial_match_count = self.calculate_initial_match_count(
+            target.term_count, bycatch.term_count
+        )
+
         doc = DocumentResult(
             doi_from_pdf=digital_object_identifier,
             matching_terms=target.term_count,
             bycatch_terms=bycatch.term_count,
             total_word_count=total_word_count,
-            wordscore=self.calculate_wordscore(target_frequency, bycatch_frequency),
+            wordscore=self.calculate_wordscore(initial_match_count, total_word_count),
             target_terms_top_3=target.frequency_dist,
             bycatch_terms_top_3=bycatch.frequency_dist,
             paper_parentheticals=PAPER_STATISTIC.findall(preprint),
@@ -171,8 +172,20 @@ class DocScraper:
     def format_manuscript(self, preprint: str) -> list[str]:
         return preprint.strip().lower().split(" ")
 
-    def calculate_wordscore(self, target_frequency, bycatch_frequency):
-        return 100 + (log(target_frequency) * log(1 / bycatch_frequency))
+    def calculate_initial_match_count(
+        self, target_count: int, bycatch_count: int
+    ) -> int:
+        return target_count - bycatch_count if target_count > bycatch_count else 1
+
+    def calculate_wordscore(
+        self, initial_match_count: int, total_word_count: int
+    ) -> float:
+        RELEVANCE_PROBABILITY = 0.075
+        IRRELEVANCE_PROBABILITY = 0.925
+        match_probability: float = initial_match_count / total_word_count
+        prior = match_probability * RELEVANCE_PROBABILITY
+        evidence = prior + IRRELEVANCE_PROBABILITY
+        return prior / evidence
 
     def extract_text_from_pdf(self, search_text: str) -> str:
         """

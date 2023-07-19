@@ -48,9 +48,7 @@ class Fetcher(ABC):
             A dataframe containing biliographic data.
         """
 
-    def fetch(
-        self, search_terms: list[str], tqdm_unit: str = "file"
-    ) -> pd.DataFrame:
+    def fetch(self, search_terms: list[str], tqdm_unit: str = "file") -> pd.DataFrame:
         """
         fetch runs a scrape using the given
         search terms and
@@ -159,20 +157,20 @@ class SciScraper:
     export: bool = True
 
     def __call__(
-        self, target: FilePath,
+        self,
+        target: FilePath,
     ) -> None:
         self.set_logging()
         logger.info(
-            "Debug logging status: '%s'\n"
-            "Commencing sciscrape on file: '%s'...\n",
+            "Debug logging status: '%s'\n" "Commencing sciscrape on file: '%s'...\n",
             self.debug,
-            target
+            target,
         )
         dataframe: pd.DataFrame = self.scraper(target)
         dataframe = self.stager(dataframe) if self.stager else dataframe
         dataframe = self.remove_empty_columns(dataframe)
         dataframe = self.dataframe_casting(dataframe) if self.downcast else dataframe
-        self.export_csv(dataframe) if self.export else None
+        self.export_sciscrape_results(dataframe) if self.export else None
 
     def set_logging(self) -> None:
         """Sets the logging level to debug if specified,
@@ -206,13 +204,16 @@ class SciScraper:
         return dataframe
 
     @staticmethod
-    def downcast_available_datetimes(dataframe: pd.DataFrame | pd.Series) -> pd.Timestamp:
+    def downcast_available_datetimes(
+        dataframe: pd.DataFrame | pd.Series,
+    ) -> pd.Timestamp:
         """Converts all paper publication dates to the datetime format."""
         return pd.to_datetime(dataframe["pub_date"], errors="ignore")
 
     @staticmethod
-    def export_csv(
-        dataframe: pd.DataFrame, export_dir: str = config.export_dir
+    def export_sciscrape_results(
+        dataframe: pd.DataFrame,
+        export_dir: str = config.export_dir,
     ) -> None:
         """Export data to the specified export directory."""
         SciScraper.dataframe_logging(dataframe)

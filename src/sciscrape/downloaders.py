@@ -7,9 +7,9 @@ import random
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from pathlib import Path
 from tempfile import TemporaryFile
 from time import sleep
-from pathlib import Path
 
 from requests import Response
 from selectolax.parser import HTMLParser
@@ -19,9 +19,8 @@ from sciscrape.config import FilePath, config
 from sciscrape.log import logger
 from sciscrape.webscrapers import client
 
-LINK_CLEANING_PATTERN = re.compile(
-        r"(?P<location>location\.href=\')(?P<sep>/+)?"
-    )
+LINK_CLEANING_PATTERN = re.compile(r"(?P<location>location\.href=\')(?P<sep>/+)?")
+
 
 @dataclass(frozen=True)
 class DownloadReceipt:
@@ -169,7 +168,9 @@ class BulkPDFScraper(Downloader):
         download_link: str | None = self.find_download_link(response_text) or None
         formatted_src: str | None = self.format_download_link(download_link) or None
         logger.debug("download_link=%s", formatted_src)
-        return self.download_paper(paper_title, formatted_src) or DownloadReceipt(self.cls_name)
+        return self.download_paper(paper_title, formatted_src) or DownloadReceipt(
+            self.cls_name
+        )
 
     def download_paper(self, paper_title: str, formatted_src: str) -> DownloadReceipt:
         paper_contents = client.get(formatted_src, stream=True).content
@@ -219,7 +220,7 @@ class BulkPDFScraper(Downloader):
                 self.url,
                 e,
             )
-        
+
         return download_link or None
 
     def format_download_link(self, download_link: str) -> str | None:
@@ -250,7 +251,11 @@ class BulkPDFScraper(Downloader):
         seperator = link_match_object.group(2)
 
         download_link = download_link.replace(location_href, "")
-        download_link = download_link.replace(seperator, "https://", 1) if seperator == "//" else download_link.replace(seperator, self.url, 1)
+        download_link = (
+            download_link.replace(seperator, "https://", 1)
+            if seperator == "//"
+            else download_link.replace(seperator, self.url, 1)
+        )
         return download_link
 
     def clean_link_with_regex(self, download_link: str) -> re.Match[str] | None:
@@ -278,8 +283,8 @@ class ImagesDownloader(Downloader):
             response.status_code,
         )
 
-        return (
-            self.download_image(search_ext, response) or DownloadReceipt(self.cls_name)
+        return self.download_image(search_ext, response) or DownloadReceipt(
+            self.cls_name
         )
 
     def download_image(self, search_ext: str, response: Response) -> DownloadReceipt:

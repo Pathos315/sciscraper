@@ -1,8 +1,8 @@
 {
     "prog": "sciscraper",
     "description": "A bulk academic PDF extractor program, designed specifically for papers about behavioral science and design.",
-    "source_file": "exports/221222_TEST.csv",
-    "source_dir": "...",
+    "source_file": "../Desktop/221213_sciscraper_2.csv",
+    "source_dir": "..sciscraper_v1/papers",
     "dimensions_ai_dataset_url": "https://app.dimensions.ai/discover/publication/results.json",
     "semantic_scholar_url_stub": "https://api.semanticscholar.org/graph/v1/paper/search?",
     "citation_crosscite_url": "https://citation.crosscite.org/format",

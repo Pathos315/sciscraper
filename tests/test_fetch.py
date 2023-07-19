@@ -80,14 +80,12 @@ def test_none_downcast_available_datetimes():
     assert SciScraper.downcast_available_datetimes(df).isnull().all()
 
 
-
 def test_fetch_serializerstrategy(fetch_scraper, mock_csv, mock_dataframe):
     with mock.patch(
         "sciscrape.fetch.ScrapeFetcher.fetch",
         return_value=mock_dataframe,
         autospec=True,
     ):
-
         assert isinstance(fetch_scraper.scraper.serializer, Callable)
         search_terms = fetch_scraper.scraper.serializer(mock_csv)
         assert isinstance(search_terms, list)
@@ -162,9 +160,7 @@ class TestClass:
 
 
 def test_export(mock_dataframe):
-    with (
-        mock.patch("pandas.DataFrame.to_csv") as mock_to_csv,
-    ):
+    with (mock.patch("pandas.DataFrame.to_csv") as mock_to_csv,):
         TestClass.export(mock_dataframe)
         mock_to_csv.assert_called_once_with(TestClass.create_export_name())
 
@@ -190,7 +186,6 @@ def test_fetch_with_staged_reference_empty_tuple():
     scraper = mock.Mock()
     df = StagingFetcher(scraper, stager=None).fetch_with_staged_reference(staged_terms)  # type: ignore
     assert df.empty
-
 
 
 def test_export_invalid_input():
