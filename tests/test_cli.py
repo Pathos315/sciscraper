@@ -34,7 +34,6 @@ def mock_stats():
     return stats
 
 
-@pytest.mark.xfail
 def test_main_parses_command_line_arguments():
     # Set up mock objects
     mock_argv = ["prog", "-f", "test.txt", "-d", "-e"]
@@ -55,7 +54,6 @@ def test_main_parses_command_line_arguments():
     mock_parse_args.assert_called_once_with(mock_argv)
 
 
-@pytest.mark.xfail
 def test_main_executes_sciscrape_function_with_correct_arguments():
     # Set up mock objects
     mock_argv = ["prog", "-f", "test.txt", "-d", "-e"]

@@ -1,6 +1,8 @@
 import pathlib
 
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 
 from sciscrape.doi_regex import standardize_doi
 from sciscrape.doifrompdf import (
@@ -14,10 +16,9 @@ from sciscrape.doifrompdf import (
 )
 
 
-@pytest.mark.xfail
 def test_doi_from_pdf_valid_input():
     # Test valid input
-    file = pathlib.Path("tests/data/test_pdf.pdf")
+    file = pathlib.Path("tests/test_dirs/test_pdf_1.pdf")
     preprint = "This is a test preprint"
     result = doi_from_pdf(file, preprint)
     assert result.identifier == "10.1038/s41586-020-2003-3"
@@ -25,7 +26,6 @@ def test_doi_from_pdf_valid_input():
     assert result.validation_info == True
 
 
-@pytest.mark.xfail
 def test_doi_from_pdf_invalid_input():
     # Test invalid input
     assert doi_from_pdf(None, None) == None
@@ -34,7 +34,6 @@ def test_doi_from_pdf_invalid_input():
     assert doi_from_pdf("", "") == None
 
 
-@pytest.mark.xfail
 def test_doi_from_pdf_specific_cases():
     # Test the case where the DOI is in the metadata
     file = pathlib.Path("tests/data/pdf_with_doi_in_metadata.pdf")
@@ -58,7 +57,7 @@ def test_doi_from_pdf_specific_cases():
     assert result.identifier_type == "doi"
 
 
-@pytest.mark.xfail  # Test the case where the arXiv ID is
+# Test the case where the arXiv ID is
 def test_doi_from_pdf_specific_inputs():
     # Test for input with DOI
     file_with_doi = pathlib.Path(__file__).parent.parent / "tests/data/pdf_with_doi.pdf"
@@ -69,35 +68,23 @@ def test_doi_from_pdf_specific_inputs():
     assert result_with_doi.validation_info is not None
 
     # Test for input with arXiv
-    file_with_arxiv = (
-        pathlib.Path(__file__).parent.parent / "tests/data/pdf_with_arxiv.pdf"
-    )
+    file_with_arxiv = pathlib.Path(__file__).parent.parent / "tests/data/pdf_with_arxiv.pdf"
     preprint_with_arxiv = "This is a preprint with an arXiv ID: arXiv:1805.08716"
     result_with_arxiv = doi_from_pdf(file_with_arxiv, preprint_with_arxiv)
     assert result_with_arxiv.identifier == "1805.08716"
 
 
-@pytest.mark.xfail
 def test_doi_from_pdf_missing_input():
     # Test without file
     assert doi_from_pdf(None, None).identifier is None
     # Test without preprint
-    assert (
-        doi_from_pdf(pathlib.Path("tests/data/test_pdf.pdf"), None).identifier is None
-    )
+    assert doi_from_pdf(pathlib.Path("tests/data/test_pdf.pdf"), None).identifier is None
 
 
-@pytest.mark.xfail
 def test_doi_from_pdf_NaN_input():
     assert doi_from_pdf(None, None) == DOIFromPDFResult()
 
 
-@pytest.mark.xfail
-def test_doi_from_pdf_null_input():
-    assert doi_from_pdf(None, None) == DOIFromPDFResult()
-
-
-@pytest.mark.xfail
 def test_doi_from_pdf_extended():
     # Test 1
     file = pathlib.Path("tests/data/test_pdf_1.pdf")
@@ -131,7 +118,6 @@ def test_doi_from_pdf_extended():
     assert result.identifier_type == "doi"
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize(
     ("search_term"),
     (
@@ -153,7 +139,6 @@ def test_standardize_doi_valid_input(search_term):
     assert standardize_doi("DOI: 10.1234/abc-def") == "10.1234/abc-def"
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize(
     ("search_term"),
     (
@@ -169,7 +154,6 @@ def test_standardize_doi_specific_inputs(search_term):
     assert standardize_doi(search_term) == "10.12345/abcde"
 
 
-@pytest.mark.xfail
 def test_standardize_doi_missing_input():
     with pytest.raises(TypeError):
         assert standardize_doi(None) == "10.1234/abc-def"
@@ -177,7 +161,6 @@ def test_standardize_doi_missing_input():
         assert standardize_doi(1) is None
 
 
-@pytest.mark.xfail
 def test_find_identifier_in_metadata_valid_input():
     metadata = {
         "Title": "A test title",
@@ -221,7 +204,6 @@ def test_for_valid_arxiv_metadata():
     assert result.validation_info == True
 
 
-@pytest.mark.xfail
 def test_find_identifier_in_pdf_info_valid_input():
     metadata = {
         "Title": "A test title",
@@ -235,7 +217,6 @@ def test_find_identifier_in_pdf_info_valid_input():
     assert result.validation_info == True
 
 
-@pytest.mark.xfail
 def test_find_identifier_in_pdf_info_specific_cases():
     # Test the case where the key is not in the KEYS_TO_AVOID
     metadata = {"pdf2doi_identifier": "10.1038/s41586-020-2003-3"}
@@ -250,23 +231,19 @@ def test_find_identifier_in_pdf_info_specific_cases():
     assert result.identifier_type is None
 
 
-@pytest.mark.xfail
 def test_find_identifier_in_pdf_info_missing_input():
     # Test without any input
     assert find_identifier_in_pdf_info({}) == DOIFromPDFResult()
 
 
-@pytest.mark.xfail
 def test_find_identifier_in_pdf_info_NaN_input():
     assert find_identifier_in_pdf_info(None) == DOIFromPDFResult()
 
 
-@pytest.mark.xfail
 def test_find_identifier_in_pdf_info_null_input():
     assert find_identifier_in_pdf_info({}) == DOIFromPDFResult()
 
 
-@pytest.mark.xfail
 def test_extract_metadata_valid_input():
     # Test valid input
     file = pathlib.Path("test.pdf")
@@ -274,13 +251,11 @@ def test_extract_metadata_valid_input():
     assert isinstance(metadata, dict)
 
 
-@pytest.mark.xfail
 def test_extract_metadata_invalid_input():
     # Test invalid input
     assert extract_metadata(None) == {}
 
 
-@pytest.mark.xfail
 def test_extract_metadata_specific_cases():
     # Test the case where the file is valid
     file = pathlib.Path("tests/data/test_pdf.pdf")
@@ -299,7 +274,6 @@ def test_extract_metadata_specific_cases():
     assert metadata["arxiv"] == ""
 
 
-@pytest.mark.xfail
 def test_extract_metadata_specific_inputs():
     # Test for input with valid metadata
     file = pathlib.Path("test.pdf")
@@ -307,23 +281,19 @@ def test_extract_metadata_specific_inputs():
     assert metadata["Title"] == "test"
 
 
-@pytest.mark.xfail
 def test_extract_metadata_missing_input():
     # Test without any input
     assert extract_metadata(None) == {}
 
 
-@pytest.mark.xfail
 def test_extract_metadata_NaN_input():
     assert extract_metadata(None) == {}
 
 
-@pytest.mark.xfail
 def test_extract_metadata_null_input():
     assert extract_metadata(None) == {}
 
 
-@pytest.mark.xfail
 def test_extract_metadata_extended():
     # Test valid input
     file = pathlib.Path("test.pdf")
@@ -331,7 +301,6 @@ def test_extract_metadata_extended():
     assert isinstance(metadata, dict)
 
 
-@pytest.mark.xfail
 def test_find_identifier_in_google_search_valid_input():
     # Test valid input
     query = "10.1103/PhysRevLett.122.171801"
@@ -341,7 +310,6 @@ def test_find_identifier_in_google_search_valid_input():
     assert result.validation_info == True
 
 
-@pytest.mark.xfail
 def test_find_identifier_in_google_search_invalid_input():
     # Test invalid input
     query = ""
@@ -352,7 +320,6 @@ def test_find_identifier_in_google_search_invalid_input():
     assert result.validation_info is None
 
 
-@pytest.mark.xfail
 def test_find_identifier_in_google_search_specific_inputs():
     # Test for input with no valid identifier
     query = "This is a test string with no valid identifier"
@@ -366,7 +333,6 @@ def test_find_identifier_in_google_search_specific_inputs():
     assert result.identifier_type == "doi"
 
 
-@pytest.mark.xfail
 def test_find_identifier_in_google_search_missing_input():
     result = find_identifier_in_google_search()
     assert result.identifier is None
@@ -374,17 +340,14 @@ def test_find_identifier_in_google_search_missing_input():
     assert result.validation_info is None
 
 
-@pytest.mark.xfail
 def test_find_identifier_in_google_search_NaN_input():
     assert find_identifier_in_google_search(None).identifier is None
 
 
-@pytest.mark.xfail
 def test_find_identifier_in_google_search_null_input():
     assert find_identifier_in_google_search(None) == DOIFromPDFResult()
 
 
-@pytest.mark.xfail
 def test_find_identifier_in_google_search_extended():
     # Arrange
     query = "A novel approach to the detection of malicious URLs"
@@ -399,7 +362,6 @@ def test_find_identifier_in_google_search_extended():
     assert result.validation_info is None
 
 
-@pytest.mark.xfail
 def test_find_identifier_by_googling_first_N_characters_in_pdf_valid_input():
     # Test valid input
     text = "This is a test string"
@@ -409,15 +371,11 @@ def test_find_identifier_by_googling_first_N_characters_in_pdf_valid_input():
     assert result.validation_info is None
 
 
-@pytest.mark.xfail
 def test_find_identifier_by_googling_first_N_characters_in_pdf_invalid_input():
     # Test invalid input
-    assert (
-        find_identifier_by_googling_first_N_characters_in_pdf("") == DOIFromPDFResult()
-    )
+    assert find_identifier_by_googling_first_N_characters_in_pdf("") == DOIFromPDFResult()
 
 
-@pytest.mark.xfail
 def test_find_identifier_by_googling_first_N_characters_in_pdf_specific_cases():
     # Test the case where the text is empty
     text = ""
@@ -430,15 +388,11 @@ def test_find_identifier_by_googling_first_N_characters_in_pdf_specific_cases():
     assert result.identifier is None
 
 
-@pytest.mark.xfail
 def test_find_identifier_by_googling_first_N_characters_in_pdf_specific_inputs():
     # Test for input with empty string
-    assert (
-        find_identifier_by_googling_first_N_characters_in_pdf("") == DOIFromPDFResult()
-    )
+    assert find_identifier_by_googling_first_N_characters_in_pdf("") == DOIFromPDFResult()
 
 
-@pytest.mark.xfail
 def test_find_identifier_by_googling_first_N_characters_in_pdf_missing_input():
     # Test without websearch
     result = find_identifier_by_googling_first_N_characters_in_pdf("", websearch=False)
@@ -453,15 +407,9 @@ def test_find_identifier_by_googling_first_N_characters_in_pdf_missing_input():
     assert result.validation_info is None
 
 
-@pytest.mark.xfail
 def test_find_identifier_by_googling_first_N_characters_in_pdf_NaN_input():
-    assert (
-        find_identifier_by_googling_first_N_characters_in_pdf("") == DOIFromPDFResult()
-    )
+    assert find_identifier_by_googling_first_N_characters_in_pdf("") == DOIFromPDFResult()
 
 
-@pytest.mark.xfail
 def test_find_identifier_by_googling_first_N_characters_in_pdf_null_input():
-    assert (
-        find_identifier_by_googling_first_N_characters_in_pdf("") == DOIFromPDFResult()
-    )
+    assert find_identifier_by_googling_first_N_characters_in_pdf("") == DOIFromPDFResult()

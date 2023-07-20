@@ -16,7 +16,6 @@ def test_downloader_config(mock_bulkpdfscraper):
     assert isinstance(mock_bulkpdfscraper.link_cleaning_pattern, re.Pattern)
 
 
-@pytest.mark.xfail
 def test_create_document(mock_bulkpdfscraper, mock_dirs):
     if path.exists("tests/test_dirs/temp_file.txt"):
         remove("tests/test_dirs/temp_file.txt")
@@ -47,9 +46,7 @@ def test_create_document(mock_bulkpdfscraper, mock_dirs):
 def test_bulkpdf_receipt_validation(mock_bulkpdfscraper, search_term, expected):
     with mock.patch(
         "sciscrape.downloaders.BulkPDFScraper.obtain",
-        return_value=DownloadReceipt(
-            "test_downloader", success=expected, filepath="N/A"
-        ),
+        return_value=DownloadReceipt("test_downloader", success=expected, filepath="N/A"),
         autospec=True,
     ):
         receipt = mock_bulkpdfscraper.obtain(search_term)
@@ -58,7 +55,6 @@ def test_bulkpdf_receipt_validation(mock_bulkpdfscraper, search_term, expected):
         assert receipt.filepath == "N/A"
 
 
-@pytest.mark.xfail
 def test_create_document_consistency(mock_bulkpdfscraper, mock_dirs):
     if path.exists("tests/test_dirs/temp_file.txt"):
         remove("tests/test_dirs/temp_file.txt")
@@ -153,7 +149,6 @@ def test_null_find_download_link(mock_bulkpdfscraper):
     assert mock_bulkpdfscraper.find_download_link("asfd") == None
 
 
-@pytest.mark.xfail
 def test_create_mock_document():
     # create a mock object for the Downloader class
     downloader = mock.Mock()
@@ -176,7 +171,6 @@ def test_create_mock_document():
         remove.assert_called_with("temp_file.txt")
 
 
-@pytest.mark.xfail
 def test_create_document_writes_to_file():
     # create a mock object for the Downloader class
     downloader = mock.Mock()
@@ -206,7 +200,6 @@ def test_create_document_writes_to_file():
         assert call_args == ((mock_contents,),)
 
 
-@pytest.mark.xfail
 def test_download_paper():
     # create a mock object for the Downloader class
     downloader = mock.Mock()
@@ -244,7 +237,6 @@ def test_download_paper():
         assert receipt.filepath == f"{creator.export_dir}/{mock_paper_title}"
 
 
-@pytest.mark.xfail
 def test_download_image_invalid():
     mock_response = mock.Mock()
     # Test the case where the response is not 200
@@ -254,7 +246,6 @@ def test_download_image_invalid():
     assert downloader.download_image("jpg", mock_response) == expected
 
 
-@pytest.mark.xfail
 def test_download_image_valid():
     # Test the case where the response is 200
     mock_response = mock.Mock()
@@ -265,7 +256,6 @@ def test_download_image_valid():
     assert downloader.download_image("jpg", mock_response) == expected
 
 
-@pytest.mark.xfail
 def test_find_download_link():
     instance = BulkPDFScraper(url="")
     search_text = "html text"
@@ -273,20 +263,15 @@ def test_find_download_link():
     mock_html_parser.css_first.return_value.attributes = {"onclick": "download.pdf"}
     with (
         mock.patch("sciscrape.log.logger.debug") as mock_debug,
-        mock.patch(
-            "HTMLParser", return_value=mock_html_parser
-        ) as mock_html_parser_constructor,
+        mock.patch("HTMLParser", return_value=mock_html_parser) as mock_html_parser_constructor,
     ):
         result = instance.find_download_link(search_text)
         mock_html_parser_constructor.assert_called_once_with(search_text)
-        mock_html_parser.css_first.assert_called_once_with(
-            "#buttons button:nth-child(1)"
-        )
+        mock_html_parser.css_first.assert_called_once_with("#buttons button:nth-child(1)")
         assert result == "download.pdf"
         mock_debug.assert_called_once_with("filename")
 
 
-@pytest.mark.xfail
 def test_image_downloader_obtain():
     instance = ImagesDownloader(url="")
     with (
@@ -300,9 +285,7 @@ def test_image_downloader_obtain():
         search_text = "http://example.com/file.pdf"
         output = instance.obtain(search_text)
         mock_sleep.assert_called_once_with(instance.sleep_val)
-        mock_client_get.assert_called_once_with(
-            search_text, stream=True, allow_redirects=True
-        )
+        mock_client_get.assert_called_once_with(search_text, stream=True, allow_redirects=True)
         mock_logger_debug.assert_called_once_with(
             "response=%s, scraper=%r",
             mock_client_get.return_value,

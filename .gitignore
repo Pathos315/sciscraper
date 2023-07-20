@@ -14,5 +14,4 @@ Pipfile
 **/_zeroshotscraper.py
 **/sciscrape/local_bibtexparser.py
 **src/config_setup.json
-poetry.lock
 dist/**

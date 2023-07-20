@@ -29,6 +29,7 @@ tqdm = "^4.65.0"
 numpy = "^1.25.1"
 feedparser = "^6.0.10"
 selectolax = "^0.3.14"
+hypothesis = "^6.82.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.4.1"

@@ -40,16 +40,13 @@ def test_stage_from_series(mock_dataframe, column, expected):
     assert output == expected
 
 
-@pytest.mark.xfail
 def test_serialize_from_csv_type_error(mock_dataframe):
     with pytest.raises(AttributeError):
         stage_from_series(mock_dataframe, "times_cited")
 
 
 def test_valid_stagers(mock_dataframe):
-    output = stage_with_reference(
-        mock_dataframe, column_x="listed_data", column_y="title"
-    )
+    output = stage_with_reference(mock_dataframe, column_x="listed_data", column_y="title")
     assert isinstance(output, tuple)
     assert output == (
         [
