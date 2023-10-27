@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from json import loads
 from time import sleep
-from typing import Any
+from typing import Any, Generator
 from urllib.parse import urlencode
 
 from bs4 import BeautifulSoup, ResultSet
@@ -84,7 +84,7 @@ class GoogleScholarScraper(WebScraper):
     publication_type: str
     num_articles: int
 
-    def obtain(self, search_text: str):
+    def obtain(self, search_text: str) -> Generator[WebScrapeResult, Any, None]:
         """
         Fetches and parses articles from Google Scholar based on the search_text and
         pre-defined criteria such as publication_type, date range, etc.
@@ -127,7 +127,7 @@ class GoogleScholarScraper(WebScraper):
                 abstract = self.find_element_text(result, class_name="gs_rs")
                 times_cited = self.find_element_text(result, class_name="gs_flb", regex_pattern=r"\d+")
                 publication_year = self.find_element_text(result, class_name="gs_a", regex_pattern=r"\d{4}")
-                return WebScrapeResult(
+                yield WebScrapeResult(
                     title=title,
                     pub_date=publication_year,
                     doi=article_url,
@@ -135,6 +135,7 @@ class GoogleScholarScraper(WebScraper):
                     abstract=abstract,
                     times_cited=int(times_cited),
                     journal_title=None,
+                    keywords=[search_text],
                 )
 
     def find_element_text(

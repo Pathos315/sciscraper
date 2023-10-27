@@ -21,7 +21,7 @@ from sciscrape.webscrapers import WebScraper, WebScrapeResult
 
 SerializationStrategyFunction = Callable[[Path], List]
 StagingStrategyFunction = Callable[[pd.DataFrame], Iterable[Any]]
-ScrapeResult = DocumentResult | WebScrapeResult | DownloadReceipt | None
+ScrapeResult = DocumentResult | WebScrapeResult | DownloadReceipt
 Scraper = DocScraper | WebScraper | Downloader
 
 
@@ -51,9 +51,7 @@ class Fetcher(ABC):
 
     def fetch(self, search_terms: List[str], tqdm_unit: str = "abstracts") -> pd.DataFrame:
         """
-        fetch runs a scrape using the given
-        search terms and
-        returns a dataframe.
+        fetch runs a scrape using the given search terms and returns a dataframe.
 
         Parameters
         ----------
@@ -65,9 +63,19 @@ class Fetcher(ABC):
         pd.DataFrame
             A dataframe containing biliographic data.
         """
-        data: List[ScrapeResult] = [
-            self.scraper.obtain(term) for term in tqdm(search_terms, desc="[sciscraper]: ", unit=f"{tqdm_unit}")
-        ]
+        data: List[ScrapeResult] = []
+        for term in tqdm(search_terms, desc="[sciscraper]: ", unit=f"{tqdm_unit}"):
+            results = self.scraper.obtain(term)
+            # Check if results is a single ScrapeResult, and if so, convert it to a list
+            if not isinstance(results, Iterable) or isinstance(
+                results, str
+            ):  # Including `isinstance(results, str)` to exclude strings
+                results = [results]
+
+            for result in results:
+                if result is not None:
+                    data.append(result)
+
         logger.debug(data)
         return pd.DataFrame(data, index=None)
 
