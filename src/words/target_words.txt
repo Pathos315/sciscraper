@@ -183,10 +183,7 @@ saunter
 boost
 behavioural
 cognitive
-physiological
-developmental
 psychological
-mental
 hormonal
 psychiatric
 neuropsychiatric
@@ -255,7 +252,6 @@ relief
 mitigation
 degree
 moderate
-golden mean
 natural virtue
 tolerance
 caution
@@ -272,8 +268,6 @@ statesmanship
 piety
 pluralism
 social network
-twitter
-facebook
 network
 world wide web
 linkedin
@@ -343,7 +337,6 @@ product
 mandala
 plot
 chart
-page layout
 schedule
 photography
 sketch
@@ -356,3 +349,12 @@ mask
 raster
 duotone
 vector
+fact
+practices
+facebook
+twitter
+meta
+discord
+instagram
+snapchat
+mturk

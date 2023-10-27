@@ -1,5 +1,6 @@
 import logging
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 from sciscrape.change_dir import change_dir
 
@@ -10,7 +11,7 @@ stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
-LOGDIR = ".logs"
+LOGDIR = Path(".logs").resolve()
 
 if logger.level == logging.DEBUG:
     with change_dir(LOGDIR):

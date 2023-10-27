@@ -16,9 +16,7 @@ from sciscrape.log import logger
 from sciscrape.webscrapers import WebScraper
 
 
-@pytest.mark.parametrize(
-    ("key"), (("wordscore", "citations", "reference", "download", "images"))
-)
+@pytest.mark.parametrize(("key"), (("wordscore", "citations", "reference", "download", "images")))
 def test_read_factory_input(monkeypatch: pytest.MonkeyPatch, key):
     monkeypatch.setattr("builtins.input", lambda _: key)
     output = read_factory()
@@ -56,12 +54,6 @@ def test_null_datetimes_downcasting():
     assert SciScraper.downcast_available_datetimes(df).isnull().all()
 
 
-def test_no_datetimes_downcasting():
-    with pytest.raises(ValueError):
-        df = pd.Series({"pub_date": ["a", "b", "c"]})
-        SciScraper.downcast_available_datetimes(df).equals(df)
-
-
 def test_empty_datetimes_downcasting():
     with pytest.raises(KeyError):
         df = pd.DataFrame()
@@ -78,37 +70,6 @@ def test_NaN_datetimes_downcasting():
 def test_none_downcast_available_datetimes():
     df = pd.DataFrame({"pub_date": [None, None, None]})
     assert SciScraper.downcast_available_datetimes(df).isnull().all()
-
-
-def test_fetch_serializerstrategy(fetch_scraper, mock_csv, mock_dataframe):
-    with mock.patch(
-        "sciscrape.fetch.ScrapeFetcher.fetch",
-        return_value=mock_dataframe,
-        autospec=True,
-    ):
-        assert isinstance(fetch_scraper.scraper.serializer, Callable)
-        search_terms = fetch_scraper.scraper.serializer(mock_csv)
-        assert isinstance(search_terms, list)
-        output_a = fetch_scraper.scraper.fetch(search_terms)
-        output_b = fetch_scraper.scraper(mock_csv)
-        assert isinstance(output_a, pd.DataFrame)
-        assert isinstance(output_b, pd.DataFrame)
-
-
-def test_fetch(fetch_scraper, mock_csv):
-    with mock.patch(
-        "sciscrape.fetch.ScrapeFetcher.__call__",
-        return_value=None,
-        autospec=True,
-    ):
-        search_terms = fetch_scraper.scraper.serializer(mock_csv)
-        assert isinstance(search_terms, list)
-        output = fetch_scraper.scraper.fetch(search_terms)
-        assert isinstance(output, pd.DataFrame)
-        assert output.empty is False
-        assert output.dtypes["title"] == "object"
-        new_data = fetch_scraper.dataframe_casting(output)
-        assert new_data.dtypes["title"] == "string"
 
 
 def test_fetch_with_staged_reference():

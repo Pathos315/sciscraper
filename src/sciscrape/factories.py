@@ -8,21 +8,26 @@ It also includes functions for serializing and staging the scraped data.
 from __future__ import annotations
 
 from functools import partial
+from pathlib import Path
 
 from sciscrape.config import config
 from sciscrape.docscraper import DocScraper
 from sciscrape.downloaders import BulkPDFScraper, ImagesDownloader
 from sciscrape.fetch import SciScraper, ScrapeFetcher, StagingFetcher
 from sciscrape.log import logger
-from sciscrape.serials import serialize_from_csv, serialize_from_directory
+from sciscrape.serials import (
+    serialize_from_csv,
+    serialize_from_directory,
+    serialize_from_txt,
+)
 from sciscrape.stagers import stage_from_series, stage_with_reference
-from sciscrape.webscrapers import DimensionsScraper
+from sciscrape.webscrapers import DimensionsScraper, GoogleScholarScraper
 
 SCRAPERS: dict[str, ScrapeFetcher] = {
     "pdf_lookup": ScrapeFetcher(
         DocScraper(
-            config.target_words,
-            config.bycatch_words,
+            Path(config.target_words).resolve(),
+            Path(config.bycatch_words).resolve(),
         ),
         serialize_from_directory,
     ),
@@ -32,22 +37,31 @@ SCRAPERS: dict[str, ScrapeFetcher] = {
     ),
     "abstract_lookup": ScrapeFetcher(
         DocScraper(
-            config.target_words,
-            config.bycatch_words,
+            Path(config.target_words).resolve(),
+            Path(config.bycatch_words).resolve(),
             is_pdf=False,
         ),
         partial(
             serialize_from_csv,
             column="abstract",
         ),
+        _title_serializer=partial(
+            serialize_from_csv,
+            column="title",
+        ),
+    ),
+    "google_lookup": ScrapeFetcher(
+        GoogleScholarScraper(config.google_scholar_url, config.sleep_interval, 2016, 2023, "j", 5),
+        serialize_from_txt,
     ),
 }
+
 
 STAGERS: dict[str, StagingFetcher] = {
     "abstracts": StagingFetcher(
         DocScraper(
-            config.target_words,
-            config.bycatch_words,
+            Path(config.target_words).resolve(),
+            Path(config.bycatch_words).resolve(),
             False,
         ),
         stage_from_series,
@@ -56,22 +70,10 @@ STAGERS: dict[str, StagingFetcher] = {
         DimensionsScraper(config.dimensions_ai_dataset_url),
         stage_with_reference,
     ),
-    "references": StagingFetcher(
-        DimensionsScraper(
-            config.dimensions_ai_dataset_url,
-            query_subset_citations=True,
-        ),
-        stage_with_reference,
-    ),
-    "download": StagingFetcher(
-        BulkPDFScraper(config.downloader_url), partial(stage_from_series, column="doi")
-    ),
-    "images": StagingFetcher(
-        ImagesDownloader(url=""), partial(stage_with_reference, column_x="figures")
-    ),
+    "download": StagingFetcher(BulkPDFScraper(config.downloader_url), partial(stage_from_series, column="doi")),
+    "images": StagingFetcher(ImagesDownloader(url=""), partial(stage_with_reference, column_x="figures")),
     "pdf_expanded": StagingFetcher(
-        DimensionsScraper(config.dimensions_ai_dataset_url),
-        partial(stage_from_series, column="doi_from_pdf")
+        DimensionsScraper(config.dimensions_ai_dataset_url), partial(stage_from_series, column="doi_from_pdf")
     ),
 }
 
@@ -80,9 +82,10 @@ SCISCRAPERS: dict[str, SciScraper] = {
     "directory": SciScraper(SCRAPERS["pdf_lookup"], STAGERS["pdf_expanded"]),
     "wordscore": SciScraper(SCRAPERS["csv_lookup"], STAGERS["abstracts"]),
     "citations": SciScraper(SCRAPERS["csv_lookup"], STAGERS["citations"]),
-    "reference": SciScraper(SCRAPERS["csv_lookup"], STAGERS["references"]),
     "download": SciScraper(SCRAPERS["csv_lookup"], STAGERS["download"]),
     "images": SciScraper(SCRAPERS["csv_lookup"], STAGERS["images"]),
+    "fastscore": SciScraper(SCRAPERS["abstract_lookup"], None),
+    "google": SciScraper(SCRAPERS["google_lookup"], None),
 }
 
 
@@ -96,9 +99,7 @@ def read_factory() -> SciScraper:
     """
 
     while True:
-        scrape_process = input(
-            f"Enter desired data scraping process ({', '.join(SCISCRAPERS)}): "
-        )
+        scrape_process = input(f"Enter desired data scraping process ({', '.join(SCISCRAPERS)}): ")
         try:
             return SCISCRAPERS[scrape_process]
         except KeyError:

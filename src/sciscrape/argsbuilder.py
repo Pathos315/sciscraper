@@ -7,6 +7,8 @@ from __future__ import annotations
 from argparse import ArgumentParser, Namespace
 from typing import Sequence
 
+from pydantic import FilePath
+
 from sciscrape.config import config
 
 
@@ -29,8 +31,8 @@ def build_parser(argv: Sequence[str] | None) -> Namespace:
         "-f",
         "--file",
         metavar="FILE",
-        type=str,
-        default=config.source_dir,
+        type=FilePath,
+        default=config.google_keywords,
         help="Specify the target file: default: %(default)s)",
     )
     parser.add_argument(
@@ -70,6 +72,7 @@ def build_parser(argv: Sequence[str] | None) -> Namespace:
             "download",
             "images",
             "relevance",
+            "fastscore",
         ),
         help="Specify the sciscraper to be used,\
             if None is provided, the user will be prompted\

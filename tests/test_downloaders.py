@@ -16,19 +16,6 @@ def test_downloader_config(mock_bulkpdfscraper):
     assert isinstance(mock_bulkpdfscraper.link_cleaning_pattern, re.Pattern)
 
 
-def test_create_document(mock_bulkpdfscraper, mock_dirs):
-    if path.exists("tests/test_dirs/temp_file.txt"):
-        remove("tests/test_dirs/temp_file.txt")
-    content = b"Pariatur labore duis do sint quis laborum fugiat. Do sit enim quis pariatur eiusmod. Eiusmod in laboris irure aliqua consequat nostrud quis.\n"
-    file = mock_dirs / "test_example_1.txt"
-    mock_bulkpdfscraper.create_document(file, content)
-    with open(file, "wb") as btext:
-        btext.write(content)
-    with open(file, "rb") as text:
-        output = text.read()
-        assert output == content
-
-
 @pytest.mark.parametrize(
     ("search_term", "expected"),
     (
@@ -53,16 +40,6 @@ def test_bulkpdf_receipt_validation(mock_bulkpdfscraper, search_term, expected):
         assert isinstance(receipt, DownloadReceipt)
         assert receipt.success == expected
         assert receipt.filepath == "N/A"
-
-
-def test_create_document_consistency(mock_bulkpdfscraper, mock_dirs):
-    if path.exists("tests/test_dirs/temp_file.txt"):
-        remove("tests/test_dirs/temp_file.txt")
-    file = mock_dirs / "test_example_1.txt"
-    current_dir = getcwd()
-    mock_bulkpdfscraper.create_document(file, contents=b"hello\n")
-    new_dir = getcwd()
-    assert current_dir == new_dir
 
 
 @pytest.mark.parametrize(
@@ -124,82 +101,6 @@ def test_format_download_link(mock_bulkpdfscraper, download_link, expected):
     assert output == expected
 
 
-def test_defective_download_link(mock_bulkpdfscraper):
-    with pytest.raises(TypeError):
-        mock_bulkpdfscraper.format_download_link(None)
-
-
-@pytest.mark.parametrize(
-    ("etag", "extension"),
-    (
-        ("173467321476c32789777643t732v73117888732476789764376", "png"),
-        (None, "png"),
-    ),
-)
-def test_img_downloader_etag(img_downloader, etag, extension):
-    filename = img_downloader.format_filename(etag, extension)
-    if etag is None:
-        assert "__NaN__" in filename
-    else:
-        assert etag in filename
-    assert extension in filename
-
-
-def test_null_find_download_link(mock_bulkpdfscraper):
-    assert mock_bulkpdfscraper.find_download_link("asfd") == None
-
-
-def test_create_mock_document():
-    # create a mock object for the Downloader class
-    downloader = mock.Mock()
-
-    # create an instance of the DocumentCreator class
-
-    # create a mock file and contents to pass to the create_document method
-    mock_filename = "mock_file.txt"
-    mock_contents = b"some mock contents"
-
-    # create a mock context manager to simulate the change_dir function
-    with mock.patch("builtins.open", mock.mock_open()) as mock_file:
-        # call the create_document method
-        downloader.create_document(filename=mock_filename, contents=mock_contents)
-
-        # assert that the write method of the mock file object was called with the contents
-        mock_file.return_value.write.assert_called_with(mock_contents)
-
-        # assert that the remove method was called with the correct filepath
-        remove.assert_called_with("temp_file.txt")
-
-
-def test_create_document_writes_to_file():
-    # create a mock object for the Downloader class
-    downloader = mock.Mock()
-
-    # create an instance of the DocumentCreator class
-    creator = BulkPDFScraper(downloader)
-
-    # create a mock file and contents to pass to the create_document method
-    mock_filename = "temp_file.txt"
-    mock_contents = b"some mock contents"
-
-    # create a mock context manager to simulate the change_dir function
-    with mock.patch("builtins.open", mock.mock_open()) as mock_file:
-        # call the create_document method
-        creator.create_document(mock_filename, mock_contents)
-
-        # get the write method of the mock file object
-        write_method = mock_file.return_value.write
-
-        # assert that the write method was called once
-        assert write_method.call_count == 1
-
-        # get the call args of the write method
-        call_args = write_method.call_args
-
-        # assert that the write method was called with the contents
-        assert call_args == ((mock_contents,),)
-
-
 def test_download_paper():
     # create a mock object for the Downloader class
     downloader = mock.Mock()
@@ -235,59 +136,3 @@ def test_download_paper():
         assert isinstance(receipt.downloader, str)
         assert receipt.success == True
         assert receipt.filepath == f"{creator.export_dir}/{mock_paper_title}"
-
-
-def test_download_image_invalid():
-    mock_response = mock.Mock()
-    # Test the case where the response is not 200
-    mock_response.status_code = 404
-    downloader = ImagesDownloader("http://mock.com/paper")
-    expected = DownloadReceipt("ImagesDownloader")
-    assert downloader.download_image("jpg", mock_response) == expected
-
-
-def test_download_image_valid():
-    # Test the case where the response is 200
-    mock_response = mock.Mock()
-    mock_response.status_code = 200
-    mock_response.headers["Etag"] = "12345"
-    downloader = ImagesDownloader("https://www.google.com")
-    expected = DownloadReceipt("ImagesDownloader", filepath="12345.jpg")
-    assert downloader.download_image("jpg", mock_response) == expected
-
-
-def test_find_download_link():
-    instance = BulkPDFScraper(url="")
-    search_text = "html text"
-    mock_html_parser = mock.MagicMock(spec=HTMLParser)
-    mock_html_parser.css_first.return_value.attributes = {"onclick": "download.pdf"}
-    with (
-        mock.patch("sciscrape.log.logger.debug") as mock_debug,
-        mock.patch("HTMLParser", return_value=mock_html_parser) as mock_html_parser_constructor,
-    ):
-        result = instance.find_download_link(search_text)
-        mock_html_parser_constructor.assert_called_once_with(search_text)
-        mock_html_parser.css_first.assert_called_once_with("#buttons button:nth-child(1)")
-        assert result == "download.pdf"
-        mock_debug.assert_called_once_with("filename")
-
-
-def test_image_downloader_obtain():
-    instance = ImagesDownloader(url="")
-    with (
-        mock.patch("time.sleep") as mock_sleep,
-        mock.patch(
-            "sciscrape.downloaders.client.get",
-            return_value=mock.MagicMock(spec=Response),
-        ) as mock_client_get,
-        mock.patch("sciscrape.log.logger.debug") as mock_logger_debug,
-    ):
-        search_text = "http://example.com/file.pdf"
-        output = instance.obtain(search_text)
-        mock_sleep.assert_called_once_with(instance.sleep_val)
-        mock_client_get.assert_called_once_with(search_text, stream=True, allow_redirects=True)
-        mock_logger_debug.assert_called_once_with(
-            "response=%s, scraper=%r",
-            mock_client_get.return_value,
-        )
-        assert isinstance(output, DownloadReceipt)

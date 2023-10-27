@@ -9,7 +9,6 @@ description = "A bulk academic PDF extractor program, designed specifically for 
 license = "MIT"
 classifiers = [
     "Development Status :: 3 - Alpha",
-    "Intended Audience :: Academics",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.10"
 ]
@@ -29,7 +28,8 @@ tqdm = "^4.65.0"
 numpy = "^1.25.1"
 feedparser = "^6.0.10"
 selectolax = "^0.3.14"
-hypothesis = "^6.82.0"
+python-dotenv = "^1.0.0"
+pydantic = "^2.0.3"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.4.1"
@@ -45,6 +45,7 @@ pytest = "^7.4.0"
 pytest-cov = "^4.1.0"
 pytest-mock = "^3.11.1"
 requests-mock = "^1.11.0"
+hypothesis = "^6.82.0"
 
 [tool.poetry.group.formatting.dependencies]
 black = "^23.7.0"
@@ -53,9 +54,8 @@ black = "^23.7.0"
 sciscraper_cli = "sciscrape.main:main"
 
 [tool.pytest.ini_options]
-addopts = "--cov=src --cov-report term-missing -v"
-pythonpath = "."
-testpaths = ".test"
+addopts = "--cov=src  --runxfail --cov-report term-missing -v"
+testpaths = ["tests"]
 
 [tool.black]
 line-length = 120  # Default

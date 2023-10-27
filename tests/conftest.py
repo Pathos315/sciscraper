@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+import requests
 
 from sciscrape.config import config
 from sciscrape.docscraper import DocScraper
@@ -19,30 +20,15 @@ def mock_dirs():
 
 
 @pytest.fixture()
-def mock_csv():
-    return "tests/test_dirs/test_example_file_1.csv"
+def mock_file_blank():
+    with open("tests/test_dirs/test_file", "r") as file_blank:
+        return str(file_blank.readlines())
 
 
 @pytest.fixture()
-def mock_txt():
-    return "tests/test_dirs/test_file.txt"
-
-
-@pytest.fixture(scope="function")
-def mock_dataframe(mock_csv) -> pd.DataFrame:
-    return pd.read_csv(mock_csv)
-
-
-@pytest.fixture()
-def test_file_1():
-    with open("tests/test_dirs/test_example_1.txt", "r") as file_1:
-        return str(file_1.readlines())
-
-
-@pytest.fixture()
-def test_file_2():
-    with open("tests/test_dirs/test_example_2.txt", "r") as file_2:
-        return str(file_2.readlines())
+def mock_file_multiline():
+    with open("tests/test_dirs/test_example_2.txt", "r") as file_multiline:
+        return str(file_multiline.readlines())
 
 
 @pytest.fixture()
@@ -51,7 +37,7 @@ def test_pdf():
 
 
 @pytest.fixture
-def prior_df():
+def mock_dataframe():
     return pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]})
 
 
@@ -148,3 +134,60 @@ def mock_bulkpdfscraper(mock_dirs):
 @pytest.fixture()
 def img_downloader():
     return ImagesDownloader(config.downloader_url, sleep_val=0.5)
+
+
+# will override the requests.Response returned from requests.get
+class MockFetchResponse:
+    # mock json() method always returns a specific testing dictionary
+    @staticmethod
+    def obtain():
+        return {"mock_key": "mock_response"}
+
+
+@pytest.fixture
+def mock_response(monkeypatch: pytest.MonkeyPatch):
+    """Requests.get() mocked to return {'mock_key':'mock_response'}."""
+
+    def mock_get(*args, **kwargs):
+        return MockFetchResponse()
+
+    monkeypatch.setattr(requests, "get", mock_get)
+
+
+@pytest.fixture
+def mock_metadata():
+    return {
+        "Title": "A test title",
+        "doi": "10.1038/s41586-020-0315-z",
+        "pdf2doi_identifier": "10.1038/s41586-020-0315-z",
+        "arxiv": "arXiv:1905.12345",
+    }
+
+
+class MockReadCSV:
+    @staticmethod
+    def readcsv():
+        return [
+            {
+                "title": "Fake News and Misinformation",
+                "doi": 0.1000 / 12345,
+                "times_cited": 1,
+                "authors": "Darius Lettsgetham",
+                "listed_data": "['pub.10001', 'pub.10002', 'pub.10003']",
+            },
+            {
+                "title": "Prosocial Eurythmics",
+                "doi": 10.1000 / 23456,
+                "times_cited": 0,
+                "authors": "Anne Elon-Ux",
+                "listed_data": "['pub.10004', 'pub.10005']",
+            },
+            {
+                "title": "Gamification on Social Media",
+                "doi": 10.1000 / 34567,
+                "times_cited": None,
+                "authors": "I. Ron Butterfly",
+                "authors_id": 28252,
+                "uni_id": "0600055000200019000",
+            },
+        ]

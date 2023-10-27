@@ -11,11 +11,12 @@ from pathlib import Path
 from tempfile import TemporaryFile
 from time import sleep
 
+from pydantic import DirectoryPath, FilePath
 from requests import Response
 from selectolax.parser import HTMLParser
 
 from sciscrape.change_dir import change_dir
-from sciscrape.config import FilePath, config
+from sciscrape.config import config
 from sciscrape.log import logger
 from sciscrape.webscrapers import client
 
@@ -52,7 +53,7 @@ class Downloader(ABC):
     url: str
     sleep_val: float = config.sleep_interval
     cls_name: str = field(init=False)
-    export_dir: str = config.export_dir
+    export_dir: DirectoryPath = Path(config.export_dir)
 
     def __post_init__(self) -> None:
         self.cls_name = type(self).__name__
@@ -162,17 +163,15 @@ class BulkPDFScraper(Downloader):
             if so, where the ensuing .pdf may be found.
         """
         payload = {"request": search_text}
-        paper_title = f"{config.today}_{search_text.replace('/','')}.pdf"
+        paper_title = Path(f"{config.today}_{search_text.replace('/','')}.pdf")
         response_text = self.get_response(payload)
 
-        download_link: str | None = self.find_download_link(response_text) or None
-        formatted_src: str | None = self.format_download_link(download_link) or None
+        download_link: str | None = self.find_download_link(response_text)
+        formatted_src: str | None = self.format_download_link(download_link)
         logger.debug("download_link=%s", formatted_src)
-        return self.download_paper(paper_title, formatted_src) or DownloadReceipt(
-            self.cls_name
-        )
+        return self.download_paper(paper_title, formatted_src) if formatted_src else DownloadReceipt(self.cls_name)
 
-    def download_paper(self, paper_title: str, formatted_src: str) -> DownloadReceipt:
+    def download_paper(self, paper_title: FilePath, formatted_src: str) -> DownloadReceipt:
         paper_contents = client.get(formatted_src, stream=True).content
         self.create_document(paper_title, paper_contents)
         return DownloadReceipt(self.cls_name, True, f"{self.export_dir}/{paper_title}")
@@ -191,7 +190,7 @@ class BulkPDFScraper(Downloader):
         )
         return response.text or None
 
-    def find_download_link(self, search_text: str) -> str | None:
+    def find_download_link(self, search_text: str | None) -> str | None:
         """
         create_querystring, within `BulkPDFScraper`,
         returns a link that will download the paper in question.
@@ -206,12 +205,13 @@ class BulkPDFScraper(Downloader):
         str
             A download link, which will download a link to the paper.
         """
+        if not isinstance(search_text, str):
+            return None
         html = HTMLParser(search_text)
         try:
-            download_link: str | None = html.css_first(
-                "#buttons button:nth-child(1)"
-            ).attributes["onclick"]
+            download_link: str | None = html.css_first("#buttons button:nth-child(1)").attributes["onclick"]
             logger.debug("download_link=%s", download_link)
+            return download_link
         except (AttributeError, ValueError) as e:
             logger.error(
                 'No "onclick" attribute found within downloader=%s DOM attributes.\
@@ -220,10 +220,9 @@ class BulkPDFScraper(Downloader):
                 self.url,
                 e,
             )
+            return None
 
-        return download_link or None
-
-    def format_download_link(self, download_link: str) -> str | None:
+    def format_download_link(self, download_link: str | None) -> str | None:
         """
         format_download_link first cleans the download_link
         according to the provided regular expression pattern.
@@ -241,12 +240,12 @@ class BulkPDFScraper(Downloader):
         str
             A link to the requested academic paper.
         """
+        if not isinstance(download_link, str):
+            return None
         link_match_object = self.clean_link_with_regex(download_link)
-        return self.adjust_download_link(download_link, link_match_object) or None
+        return self.adjust_download_link(download_link, link_match_object) if link_match_object else None
 
-    def adjust_download_link(
-        self, download_link: str, link_match_object: re.Match[str]
-    ) -> str:
+    def adjust_download_link(self, download_link: str, link_match_object: re.Match[str]) -> str:
         location_href = link_match_object.group(1)
         seperator = link_match_object.group(2)
 
@@ -258,8 +257,8 @@ class BulkPDFScraper(Downloader):
         )
         return download_link
 
-    def clean_link_with_regex(self, download_link: str) -> re.Match[str] | None:
-        return self.link_cleaning_pattern.match(download_link) or None
+    def clean_link_with_regex(self, download_link: str | None) -> re.Match[str] | None:
+        return self.link_cleaning_pattern.match(download_link) if download_link else None
 
 
 @dataclass
@@ -283,9 +282,7 @@ class ImagesDownloader(Downloader):
             response.status_code,
         )
 
-        return self.download_image(search_ext, response) or DownloadReceipt(
-            self.cls_name
-        )
+        return self.download_image(search_ext, response) or DownloadReceipt(self.cls_name)
 
     def download_image(self, search_ext: str, response: Response) -> DownloadReceipt:
         """
@@ -303,8 +300,8 @@ class ImagesDownloader(Downloader):
         DownloadReceipt:
             A receipt indicating whether the image was successfully downloaded and the path to the downloaded image.
         """
-        filename: Path = self.format_filename(response.headers.get("Etag"), search_ext)
-        self.create_document(filename.name, response.content)
+        filename: FilePath = self.format_filename(response.headers.get("Etag"), search_ext)
+        self.create_document(filename, response.content)
         fullpath = (filename.resolve()).name
         return DownloadReceipt(self.cls_name, True, fullpath)
 

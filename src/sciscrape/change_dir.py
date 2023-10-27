@@ -5,11 +5,11 @@ from contextlib import contextmanager
 from os import chdir, getcwd, makedirs, path
 from typing import Iterator
 
-from sciscrape.config import FilePath
+from pydantic import DirectoryPath
 
 
 @contextmanager
-def change_dir(destination: FilePath) -> Iterator[None]:
+def change_dir(destination: DirectoryPath) -> Iterator[None]:
     """Sets a destination for exported files."""
     cwd = getcwd()
     try:

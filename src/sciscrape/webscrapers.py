@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
@@ -8,6 +9,7 @@ from time import sleep
 from typing import Any
 from urllib.parse import urlencode
 
+from bs4 import BeautifulSoup, ResultSet
 from requests import Response, Session
 from selectolax.parser import HTMLParser, Node
 
@@ -40,7 +42,7 @@ class WebScraper(ABC):
     """Abstract representation of a webscraper dataclass."""
 
     url: str
-    sleep_val: float = config.sleep_interval
+    sleep_val: float
 
     @abstractmethod
     def obtain(self, search_text: str) -> WebScrapeResult | None:
@@ -66,21 +68,100 @@ class WebScraper(ABC):
     def get_items_from_response(self, response_text: str, key: str) -> Any:
         return loads(response_text)[key][0]
 
-    def get_singular_item_from_response(
-        self, response_text: str, key: str, subkey: str
-    ) -> Any:
+    def get_singular_item_from_response(self, response_text: str, key: str, subkey: str) -> Any:
         doc = self.get_items_from_response(response_text, key)
         return doc[subkey]
+
+
+@dataclass
+class GoogleScholarScraper(WebScraper):
+    """
+    Representation of a webscraper that makes requests to Google Scholar.
+    """
+
+    start_year: int
+    end_year: int
+    publication_type: str
+    num_articles: int
+
+    def obtain(self, search_text: str):
+        """
+        Fetches and parses articles from Google Scholar based on the search_text and
+        pre-defined criteria such as publication_type, date range, etc.
+        """
+
+        publication_type_mapping = {
+            "all": "",
+            "j": "source: journals",
+            "b": "source: books",
+            "c": "source: conferences",
+            # Add more mappings as needed
+        }
+        publication_type = publication_type_mapping.get(self.publication_type, "")
+        num_pages = (self.num_articles - 1) // 10 + 1
+        for page in range(num_pages):
+            start = page * 10
+            params_ = {
+                "q": search_text,
+                "as_ylo": self.start_year,
+                "as_yhi": self.end_year,
+                f"{publication_type}": publication_type,
+                "start": start,
+            }
+
+            sleep(self.sleep_val)
+            response = client.get(self.url, params=params_)
+            if not response.ok:
+                logger.error(f"An error occurred for {search_text}")
+                return
+
+            soup = BeautifulSoup(response.text, "html.parser")
+            results: ResultSet[Any] = soup.find_all("div", class_="gs_ri")
+
+            for result in results:
+                title_element = result.find("h3", class_="gs_rt")
+                title = str(title_element.text).strip() if title_element else "N/A"
+
+                article_url_element = title_element.find("a")
+                article_url = article_url_element["href"] if article_url_element else "N/A"
+                abstract = self.find_element_text(result, class_name="gs_rs")
+                times_cited = self.find_element_text(result, class_name="gs_flb", regex_pattern=r"\d+")
+                publication_year = self.find_element_text(result, class_name="gs_a", regex_pattern=r"\d{4}")
+                return WebScrapeResult(
+                    title=title,
+                    pub_date=publication_year,
+                    doi=article_url,
+                    internal_id=self.publication_type,
+                    abstract=abstract,
+                    times_cited=int(times_cited),
+                    journal_title=None,
+                )
+
+    def find_element_text(
+        self,
+        result: Any,
+        class_name: str,
+        element: str = "div",
+        regex_pattern: str | None = None,
+    ) -> str:
+        tag = result.find(element, class_=class_name)
+        if not tag:
+            return ""
+        text = tag.text
+        if not regex_pattern:
+            return text
+        match = re.search(regex_pattern, text)
+        return match.group(0) if match else ""
 
 
 @dataclass
 class DimensionsScraper(WebScraper):
     """
     Representation of a webscraper that makes requests to dimensions.ai.
-    This is sciscraper's preferred webscraper.
     """
 
     query_subset_citations: bool = False
+    sleep_val: float = 1.0
 
     def obtain(self, search_text: str) -> WebScrapeResult | None:
         querystring = self.create_querystring(search_text)
@@ -122,9 +203,7 @@ class DimensionsScraper(WebScraper):
             data[key] = self.get_extra_variables(data, *getter)
         return data
 
-    def get_extra_variables(
-        self, data: dict[str, Any], query: str, getter: WebScraper
-    ) -> WebScrapeResult | None:
+    def get_extra_variables(self, data: dict[str, Any], query: str, getter: WebScraper) -> WebScrapeResult | None:
         """get_extra_variables queries
         subsidiary scrapers to get
         additional data
@@ -159,9 +238,7 @@ class DimensionsScraper(WebScraper):
                 "search_mode": "content",
                 "search_text": search_text,
                 "search_type": "kws",
-                "search_field": "doi"
-                if search_text.startswith("10.")
-                else "text_search",
+                "search_field": "doi" if search_text.startswith("10.") else "text_search",
             }
         )
 
@@ -268,14 +345,10 @@ class SemanticFigureScraper(WebScraper):
             self,
             response.status_code,
         )
-        return (
-            self.parse_html_tree(response.text) if response.status_code == 200 else None
-        )
+        return self.parse_html_tree(response.text) if response.status_code == 200 else None
 
     def find_paper_url(self, search_text: str) -> str | None:
-        paper_searching_url = self.url + urlencode(
-            {"query": search_text, "fields": "url", "limit": 1}
-        )
+        paper_searching_url = self.url + urlencode({"query": search_text, "fields": "url", "limit": 1})
         logger.info(paper_searching_url)
         paper_searching_response = client.get(paper_searching_url)
         logger.info(paper_searching_response)
@@ -293,7 +366,7 @@ class SemanticFigureScraper(WebScraper):
             paper_url = None
         return paper_url
 
-    def parse_html_tree(self, response_text: str) -> list[Node] | None:
+    def parse_html_tree(self, response_text: str) -> list | None:
         tree = HTMLParser(response_text)
         images: list[Node] = tree.css("li.figure-list__figure > a > figure > div > img")
         return [image.attributes.get("src") for image in images] if images else None

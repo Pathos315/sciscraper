@@ -1,16 +1,20 @@
 from __future__ import annotations
 
-from ast import literal_eval
-from fnmatch import fnmatch
-from os import listdir, path
+from pathlib import Path
+from typing import List
 
 import pandas as pd
 
-from sciscrape.config import FilePath
+from sciscrape.config import UTF
 from sciscrape.log import logger
 
 
-def serialize_from_csv(target: FilePath, column: str = "doi") -> list[str]:
+def serialize_from_txt(target: Path) -> List[str]:
+    with open(target, encoding=UTF) as iowrapper:
+        return [word.strip().lower() for word in iowrapper]
+
+
+def serialize_from_csv(target: Path, column: str = "doi") -> List[str]:
     """
     serialize_from_csv
         Reads a .csv file of papers
@@ -28,24 +32,19 @@ def serialize_from_csv(target: FilePath, column: str = "doi") -> list[str]:
 
     Returns
     -------
-    list[str]:
+    List[str]:
         A list of entries from the provided column, `column`.
 
-    Notes
-    ----
-    `literal_eval` is provided to account for when a json string
-    gets read into the .csv file. literal_eval converts the string
-    into a dict and then isolates the desired key from the dict.
     """
     data: pd.DataFrame = pd.read_csv(target, skip_blank_lines=True, usecols=[column])
     data = data.fillna("N/A")
-    data_list: list[str] = data[column].to_list()
+    data_list: List[str] = data[column].to_list()
     data_list = clean_any_nested_columns(data_list, column)
     logger.debug("serializer=%s, terms=%s", serialize_from_csv, data_list)
     return data_list
 
 
-def serialize_from_directory(target: FilePath, suffix: str = "pdf") -> list[str]:
+def serialize_from_directory(target: Path, suffix: str = "pdf") -> List[Path]:
     """
     serialize_directory takes a directory `target` and returns a list[str]
     of its contents to be scraped.
@@ -64,21 +63,12 @@ def serialize_from_directory(target: FilePath, suffix: str = "pdf") -> list[str]
         A list of files from the provided directory, `target` that adhere
         to the requested format `suffix`.
     """
-    data_list: list[str] = [
-        path.join(target, file)
-        for file in listdir(target)
-        if fnmatch(path.basename(file), f"*.{suffix}")
-    ]
-    if len(data_list) == 0:
-        raise ValueError("This directory contains no valid files.")
-
+    data_list: List[Path] = list(target.rglob(f"*.{suffix}"))
     logger.debug("serializer=%s, terms=%s", serialize_from_directory, data_list)
     return data_list
 
 
-def clean_any_nested_columns(data_list: list[str], column: str) -> list[str]:
-    initial_terms: list[str] = [term for term in data_list if not term.startswith("{")]
-    nested_terms: list[str] = [
-        literal_eval(term)[column] for term in data_list if term.startswith("{")
-    ]
+def clean_any_nested_columns(data_list: List[str], column: str) -> List[str]:
+    initial_terms: List[str] = [term for term in data_list if not term.startswith("{")]
+    nested_terms: List[str] = [eval(term).get(column, "") for term in data_list if term.startswith("{")]
     return initial_terms + nested_terms

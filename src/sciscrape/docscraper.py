@@ -3,11 +3,14 @@ from __future__ import annotations
 import re
 from collections import Counter
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Generator
 
 import pdfplumber
+from pydantic import FilePath
+from tqdm import tqdm
 
-from sciscrape.config import UTF, FilePath
+from sciscrape.config import UTF
 from sciscrape.doifrompdf import doi_from_pdf
 from sciscrape.log import logger
 
@@ -79,9 +82,7 @@ def match_terms(target: list[str], word_set: set[str]) -> FreqDistAndCount:
     >>> output.term_count           = 7
     """
 
-    matching_terms = Counter((word for word in target if word in word_set)).most_common(
-        3
-    )
+    matching_terms = Counter((word for word in target if word in word_set)).most_common(3)
     term_count = sum(term[1] for term in matching_terms)
     freq = FreqDistAndCount(term_count, matching_terms)
     logger.debug(
@@ -102,8 +103,8 @@ class DocScraper:
     a percentage grade called WordscoreCalculator.
     """
 
-    target_words_file: FilePath
-    bycatch_words_file: FilePath
+    target_words_file: Path
+    bycatch_words_file: Path
     is_pdf: bool = True
 
     def unpack_txt_files(self, txtfile: FilePath) -> set[str]:
@@ -142,12 +143,8 @@ class DocScraper:
         logger.debug(repr(self))
         target_set = self.unpack_txt_files(self.target_words_file)
         bycatch_set = self.unpack_txt_files(self.bycatch_words_file)
-        preprint: str = (
-            self.extract_text_from_pdf(search_text) if self.is_pdf else search_text
-        )
-        digital_object_identifier = (
-            doi_from_pdf(search_text, preprint).identifier if self.is_pdf else None
-        )
+        preprint: str = self.extract_text_from_pdf(search_text) if self.is_pdf else search_text
+        digital_object_identifier = doi_from_pdf(search_text, preprint).identifier if self.is_pdf else None  # type: ignore
         token_list: list[str] = self.format_manuscript(preprint)
         target = match_terms(token_list, target_set)
         bycatch = match_terms(token_list, bycatch_set)

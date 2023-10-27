@@ -53,7 +53,6 @@ stress
 safety
 hygiene
 research
-social
 healthy
 condition
 aids
@@ -113,3 +112,9 @@ dehumanize
 debilitate
 ostracize
 abuse
+infant
+infants
+infantile
+infancy
+question
+survey

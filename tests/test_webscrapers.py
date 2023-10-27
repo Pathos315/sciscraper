@@ -63,10 +63,7 @@ def test_obtain_search_data(scraper):
     output = scraper.obtain(input_query)
     assert isinstance(output, WebScrapeResult)
     assert output.doi == input_query
-    assert (
-        output.title
-        == "Modeling Echo Chambers and Polarization Dynamics in Social Networks"
-    )
+    assert output.title == "Modeling Echo Chambers and Polarization Dynamics in Social Networks"
 
 
 def test_obtain_returns_none(faulty_scraper):
