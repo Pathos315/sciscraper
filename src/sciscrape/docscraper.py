@@ -149,7 +149,7 @@ class DocScraper:
         target = match_terms(token_list, target_set)
         bycatch = match_terms(token_list, bycatch_set)
         total_word_count = len(token_list)
-        wordscore: float = target.term_count / target.term_count + bycatch.term_count
+        wordscore: float = target.term_count / 1 + bycatch.term_count
         doc = DocumentResult(
             doi_from_pdf=digital_object_identifier,
             matching_terms=target.term_count,
