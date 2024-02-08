@@ -6,7 +6,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Generator, Iterable, List
+from typing import Any, Callable, Iterable, List
 
 import pandas as pd
 from pydantic import DirectoryPath, FilePath

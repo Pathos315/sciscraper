@@ -10,6 +10,7 @@ from typing import Sequence
 from pydantic import FilePath
 
 from sciscrape.config import config
+from sciscrape.factories import SCISCRAPERS
 
 
 def build_parser(argv: Sequence[str] | None) -> Namespace:
@@ -32,7 +33,7 @@ def build_parser(argv: Sequence[str] | None) -> Namespace:
         "--file",
         metavar="FILE",
         type=FilePath,
-        default=config.google_keywords,
+        default=config.source_file,
         help="Specify the target file: default: %(default)s)",
     )
     parser.add_argument(
@@ -65,14 +66,7 @@ def build_parser(argv: Sequence[str] | None) -> Namespace:
         default=None,
         type=str,
         choices=(
-            "directory",
-            "wordscore",
-            "citations",
-            "reference",
-            "download",
-            "images",
-            "relevance",
-            "fastscore",
+            [key for key, _ in SCISCRAPERS.items()]
         ),
         help="Specify the sciscraper to be used,\
             if None is provided, the user will be prompted\

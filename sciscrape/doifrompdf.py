@@ -9,7 +9,7 @@ from feedparser import parse as feedparse
 from googlesearch import search
 from pydantic import FilePath
 
-from sciscrape.doi_regex import IDENTIFIER_PATTERNS, standardize_doi
+from sciscrape.doi_regex import IDENTIFIER_TYPES, standardize_doi
 from sciscrape.log import logger
 from sciscrape.webscrapers import client
 
@@ -27,11 +27,13 @@ def doi_from_pdf(file: FilePath, preprint: str) -> DOIFromPDFResult | None:
     handlers: dict = {
         find_identifier_in_metadata: (metadata,),
         find_identifier_in_pdf_info: (metadata,),
-        find_identifier_in_text: (title, IDENTIFIER_PATTERNS, True),
-        find_identifier_in_text: (preprint, IDENTIFIER_PATTERNS),
+        find_identifier_in_text: (title, IDENTIFIER_TYPES, True),
+        find_identifier_in_text: (preprint, IDENTIFIER_TYPES),
         find_identifier_by_googling_first_N_characters_in_pdf: (preprint,),
     }
-    return next(filter(None, (handler(*args) for handler, args in handlers.items())), None)
+    handler_comprehension = (handler(*args) for handler, args in handlers.items())
+    filtered_handler = filter(None, handler_comprehension)
+    return next(filtered_handler, None)
 
 
 def find_identifier_in_metadata(metadata: dict) -> DOIFromPDFResult | None:
@@ -89,12 +91,12 @@ def extract_metadata(file: FilePath) -> dict:
     with pdfplumber.open(file) as pdf:
         metadata = pdf.metadata
         logger.debug(metadata)
-        return metadata
+    return metadata
 
 
 def find_identifier_in_text(
     text: str,
-    pattern_dict: dict[re.Pattern[str], str] = IDENTIFIER_PATTERNS,
+    pattern_dict: dict[str, list[re.Pattern[str]]] = IDENTIFIER_TYPES,
     title_search: bool = False,
 ) -> DOIFromPDFResult | None:
     """
@@ -117,9 +119,10 @@ def find_identifier_in_text(
     """
     search_type = "title" if title_search else "text"
 
-    for pattern, id_type in pattern_dict.items():
+    for id_type, pattern in pattern_dict.items():
         logger.info(f"Searching for a valid {id_type.upper()} in the document {search_type}...")
-        matches = pattern.findall(text)
+        for sub_pattern in pattern:
+            matches = sub_pattern.findall(text)
         if not matches:
             logger.info(f"No valid {id_type.upper()} found in the document {search_type}.")
             continue

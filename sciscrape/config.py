@@ -9,18 +9,19 @@ Returns
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 from typing import Any
 
-from numpy import int16
-from pydantic import BaseModel, PositiveFloat, field_validator
+import numpy as np
 
+FilePath = str | Path
 UTF = "utf-8"
-SETTINGS = Path("src/config_setup.json").resolve()
 
 
-class ScrapeConfig(BaseModel):
+@dataclass
+class ScrapeConfig:
 
     """
     A dataclass containing the overall configurations.
@@ -66,37 +67,24 @@ class ScrapeConfig(BaseModel):
     """
 
     prog: str
-    description: str
+    description: str = field(repr=False)
     source_file: str
     source_dir: str
     dimensions_ai_dataset_url: str
-    semantic_scholar_url: str
+    google_scholar_url: str
+    semantic_scholar_url_stub: str
     citation_crosscite_url: str
     abstract_getting_url: str
-    google_scholar_url: str
-    downloader_url: str
+    downloader_url: str = field(repr=False)
     export_dir: str
     target_words: str
     bycatch_words: str
-    google_keywords: str
-    sleep_interval: PositiveFloat
+    sleep_interval: float
     profiling_path: str
     today: str = date.today().strftime("%y%m%d")
 
-    @field_validator(
-        "source_file",
-        "source_dir",
-        "export_dir",
-        "target_words",
-        "bycatch_words",
-        "profiling_path",
-    )
-    def convert_to_path(cls, json_path: str):
-        path_in_config = Path(json_path)
-        return path_in_config if path_in_config.exists() else "Not Found"
 
-
-def read_config() -> ScrapeConfig:
+def read_config(config_file: str) -> ScrapeConfig:
     """
     Takes a .json file and returns a ScrapeConfig object.
 
@@ -110,12 +98,12 @@ def read_config() -> ScrapeConfig:
     ScrapeConfig
         A dataclass containing the overall configurations
     """
-    with SETTINGS.open(encoding=UTF) as file:
+    with open(config_file, encoding=UTF) as file:
         data = json.load(file)
-        return ScrapeConfig(**data)
+    return ScrapeConfig(**data)
 
 
-config: ScrapeConfig = read_config()
+config: ScrapeConfig = read_config("config_setup.json")
 
 DIMENSIONS_AI_KEYS: dict[str, str] = {
     "title": "title",
@@ -129,31 +117,16 @@ DIMENSIONS_AI_KEYS: dict[str, str] = {
     "keywords": "mesh_terms",
 }
 
-SEMANTIC_API_KEYS: dict[str, str] = {
-    "title": "title",
-    "pub_date": "publicationDate",
-    "doi": "externalIds",
-    "internal_id": "corpusId",
-    "journal_title": "journal",
-    "times_cited": "citationCount",
-    "author_list": "authors",
-    "citations": "citations",
-    "keywords": "fieldsOfStudy",
-    "biblio": "citationStyles",
-    "abstract": "abstract",
-}
-
-
 KEY_TYPE_PAIRINGS: dict[str, Any] = {
     "doi_from_pdf": "string",
     "title": "string",
     "doi": "string",
     "internal_id": "string",
-    "times_cited": int16,
-    "matching_terms": int16,
-    "bycatch_terms": int16,
-    "total_word_count": int16,
-    "wordscore": "float",
+    "times_cited": np.int16,
+    "matching_terms": np.int16,
+    "bycatch_terms": np.int16,
+    "total_word_count": np.int16,
+    "wordscore": np.float16,
     "abstract": "string",
     "biblio": "string",
     "journal_title": "string",

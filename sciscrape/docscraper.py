@@ -4,11 +4,10 @@ import re
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import pdfplumber
 from pydantic import FilePath
-from tqdm import tqdm
 
 from sciscrape.config import UTF
 from sciscrape.doifrompdf import doi_from_pdf
@@ -166,7 +165,7 @@ class DocScraper:
     def format_manuscript(self, preprint: str) -> list[str]:
         return preprint.strip().lower().split(" ")
 
-    def extract_text_from_pdf(self, search_text: str) -> str:
+    def extract_text_from_pdf(self, pdf_path: str) -> str:
         """
         Given the provided filepath, `search_text`, it opens the .pdf
         file and cleans the text. Returning the words from each page
@@ -178,14 +177,6 @@ class DocScraper:
         Returns:
             str: A string of unformatted words from the entire document.
         """
-        with pdfplumber.open(search_text) as study:
-            study_pages: list[Any] = study.pages
-            study_length = len(study_pages)
-            pages_to_check = [*study_pages][:study_length]
-            # Goes through all pages and creates a continuous string of text from the entire document
-            preprints: Generator[str, None, None] = (
-                study_pages[page_number].extract_text(x_tolerance=1, y_tolerance=3)
-                for page_number, _ in enumerate(pages_to_check)
-            )
-            preprint: str = " ".join(preprint for preprint in preprints)
-            return preprint
+        with pdfplumber.open(pdf_path) as pdf:
+            text_pages = [page.extract_text(x_tolerance=1, y_tolerance=3) for page in pdf.pages]
+        return " ".join(text_pages)

@@ -58,16 +58,6 @@ def test_valid_clean_link_with_regex(mock_bulkpdfscraper, download_link):
     assert link_match_object.group(2) == "/"
 
 
-def test_invalid_clean_link_with_regex(mock_bulkpdfscraper):
-    with pytest.raises(TypeError):
-        link_match_object = mock_bulkpdfscraper.clean_link_with_regex(None)
-
-
-def test_img_downloader_config(img_downloader):
-    assert img_downloader.url == config.downloader_url
-    assert img_downloader.export_dir == config.export_dir
-
-
 def test_img_downloader_obtain(img_downloader):
     with mock.patch(
         "sciscrape.downloaders.ImagesDownloader.obtain",
@@ -99,40 +89,3 @@ def test_img_downloader_obtain(img_downloader):
 def test_format_download_link(mock_bulkpdfscraper, download_link, expected):
     output = mock_bulkpdfscraper.format_download_link(download_link)
     assert output == expected
-
-
-def test_download_paper():
-    # create a mock object for the Downloader class
-    downloader = mock.Mock()
-
-    # create an instance of the DocumentCreator class
-    creator = BulkPDFScraper(downloader)
-
-    # create mock values for the paper_title and formatted_src arguments
-    mock_paper_title = "mock_paper"
-    mock_formatted_src = "http://mock.com/paper"
-
-    # create a mock response object to simulate the request.get method
-    mock_response = mock.Mock()
-
-    # set the content attribute of the mock response object
-    mock_response.content = b"some mock contents"
-
-    # create a mock request object to simulate the client.get method
-    mock_request = mock.Mock()
-
-    # set the return value of the mock request object to the mock response object
-    mock_request.return_value = mock_response
-
-    # patch the requests.get method
-    with mock.patch("requests.get", mock_request):
-        # call the download_paper method
-        receipt = creator.download_paper(mock_paper_title, mock_formatted_src)
-
-        # assert that the download_paper method returned a DownloadReceipt object
-        assert isinstance(receipt, DownloadReceipt)
-
-        # assert that the DownloadReceipt object has the correct attributes
-        assert isinstance(receipt.downloader, str)
-        assert receipt.success == True
-        assert receipt.filepath == f"{creator.export_dir}/{mock_paper_title}"

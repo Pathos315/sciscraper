@@ -37,7 +37,6 @@ def main(argv: Sequence[str] | None = None) -> None:
     args = build_parser(argv)
 
     sciscrape = read_factory() if args.mode is None else SCISCRAPERS[args.mode]
-    logger.debug(repr(sciscrape))
     logger.debug(repr(args.file))
 
     get_profiler(args, sciscrape)

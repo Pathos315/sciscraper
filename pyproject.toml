@@ -30,6 +30,7 @@ feedparser = "^6.0.10"
 selectolax = "^0.3.14"
 python-dotenv = "^1.0.0"
 pydantic = "^2.0.3"
+pytest = "^8.0.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.4.1"
@@ -41,7 +42,7 @@ psutil = "^5.9.5"
 memory-profiler = "^0.61.0"
 
 [tool.poetry.group.tests.dependencies]
-pytest = "^7.4.0"
+pytest = "^8.0.0"
 pytest-cov = "^4.1.0"
 pytest-mock = "^3.11.1"
 requests-mock = "^1.11.0"

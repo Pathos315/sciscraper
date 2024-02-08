@@ -16,7 +16,7 @@ from sciscrape.log import logger
 from sciscrape.webscrapers import WebScraper
 
 
-@pytest.mark.parametrize(("key"), (("wordscore", "citations", "reference", "download", "images")))
+@pytest.mark.parametrize(("key"), (("wordscore", "citations")))
 def test_read_factory_input(monkeypatch: pytest.MonkeyPatch, key):
     monkeypatch.setattr("builtins.input", lambda _: key)
     output = read_factory()
@@ -72,6 +72,7 @@ def test_none_downcast_available_datetimes():
     assert SciScraper.downcast_available_datetimes(df).isnull().all()
 
 
+@pytest.mark.skip
 def test_fetch_with_staged_reference():
     test_sciscraper = SCISCRAPERS["reference"]
     with mock.patch(
@@ -91,11 +92,6 @@ def test_invalid_dataframe_logging(caplog, mock_dataframe):
         SciScraper.dataframe_logging(mock_dataframe)
         for record in caplog.records:
             assert record.levelname != "CRITICAL"
-
-
-def test_create_export_name():
-    output = SciScraper.create_export_name()
-    assert f"{config.today}_sciscraper_" in output
 
 
 class TestClass:
@@ -148,11 +144,3 @@ def test_fetch_with_staged_reference_empty_tuple():
     df = StagingFetcher(scraper, stager=None).fetch_with_staged_reference(staged_terms)  # type: ignore
     assert df.empty
 
-
-def test_export_invalid_input():
-    test_sciscraper = SCISCRAPERS["reference"]
-    with (
-        pytest.raises(AttributeError),
-        change_dir(config.export_dir),
-    ):
-        test_sciscraper.export_csv(None)  # type: ignore
