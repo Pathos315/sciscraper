@@ -4,8 +4,7 @@ import re
 from dataclasses import dataclass
 
 import pdfplumber
-from feedparser import FeedParserDict
-from feedparser import parse as feedparse
+from feedparser import FeedParserDict, parse as feedparse
 from googlesearch import search
 from pydantic import FilePath
 

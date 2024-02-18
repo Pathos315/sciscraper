@@ -37,11 +37,10 @@ def serialize_from_csv(target: Path, column: str = "doi") -> List[str]:
 
     """
     data: pd.DataFrame = pd.read_csv(target, skip_blank_lines=True, usecols=[column])
-    data = data.fillna("N/A")
-    data_list: List[str] = data[column].to_list()
-    data_list = clean_any_nested_columns(data_list, column)
-    logger.debug("serializer=%s, terms=%s", serialize_from_csv, data_list)
-    return data_list
+    data_list = list_with_na_replacement(data, column)
+    cleaned_data = clean_any_nested_columns(data_list, column)
+    logger.debug("serializer=%s, terms=%s", serialize_from_csv, cleaned_data)
+    return cleaned_data
 
 
 def serialize_from_directory(target: Path, suffix: str = "pdf") -> List[Path]:
@@ -72,3 +71,8 @@ def clean_any_nested_columns(data_list: List[str], column: str) -> List[str]:
     initial_terms: List[str] = [term for term in data_list if not term.startswith("{")]
     nested_terms: List[str] = [eval(term).get(column, "") for term in data_list if term.startswith("{")]
     return initial_terms + nested_terms
+
+
+
+def list_with_na_replacement(dataframe: pd.DataFrame, column_name: str, _replacement_fill: str = "N/A",) -> list[str]:
+    return dataframe[column_name].fillna(_replacement_fill).to_list()
