@@ -1,5 +1,6 @@
 name: Tests
-
+on:
+  push:
 jobs:
   tests:
     name: ${{ matrix.os }} / ${{ matrix.python-version }}
