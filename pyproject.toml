@@ -144,8 +144,8 @@ legacy_tox_ini = """
   platform = linux|linux2
 
   [testenv:flake8]
-  commands = flake8 src
+  commands = flake8 sciscrape
 
   [testenv:mypy]
-  commands = mypy --explicit-package-bases src
+  commands = mypy --explicit-package-bases sciscrape
 """
