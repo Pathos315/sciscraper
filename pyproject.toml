@@ -86,7 +86,7 @@ exclude = [
 ]
 
 [tool.mypy]
-mypy_path = "src"
+mypy_path = "sciscrape"
 enable_error_code = [
     "truthy-bool",
     "truthy-function",
