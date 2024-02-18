@@ -14,7 +14,6 @@ classifiers = [
 ]
 authors = ["John Fallot <john.fallot@gmail.com>"]
 readme = "README.md"
-packages = [{include = "sciscrape", from = "src"}]
 repository = "https://github.com/Pathos315/sciscraper"
 
 
