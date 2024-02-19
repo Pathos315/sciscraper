@@ -115,12 +115,12 @@ def faulty_scraper():
 
 @pytest.fixture()
 def image_scraper():
-    return SemanticFigureScraper(url="https://httpstat.us/200")
+    return SemanticFigureScraper(url="https://httpstat.us/200", sleep_val=1.0)
 
 
 @pytest.fixture()
 def faulty_image_scraper():
-    return SemanticFigureScraper(url="https://httpstat.us/404")
+    return SemanticFigureScraper(url="https://httpstat.us/404", sleep_val=1.0)
 
 
 @pytest.fixture()
