@@ -1,9 +1,10 @@
 from os import getcwd
+from typing import Literal
 
-from sciscrape.change_dir import change_dir
+from ..sciscrape.change_dir import change_dir
 
 
-def test_change_dir(mock_dirs):
+def test_change_dir(mock_dirs: Literal['tests/test_dirs']):
     initial_directory: str = getcwd()
     with change_dir(mock_dirs):
         new_directory: str = getcwd()

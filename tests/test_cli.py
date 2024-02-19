@@ -1,12 +1,12 @@
-from unittest.mock import MagicMock, Mock, patch
+from typing import Literal
 
 import pytest
 
-from main import main
+from ..main import main
 
 
 @pytest.mark.parametrize("option", ("-h", "--help"))
-def test_cli(capsys, option):
+def test_cli(capsys: pytest.CaptureFixture[str], option: Literal['-h', '--help']):
     try:
         main([option])
     except SystemExit:

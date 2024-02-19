@@ -9,8 +9,8 @@ from typing import Sequence
 
 from pydantic import FilePath
 
-from sciscrape.config import config
-from sciscrape.factories import SCISCRAPERS
+from .config import config
+from .factories import SCISCRAPERS
 
 
 def build_parser(argv: Sequence[str] | None) -> Namespace:

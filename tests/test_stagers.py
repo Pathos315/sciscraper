@@ -1,6 +1,7 @@
+from pandas import DataFrame
 import pytest
 
-from sciscrape.stagers import stage_from_series, stage_with_reference
+from ..sciscrape.stagers import stage_from_series
 
 
 @pytest.mark.skip
@@ -35,7 +36,7 @@ from sciscrape.stagers import stage_from_series, stage_with_reference
         ),
     ),
 )
-def test_stage_from_series(mock_dataframe, column, expected):
+def test_stage_from_series(mock_dataframe: DataFrame, column, expected):
     output = stage_from_series(mock_dataframe, column=column)
     assert isinstance(output, list)
     assert output == expected

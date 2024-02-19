@@ -5,8 +5,8 @@ from typing import List
 
 import pandas as pd
 
-from sciscrape.config import UTF
-from sciscrape.log import logger
+from .config import UTF
+from .log import logger
 
 
 def serialize_from_txt(target: Path) -> List[str]:

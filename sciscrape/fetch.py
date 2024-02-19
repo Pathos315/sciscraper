@@ -12,12 +12,12 @@ import pandas as pd
 from pydantic import DirectoryPath, FilePath
 from tqdm import tqdm
 
-from sciscrape.change_dir import change_dir
-from sciscrape.config import KEY_TYPE_PAIRINGS, config
-from sciscrape.docscraper import DocScraper, DocumentResult
-from sciscrape.downloaders import Downloader, DownloadReceipt
-from sciscrape.log import logger
-from sciscrape.webscrapers import WebScraper, WebScrapeResult
+from .change_dir import change_dir
+from .config import KEY_TYPE_PAIRINGS, config
+from .docscraper import DocScraper, DocumentResult
+from .downloaders import Downloader, DownloadReceipt
+from .log import logger
+from .webscrapers import WebScraper, WebScrapeResult
 
 SerializationStrategyFunction = Callable[[Path], List]
 StagingStrategyFunction = Callable[[pd.DataFrame], Iterable[Any]]

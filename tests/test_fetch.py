@@ -1,23 +1,22 @@
 import logging
-from typing import Callable
+from typing import Literal
 from unittest import mock
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from sciscrape.change_dir import change_dir
-from sciscrape.config import config
-from sciscrape.docscraper import DocScraper
-from sciscrape.downloaders import Downloader
-from sciscrape.factories import SCISCRAPERS, read_factory
-from sciscrape.fetch import SciScraper, ScrapeFetcher, StagingFetcher
-from sciscrape.log import logger
-from sciscrape.webscrapers import WebScraper
+from ..sciscrape.change_dir import change_dir
+from ..sciscrape.docscraper import DocScraper
+from ..sciscrape.downloaders import Downloader
+from ..sciscrape.factories import SCISCRAPERS, read_factory
+from ..sciscrape.fetch import SciScraper, ScrapeFetcher, StagingFetcher
+from ..sciscrape.log import logger
+from ..sciscrape.webscrapers import WebScraper
 
 
 @pytest.mark.parametrize(("key"), (("wordscore", "citations")))
-def test_read_factory_input(monkeypatch: pytest.MonkeyPatch, key):
+def test_read_factory_input(monkeypatch: pytest.MonkeyPatch, key: Literal['wordscore', 'citations']):
     monkeypatch.setattr("builtins.input", lambda _: key)
     output = read_factory()
     assert isinstance(output, SciScraper)
@@ -87,7 +86,7 @@ def test_fetch_with_staged_reference():
         assert output is not None
 
 
-def test_invalid_dataframe_logging(caplog, mock_dataframe):
+def test_invalid_dataframe_logging(caplog: pytest.LogCaptureFixture, mock_dataframe: pd.DataFrame):
     with caplog.at_level(logging.INFO, logger="sciscraper"):
         SciScraper.dataframe_logging(mock_dataframe)
         for record in caplog.records:
@@ -116,7 +115,7 @@ class TestClass:
             dataframe.to_csv(export_name)
 
 
-def test_export(mock_dataframe):
+def test_export(mock_dataframe: pd.DataFrame):
     with (mock.patch("pandas.DataFrame.to_csv") as mock_to_csv,):
         TestClass.export(mock_dataframe)
         mock_to_csv.assert_called_once_with(TestClass.create_export_name())

@@ -9,8 +9,8 @@ from functools import partial
 import memory_profiler
 import psutil
 
-from sciscrape.config import config
-from sciscrape.fetch import SciScraper
+from .config import config
+from .fetch import SciScraper
 
 
 def _kill(proc_pid: int) -> None:

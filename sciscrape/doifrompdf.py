@@ -8,9 +8,9 @@ from feedparser import FeedParserDict, parse as feedparse
 from googlesearch import search
 from pydantic import FilePath
 
-from sciscrape.doi_regex import IDENTIFIER_TYPES, standardize_doi
-from sciscrape.log import logger
-from sciscrape.webscrapers import client
+from .doi_regex import IDENTIFIER_TYPES, standardize_doi
+from .log import logger
+from .webscrapers import client
 
 
 @dataclass(frozen=True)

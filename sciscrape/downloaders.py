@@ -15,10 +15,10 @@ from pydantic import DirectoryPath, FilePath
 from requests import Response
 from selectolax.parser import HTMLParser
 
-from sciscrape.change_dir import change_dir
-from sciscrape.config import config
-from sciscrape.log import logger
-from sciscrape.webscrapers import client
+from .change_dir import change_dir
+from .config import config
+from .log import logger
+from .webscrapers import client
 
 LINK_CLEANING_PATTERN = re.compile(r"(?P<location>location\.href=\')(?P<sep>/+)?")
 

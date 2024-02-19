@@ -10,18 +10,18 @@ from __future__ import annotations
 from functools import partial
 from pathlib import Path
 
-from sciscrape.config import config
-from sciscrape.docscraper import DocScraper
-from sciscrape.downloaders import BulkPDFScraper, ImagesDownloader
-from sciscrape.fetch import SciScraper, ScrapeFetcher, StagingFetcher
-from sciscrape.log import logger
-from sciscrape.serials import (
+from .config import config
+from .docscraper import DocScraper
+from .downloaders import BulkPDFScraper, ImagesDownloader
+from .fetch import SciScraper, ScrapeFetcher, StagingFetcher
+from .log import logger
+from .serials import (
     serialize_from_csv,
     serialize_from_directory,
     serialize_from_txt,
 )
-from sciscrape.stagers import stage_from_series, stage_with_reference
-from sciscrape.webscrapers import DimensionsScraper, GoogleScholarScraper
+from .stagers import stage_from_series, stage_with_reference
+from .webscrapers import DimensionsScraper, GoogleScholarScraper
 
 SCRAPERS: dict[str, ScrapeFetcher] = {
     "pdf_lookup": ScrapeFetcher(

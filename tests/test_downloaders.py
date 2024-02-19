@@ -1,13 +1,11 @@
 import re
-from os import getcwd, path, remove
+from os import path
 from unittest import mock
 
 import pytest
-from requests import Response
-from selectolax.parser import HTMLParser
 
-from sciscrape.config import config
-from sciscrape.downloaders import BulkPDFScraper, DownloadReceipt, ImagesDownloader
+from ..sciscrape.config import config
+from ..sciscrape.downloaders import DownloadReceipt
 
 
 def test_downloader_config(mock_bulkpdfscraper):
