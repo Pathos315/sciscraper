@@ -1,12 +1,7 @@
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
-
 import pdfplumber
 import pytest
-from feedparser import FeedParserDict
-from googlesearch import search
 from pydantic import FilePath
 
-from src.doi_regex import IDENTIFIER_TYPES
 from src.doifrompdf import (
     doi_from_pdf,
     find_identifier_by_googling_first_n_characters_in_pdf,
@@ -15,8 +10,6 @@ from src.doifrompdf import (
     find_identifier_in_pdf_info,
     find_identifier_in_text,
 )
-from src.log import logger
-from src.webscrapers import client
 
 
 @pytest.fixture
