@@ -114,7 +114,7 @@ def stage_with_reference(
     data_col_y = clean_any_nested_columns(
         list_with_na_replacement(data, column_y), column_y,
     )
-    staged_terms = (data_col_x, data_col_y)
+    staged_terms = data_col_x, data_col_y
     logger.debug("stager=%s, terms=%s", stage_with_reference, staged_terms)
     return staged_terms
 

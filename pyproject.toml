@@ -54,8 +54,9 @@ black = "^23.7.0"
 sciscraper_cli = "sciscrape.main:main"
 
 [tool.pytest.ini_options]
-addopts = "--cov=src  --runxfail --cov-report term-missing -v"
-testpaths = ["tests"]
+addopts = "--cov=sciscrape --cov-report term-missing -v"
+pythonpath = "."
+testpaths = ".test"
 
 [tool.black]
 line-length = 120  # Default
