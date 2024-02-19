@@ -1,5 +1,4 @@
 .env
-.logs/**
 .tox/**
 .coverage*
 .venv/**

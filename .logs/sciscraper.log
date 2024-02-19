@@ -1,0 +1,36 @@
+
+[sciscraper]: 2024-02-18 19:35:26,015 - A spreadsheet was exported as test_50.csv.
+
+
+[sciscraper]: 2024-02-18 19:35:26,067 - [<Mock name='mock.obtain()' id='4867151232'>]
+
+
+[sciscraper]: 2024-02-18 19:35:26,095 - []
+
+
+[sciscraper]: 2024-02-18 19:35:27,244 - Starting new HTTPS connection (1): httpstat.us:443
+
+
+[sciscraper]: 2024-02-18 19:35:27,545 - https://httpstat.us:443 "GET /404?search_mode=content&search_text=10.1103%2Fphysrevlett.124.048301&search_type=kws&search_field=doi HTTP/1.1" 404 13
+
+
+[sciscraper]: 2024-02-18 19:35:27,548 - search_text=10.1103/physrevlett.124.048301, scraper=DimensionsScraper(url='https://httpstat.us/404', sleep_val=1.0, query_subset_citations=False), status_code=404
+
+
+[sciscraper]: 2024-02-18 19:35:27,582 - Starting new HTTPS connection (1): citation.crosscite.org:443
+
+
+[sciscraper]: 2024-02-18 19:35:28,214 - https://citation.crosscite.org:443 "GET /format?doi=10.0000&style=apa&lang=en-US HTTP/1.1" 404 None
+
+
+[sciscraper]: 2024-02-18 19:35:28,215 - search_text=10.0000, scraper=CitationScraper(url='https://citation.crosscite.org/format', sleep_val=0.1, style=<Style.APA: 'apa'>, lang='en-US'), status_code=404
+
+
+[sciscraper]: 2024-02-18 19:35:28,748 - https://citation.crosscite.org:443 "GET /format?doi=11.1038%2Fs41586-019-1787-z&style=apa&lang=en-US HTTP/1.1" 404 None
+
+
+[sciscraper]: 2024-02-18 19:35:28,749 - search_text=11.1038/s41586-019-1787-z, scraper=CitationScraper(url='https://citation.crosscite.org/format', sleep_val=0.1, style=<Style.APA: 'apa'>, lang='en-US'), status_code=404
+
+
+[sciscraper]: 2024-02-18 19:35:28,753 - func_repr=CitationScraper(url='https://citation.crosscite.org/format', sleep_val=0.1, style=<Style.APA: 'apa'>, lang='en-US'), query=, error='', action_undertaken=Returning None
+
