@@ -1,7 +1,7 @@
 from pandas import DataFrame
 import pytest
 
-from ..sciscrape.stagers import stage_from_series
+from sciscrape.stagers import stage_from_series
 
 
 @pytest.mark.skip

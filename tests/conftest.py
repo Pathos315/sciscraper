@@ -2,11 +2,11 @@ import pandas as pd
 import pytest
 import requests
 
-from ..sciscrape.config import config
-from ..sciscrape.docscraper import DocScraper
-from ..sciscrape.downloaders import BulkPDFScraper, ImagesDownloader
-from ..sciscrape.factories import SCISCRAPERS
-from ..sciscrape.webscrapers import (
+from sciscrape.config import config
+from sciscrape.docscraper import DocScraper
+from sciscrape.downloaders import BulkPDFScraper, ImagesDownloader
+from sciscrape.factories import SCISCRAPERS
+from sciscrape.webscrapers import (
     DimensionsScraper,
     SemanticFigureScraper,
     WebScrapeResult,

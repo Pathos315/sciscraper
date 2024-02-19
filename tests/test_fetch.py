@@ -6,13 +6,13 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from ..sciscrape.change_dir import change_dir
-from ..sciscrape.docscraper import DocScraper
-from ..sciscrape.downloaders import Downloader
-from ..sciscrape.factories import SCISCRAPERS, read_factory
-from ..sciscrape.fetch import SciScraper, ScrapeFetcher, StagingFetcher
-from ..sciscrape.log import logger
-from ..sciscrape.webscrapers import WebScraper
+from sciscrape.change_dir import change_dir
+from sciscrape.docscraper import DocScraper
+from sciscrape.downloaders import Downloader
+from sciscrape.factories import SCISCRAPERS, read_factory
+from sciscrape.fetch import SciScraper, ScrapeFetcher, StagingFetcher
+from sciscrape.log import logger
+from sciscrape.webscrapers import WebScraper
 
 
 @pytest.mark.parametrize(("key"), (("wordscore", "citations")))

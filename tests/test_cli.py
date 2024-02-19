@@ -2,7 +2,7 @@ from typing import Literal
 
 import pytest
 
-from ..main import main
+from main import main
 
 
 @pytest.mark.parametrize("option", ("-h", "--help"))

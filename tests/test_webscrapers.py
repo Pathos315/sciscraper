@@ -6,8 +6,8 @@ from unittest import mock
 import pytest
 import requests
 
-from ..sciscrape.config import config
-from ..sciscrape.webscrapers import (
+from sciscrape.config import config
+from sciscrape.webscrapers import (
     CitationScraper,
     DimensionsScraper,
     OverviewScraper,

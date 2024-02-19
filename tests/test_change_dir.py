@@ -1,7 +1,7 @@
 from os import getcwd
 from typing import Literal
 
-from ..sciscrape.change_dir import change_dir
+from sciscrape.change_dir import change_dir
 
 
 def test_change_dir(mock_dirs: Literal['tests/test_dirs']):
