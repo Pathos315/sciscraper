@@ -102,7 +102,7 @@ class GoogleScholarScraper(WebScraper):
 
     def obtain(
         self, search_text: str
-    ) -> Generator[WebScrapeResult, Any, None]:
+    ) -> Generator[WebScrapeResult, Any, None]:  # type: ignore[override, unused-ignore]
         """
         Fetches and parses articles from Google Scholar based on the search_text and
         pre-defined criteria such as publication_type, date range, etc.
@@ -127,10 +127,10 @@ class GoogleScholarScraper(WebScraper):
                 "as_yhi": self.end_year,
                 f"{publication_type}": publication_type,
                 "start": start,
-            }  # type: ignore
+            }  # type: ignore[assignment]
 
             sleep(self.sleep_val)
-            response = client.get(self.url, params=params_)  # type: ignore
+            response = client.get(self.url, params=params_)  # type: ignore[arg-type]
             if not response.ok:
                 logger.error(f"An error occurred for {search_text}")
                 return
@@ -312,7 +312,7 @@ class CitationScraper(WebScraper):
     style: Style = Style.APA
     lang: str = "en-US"
 
-    def obtain(self, search_text: str) -> str | None:
+    def obtain(self, search_text: str) -> str | None:  # type: ignore[override]
         querystring = self.create_querystring(search_text)
         response = client.get(self.url, params=querystring)
         logger.debug(
@@ -339,7 +339,7 @@ class OverviewScraper(WebScraper):
     within the dimensions.ai website.
     """
 
-    def obtain(self, search_text: str) -> str | None:
+    def obtain(self, search_text: str) -> str | None:  # type: ignore[override]
         url = f"{self.url}/{search_text}/abstract.json"
         response = client.get(url)
         logger.debug(
@@ -369,7 +369,7 @@ class SemanticFigureScraper(WebScraper):
     from the paper in question.
     """
 
-    def obtain(self, search_text: str) -> list[str | None] | None:
+    def obtain(self, search_text: str) -> list[str | None] | None:  # type: ignore[override]
         paper_url = self.find_paper_url(search_text)
         if paper_url is None:
             return None

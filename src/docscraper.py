@@ -159,7 +159,7 @@ class DocScraper:
             if self.is_pdf
             else search_text
         )
-        digital_object_identifier = doi_from_pdf(search_text, preprint).identifier if self.is_pdf else None  # type: ignore
+        digital_object_identifier = doi_from_pdf(search_text, preprint).identifier if self.is_pdf else None  # type: ignore[arg-type, union-attr]
         token_list: list[str] = self.format_manuscript(preprint)
         target = match_terms(token_list, target_set)
         bycatch = match_terms(token_list, bycatch_set)

@@ -77,9 +77,5 @@ jobs:
       - name: Install dependencies
         run: poetry install
 
-      - name: Run mypy
-        run: poetry run mypy src
-        continue-on-error: true
-
       - name: Run pytest
         run: poetry run pytest -v

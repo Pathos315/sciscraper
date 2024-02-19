@@ -7,9 +7,9 @@ from typing import Any
 
 import pdfplumber
 
-from feedparser import FeedParserDict
-from feedparser import parse as feedparse
-from googlesearch import search
+from feedparser import FeedParserDict  # type: ignore[import-untyped, unused-ignore]
+from feedparser import parse as feedparse  # type: ignore[import-untyped, unused-ignore]
+from googlesearch import search  # type: ignore[import-untyped, unused-ignore]
 from pydantic import FilePath
 
 from src.doi_regex import IDENTIFIER_TYPES

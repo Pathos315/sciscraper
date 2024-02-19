@@ -1,6 +1,7 @@
 """
 Downloads papers en masse
 """
+
 from __future__ import annotations
 
 import random
@@ -315,8 +316,10 @@ class ImagesDownloader(Downloader):
             response.status_code,
         )
 
-        return self.download_image(search_ext, response) or DownloadReceipt(
-            self.cls_name
+        return (
+            self.download_image(search_ext, response)
+            if response
+            else DownloadReceipt(self.cls_name)
         )
 
     def download_image(

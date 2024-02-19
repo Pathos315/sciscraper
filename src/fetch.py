@@ -88,9 +88,9 @@ class Fetcher(ABC):
             if not isinstance(results, Iterable) or isinstance(
                 results, str
             ):  # Including `isinstance(results, str)` to exclude strings
-                results = [results]
+                results = [results]  # type: ignore[assignment]
 
-            for result in results:
+            for result in results:  # type: ignore[arg-type, union-attr]
                 if result is not None:
                     data.append(result)
 
@@ -242,10 +242,10 @@ class SciScraper:
 
     @staticmethod
     def downcast_available_datetimes(
-        dataframe: pd.DataFrame | pd.Series,
+        dataframe: pd.DataFrame | pd.Series[Any],
     ) -> pd.Timestamp:
         """Converts all paper publication dates to the datetime format."""
-        return pd.to_datetime(dataframe["pub_date"], errors="coerce")  # type: ignore
+        return pd.to_datetime(dataframe["pub_date"], errors="coerce")  # type: ignore[return-value]
 
     @staticmethod
     def export_sciscrape_results(

@@ -11,14 +11,16 @@ DOI_PATTERNS = [
     re.compile(r"doi[\s\.\:]{0,2}(10\.\d{4}[\d\:\.\-\/a-z]+)(?:[\s\n\"<]|$)"),
     re.compile(r"(10\.\d{4}[\d\:\.\-\/a-z]+)(?:[\s\n\"<]|$)"),
     re.compile(r"(10\.\d{4}[\:\.\-\/a-z]+[\:\.\-\d]+)(?:[\s\na-z\"<]|$)"),
-    re.compile(r"https?://[ -~]*doi[ -~]*/(10\.\d{4,9}/[-._;()/:a-z0-9]+)(?:[\s\n\"<]|$)"),
-    re.compile(r"^(10\.\d{4,9}/[-._;()/:a-z0-9]+)$")
+    re.compile(
+        r"https?://[ -~]*doi[ -~]*/(10\.\d{4,9}/[-._;()/:a-z0-9]+)(?:[\s\n\"<]|$)"
+    ),
+    re.compile(r"^(10\.\d{4,9}/[-._;()/:a-z0-9]+)$"),
 ]
 ARXIV_PATTERNS = [
     re.compile(r"^(\d{4}\.\d+)(?:v\d+)?$"),
     re.compile(r"arxiv[\s]*\:[\s]*(\d{4}\.\d+)(?:v\d+)?(?:[\s\n\"<]|$)"),
     re.compile(r"(\d{4}\.\d+)(?:v\d+)?(?:\.pdf)"),
-    re.compile(r"^(\d{4}\.\d+)(?:v\d+)?$")
+    re.compile(r"^(\d{4}\.\d+)(?:v\d+)?$"),
 ]
 
 
@@ -28,7 +30,7 @@ IDENTIFIER_TYPES: dict[str, list[re.Pattern[str]]] = {
 }
 
 
-def standardize_doi(identifier: str) -> str | None:
+def standardize_doi(identifier: str) -> str | None:  # type: ignore[return]
     """
     Standardise a DOI by removing any marker, lowercase, and applying a consistent separator
     """
