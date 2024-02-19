@@ -9,9 +9,9 @@ from typing import Any
 import pdfplumber
 from pydantic import FilePath
 
-from sciscrape.config import UTF
-from sciscrape.doifrompdf import doi_from_pdf
-from sciscrape.log import logger
+from .config import UTF
+from .doifrompdf import doi_from_pdf
+from .log import logger
 
 PAPER_STATISTIC = re.compile(r"\(.*\=.*\)")
 
