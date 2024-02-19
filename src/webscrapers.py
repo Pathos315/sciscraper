@@ -11,7 +11,6 @@ from json import loads
 from time import sleep
 from typing import TYPE_CHECKING
 from typing import Any
-from typing import override
 from urllib.parse import urlencode
 
 from bs4 import BeautifulSoup
@@ -28,7 +27,6 @@ from src.log import logger
 
 if TYPE_CHECKING:
     from collections.abc import Generator
-
     from numpy import _SupportsItem
 
 
@@ -102,7 +100,6 @@ class GoogleScholarScraper(WebScraper):
     publication_type: str
     num_articles: int
 
-    @override
     def obtain(
         self, search_text: str
     ) -> Generator[WebScrapeResult, Any, None]:
@@ -315,7 +312,6 @@ class CitationScraper(WebScraper):
     style: Style = Style.APA
     lang: str = "en-US"
 
-    @override
     def obtain(self, search_text: str) -> str | None:
         querystring = self.create_querystring(search_text)
         response = client.get(self.url, params=querystring)
@@ -343,7 +339,6 @@ class OverviewScraper(WebScraper):
     within the dimensions.ai website.
     """
 
-    @override
     def obtain(self, search_text: str) -> str | None:
         url = f"{self.url}/{search_text}/abstract.json"
         response = client.get(url)
@@ -374,7 +369,6 @@ class SemanticFigureScraper(WebScraper):
     from the paper in question.
     """
 
-    @override
     def obtain(self, search_text: str) -> list[str | None] | None:
         paper_url = self.find_paper_url(search_text)
         if paper_url is None:
