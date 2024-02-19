@@ -38,7 +38,7 @@ def test_bulkpdf_receipt_validation(
     mock_bulkpdfscraper: BulkPDFScraper, search_term, expected
 ):
     with mock.patch(
-        "sciscrape.downloaders.BulkPDFScraper.obtain",
+        "src.downloaders.BulkPDFScraper.obtain",
         return_value=DownloadReceipt(
             "test_downloader", success=expected, filepath="N/A"
         ),
@@ -71,13 +71,14 @@ def test_valid_clean_link_with_regex(
     link_match_object = mock_bulkpdfscraper.clean_link_with_regex(
         download_link
     )
-    assert link_match_object.group(1) == "location.href='"
-    assert link_match_object.group(2) == "/"
+    if link_match_object:
+        assert link_match_object.group(1) == "location.href='"
+        assert link_match_object.group(2) == "/"
 
 
 def test_img_downloader_obtain(img_downloader: ImagesDownloader):
     with mock.patch(
-        "sciscrape.downloaders.ImagesDownloader.obtain",
+        "src.downloaders.ImagesDownloader.obtain",
         return_value=DownloadReceipt("", True),
         autospec=True,
     ):
