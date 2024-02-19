@@ -1,7 +1,11 @@
+from __future__ import annotations
+
+import json
 import logging
 import logging.config
-import json
+
 from pathlib import Path
+
 
 logger = logging.getLogger("sciscraper")
 

@@ -79,3 +79,6 @@ jobs:
 
       - name: Run pytest
         run: poetry run pytest -v
+
+      - name: Run mypy
+        run: poetry run mypy .

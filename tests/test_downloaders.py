@@ -1,14 +1,17 @@
+from __future__ import annotations
+
 import re
+
 from os import path
 from typing import Literal
 from unittest import mock
 
 import pytest
 
-from sciscrape.downloaders import BulkPDFScraper, ImagesDownloader
-
-from sciscrape.config import config
-from sciscrape.downloaders import DownloadReceipt
+from src.config import config
+from src.downloaders import BulkPDFScraper
+from src.downloaders import DownloadReceipt
+from src.downloaders import ImagesDownloader
 
 
 def test_downloader_config(mock_bulkpdfscraper: BulkPDFScraper):
@@ -31,10 +34,14 @@ def test_downloader_config(mock_bulkpdfscraper: BulkPDFScraper):
         ),
     ),
 )
-def test_bulkpdf_receipt_validation(mock_bulkpdfscraper: BulkPDFScraper, search_term, expected):
+def test_bulkpdf_receipt_validation(
+    mock_bulkpdfscraper: BulkPDFScraper, search_term, expected
+):
     with mock.patch(
         "sciscrape.downloaders.BulkPDFScraper.obtain",
-        return_value=DownloadReceipt("test_downloader", success=expected, filepath="N/A"),
+        return_value=DownloadReceipt(
+            "test_downloader", success=expected, filepath="N/A"
+        ),
         autospec=True,
     ):
         receipt = mock_bulkpdfscraper.obtain(search_term)
@@ -53,8 +60,17 @@ def test_bulkpdf_receipt_validation(mock_bulkpdfscraper: BulkPDFScraper, search_
         )
     ),
 )
-def test_valid_clean_link_with_regex(mock_bulkpdfscraper: BulkPDFScraper, download_link: Literal['location.href=\'/pdf/10.1038/s41586-020-2003-7', 'location.href=\'/pdf/10.1038/s41586-020-2003-7.pdf', 'location.href=\'/download/pdf/123456789.pdf']):
-    link_match_object = mock_bulkpdfscraper.clean_link_with_regex(download_link)
+def test_valid_clean_link_with_regex(
+    mock_bulkpdfscraper: BulkPDFScraper,
+    download_link: Literal[
+        "location.href='/pdf/10.1038/s41586-020-2003-7",
+        "location.href='/pdf/10.1038/s41586-020-2003-7.pdf",
+        "location.href='/download/pdf/123456789.pdf",
+    ],
+):
+    link_match_object = mock_bulkpdfscraper.clean_link_with_regex(
+        download_link
+    )
     assert link_match_object.group(1) == "location.href='"
     assert link_match_object.group(2) == "/"
 
@@ -87,6 +103,8 @@ def test_img_downloader_obtain(img_downloader: ImagesDownloader):
         ),
     ),
 )
-def test_format_download_link(mock_bulkpdfscraper: BulkPDFScraper, download_link, expected):
+def test_format_download_link(
+    mock_bulkpdfscraper: BulkPDFScraper, download_link, expected
+):
     output = mock_bulkpdfscraper.format_download_link(download_link)
     assert output == expected

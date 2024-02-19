@@ -34,3 +34,9 @@
 
 [sciscraper]: 2024-02-18 19:35:28,753 - func_repr=CitationScraper(url='https://citation.crosscite.org/format', sleep_val=0.1, style=<Style.APA: 'apa'>, lang='en-US'), query=, error='', action_undertaken=Returning None
 
+
+[sciscraper]: 2024-02-19 10:37:38,484 - func_repr=CitationScraper(url='https://citation.crosscite.org/format', sleep_val=0, style=<Style.APA: 'apa'>, lang='en-US'), query=ipsum, error=string indices must be integers, not 'str', action_undertaken=Returning None
+
+
+[sciscraper]: 2024-02-19 10:37:57,050 - func_repr=CitationScraper(url='https://citation.crosscite.org/format', sleep_val=0, style=<Style.APA: 'apa'>, lang='en-US'), query=ipsum, error=string indices must be integers, not 'str', action_undertaken=Returning None
+

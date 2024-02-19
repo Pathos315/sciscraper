@@ -1,16 +1,17 @@
+from __future__ import annotations
+
 import pandas as pd
 import pytest
 import requests
 
-from sciscrape.config import config
-from sciscrape.docscraper import DocScraper
-from sciscrape.downloaders import BulkPDFScraper, ImagesDownloader
-from sciscrape.factories import SCISCRAPERS
-from sciscrape.webscrapers import (
-    DimensionsScraper,
-    SemanticFigureScraper,
-    WebScrapeResult,
-)
+from src.config import config
+from src.docscraper import DocScraper
+from src.downloaders import BulkPDFScraper
+from src.downloaders import ImagesDownloader
+from src.factories import SCISCRAPERS
+from src.webscrapers import DimensionsScraper
+from src.webscrapers import SemanticFigureScraper
+from src.webscrapers import WebScrapeResult
 
 
 # File Path Fixtures
@@ -21,13 +22,13 @@ def mock_dirs():
 
 @pytest.fixture()
 def mock_file_blank():
-    with open("tests/test_dirs/test_file", "r") as file_blank:
+    with open("tests/test_dirs/test_file") as file_blank:
         return str(file_blank.readlines())
 
 
 @pytest.fixture()
 def mock_file_multiline():
-    with open("tests/test_dirs/test_example_2.txt", "r") as file_multiline:
+    with open("tests/test_dirs/test_example_2.txt") as file_multiline:
         return str(file_multiline.readlines())
 
 

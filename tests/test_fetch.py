@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import logging
+
 from typing import Literal
 from unittest import mock
 
@@ -6,23 +9,30 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from sciscrape.change_dir import change_dir
-from sciscrape.docscraper import DocScraper
-from sciscrape.downloaders import Downloader
-from sciscrape.factories import SCISCRAPERS, read_factory
-from sciscrape.fetch import SciScraper, ScrapeFetcher, StagingFetcher
-from sciscrape.log import logger
-from sciscrape.webscrapers import WebScraper
+from src.change_dir import change_dir
+from src.docscraper import DocScraper
+from src.downloaders import Downloader
+from src.factories import SCISCRAPERS
+from src.factories import read_factory
+from src.fetch import SciScraper
+from src.fetch import ScrapeFetcher
+from src.fetch import StagingFetcher
+from src.log import logger
+from src.webscrapers import WebScraper
 
 
 @pytest.mark.parametrize(("key"), (("wordscore", "citations")))
-def test_read_factory_input(monkeypatch: pytest.MonkeyPatch, key: Literal['wordscore', 'citations']):
+def test_read_factory_input(
+    monkeypatch: pytest.MonkeyPatch, key: Literal["wordscore", "citations"]
+):
     monkeypatch.setattr("builtins.input", lambda _: key)
     output = read_factory()
     assert isinstance(output, SciScraper)
     assert isinstance(output.stager, StagingFetcher)
     assert isinstance(output.scraper, ScrapeFetcher)
-    assert isinstance(output.scraper.scraper, (DocScraper, WebScraper, Downloader))
+    assert isinstance(
+        output.scraper.scraper, DocScraper | WebScraper | Downloader
+    )
 
 
 def test_faulty_factory_input(monkeypatch: pytest.MonkeyPatch):
@@ -45,7 +55,9 @@ def test_faulty_factory_input(monkeypatch: pytest.MonkeyPatch):
 
 def test_downcast_available_datetimes_validity():
     df = pd.DataFrame({"pub_date": ["2020-01-01", "2020-01-02", "2020-01-03"]})
-    assert SciScraper.downcast_available_datetimes(df).dtype == "datetime64[ns]"
+    assert (
+        SciScraper.downcast_available_datetimes(df).dtype == "datetime64[ns]"
+    )
 
 
 def test_null_datetimes_downcasting():
@@ -59,7 +71,7 @@ def test_empty_datetimes_downcasting():
         SciScraper.downcast_available_datetimes(df)
 
 
-def test_NaN_datetimes_downcasting():
+def test_nan_datetimes_downcasting():
     # Test NaN values
     df = pd.DataFrame({"pub_date": [np.nan]})
     # TODO: Review values in assert statement
@@ -86,7 +98,9 @@ def test_fetch_with_staged_reference():
         assert output is not None
 
 
-def test_invalid_dataframe_logging(caplog: pytest.LogCaptureFixture, mock_dataframe: pd.DataFrame):
+def test_invalid_dataframe_logging(
+    caplog: pytest.LogCaptureFixture, mock_dataframe: pd.DataFrame
+):
     with caplog.at_level(logging.INFO, logger="sciscraper"):
         SciScraper.dataframe_logging(mock_dataframe)
         for record in caplog.records:
@@ -142,4 +156,3 @@ def test_fetch_with_staged_reference_empty_tuple():
     scraper = mock.Mock()
     df = StagingFetcher(scraper, stager=None).fetch_with_staged_reference(staged_terms)  # type: ignore
     assert df.empty
-

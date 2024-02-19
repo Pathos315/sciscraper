@@ -3,23 +3,37 @@ returning various dataframes for each"""
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
+from collections.abc import Callable
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Iterable, List
+from typing import TYPE_CHECKING
+from typing import Any
 
 import pandas as pd
-from pydantic import DirectoryPath, FilePath
+
 from tqdm import tqdm
 
-from .change_dir import change_dir
-from .config import KEY_TYPE_PAIRINGS, config
-from .docscraper import DocScraper, DocumentResult
-from .downloaders import Downloader, DownloadReceipt
-from .log import logger
-from .webscrapers import WebScraper, WebScrapeResult
+from src.change_dir import change_dir
+from src.config import KEY_TYPE_PAIRINGS
+from src.config import config
+from src.docscraper import DocScraper
+from src.docscraper import DocumentResult
+from src.downloaders import Downloader
+from src.downloaders import DownloadReceipt
+from src.log import logger
+from src.webscrapers import WebScraper
+from src.webscrapers import WebScrapeResult
 
-SerializationStrategyFunction = Callable[[Path], List]
+
+if TYPE_CHECKING:
+    from pydantic import DirectoryPath
+    from pydantic import FilePath
+
+
+SerializationStrategyFunction = Callable[[Path], list[Any]]
 StagingStrategyFunction = Callable[[pd.DataFrame], Iterable[Any]]
 ScrapeResult = DocumentResult | WebScrapeResult | DownloadReceipt
 Scraper = DocScraper | WebScraper | Downloader
@@ -49,7 +63,9 @@ class Fetcher(ABC):
             A dataframe containing biliographic data.
         """
 
-    def fetch(self, search_terms: List[str], tqdm_unit: str = "abstracts") -> pd.DataFrame:
+    def fetch(
+        self, search_terms: list[str], tqdm_unit: str = "abstracts"
+    ) -> pd.DataFrame:
         """
         fetch runs a scrape using the given search terms and returns a dataframe.
 
@@ -63,8 +79,10 @@ class Fetcher(ABC):
         pd.DataFrame
             A dataframe containing biliographic data.
         """
-        data: List[ScrapeResult] = []
-        for term in tqdm(search_terms, desc="[sciscraper]: ", unit=f"{tqdm_unit}"):
+        data: list[ScrapeResult] = []
+        for term in tqdm(
+            search_terms, desc="[sciscraper]: ", unit=f"{tqdm_unit}"
+        ):
             results = self.scraper.obtain(term)
             # Check if results is a single ScrapeResult, and if so, convert it to a list
             if not isinstance(results, Iterable) or isinstance(
@@ -92,7 +110,7 @@ class ScrapeFetcher(Fetcher):
     _title_serializer: SerializationStrategyFunction | None = None
 
     def __call__(self, target: Path) -> pd.DataFrame:
-        search_terms: List[str] = self.serializer(target)
+        search_terms: list[str] = self.serializer(target)
         outcome = self.fetch(search_terms)
         if self._title_serializer:
             outcome["title"] = self._title_serializer(target)
@@ -111,17 +129,22 @@ class StagingFetcher(Fetcher):
 
     def __call__(self, prior_dataframe: pd.DataFrame) -> pd.DataFrame:
         staged_terms: Iterable[Any] = self.stager(prior_dataframe)
-        if isinstance(staged_terms, List):
-            dataframe = self.fetch_from_staged_series(prior_dataframe, staged_terms)
+        if isinstance(staged_terms, list):
+            dataframe = self.fetch_from_staged_series(
+                prior_dataframe, staged_terms
+            )
         elif isinstance(staged_terms, tuple):
-            dataframe = self.fetch_with_staged_reference(staged_terms)  # type: ignore
+            dataframe = self.fetch_with_staged_reference(staged_terms)
         else:
             raise ValueError("Staged terms must be lists or tuples.")
         return dataframe
 
-    def fetch_from_staged_series(self, prior_dataframe: pd.DataFrame, staged_terms: List[Any]) -> pd.DataFrame:
+    def fetch_from_staged_series(
+        self, prior_dataframe: pd.DataFrame, staged_terms: list[Any]
+    ) -> pd.DataFrame:
         """If the terms are staged as a list, then the dataframe is extended
-        along the provided query, and then it is appended to the existing dataframe."""
+        along the provided query, and then it is appended to the existing dataframe.
+        """
         dataframe_ext: pd.DataFrame = self.fetch(staged_terms)
         dataframe: pd.DataFrame = prior_dataframe.join(dataframe_ext)
         return dataframe
@@ -129,8 +152,8 @@ class StagingFetcher(Fetcher):
     def fetch_with_staged_reference(
         self,
         staged_terms: tuple[
-            List[Any],
-            List[Any],
+            list[Any],
+            list[Any],
         ],
     ) -> pd.DataFrame:
         """If the terms are staged as a tuple of two lists,
@@ -171,14 +194,17 @@ class SciScraper:
     ) -> None:
         self.set_logging()
         logger.info(
-            "Debug logging status: '%s'\n" "Commencing sciscrape on file: '%s'...\n",
+            "Debug logging status: '%s'\n"
+            "Commencing sciscrape on file: '%s'...\n",
             self.debug,
             target,
         )
         dataframe: pd.DataFrame = self.scraper(target)
         dataframe = self.stager(dataframe) if self.stager else dataframe
         dataframe = self.remove_empty_columns(dataframe)
-        dataframe = self.dataframe_casting(dataframe) if self.downcast else dataframe
+        dataframe = (
+            self.dataframe_casting(dataframe) if self.downcast else dataframe
+        )
         self.export_sciscrape_results(dataframe) if self.export else None
 
     def set_logging(self) -> None:
@@ -204,7 +230,9 @@ class SciScraper:
 
         # Convert "pub_date" column to datetime data type
         if "pub_date" in dataframe:
-            dataframe["pub_date"] = SciScraper.downcast_available_datetimes(dataframe)
+            dataframe["pub_date"] = SciScraper.downcast_available_datetimes(
+                dataframe
+            )
 
         # Convert columns in KEY_TYPE_PAIRINGS dictionary to specified data types
         for scikey, value in KEY_TYPE_PAIRINGS.items():
@@ -217,7 +245,7 @@ class SciScraper:
         dataframe: pd.DataFrame | pd.Series,
     ) -> pd.Timestamp:
         """Converts all paper publication dates to the datetime format."""
-        return pd.to_datetime(dataframe["pub_date"], errors="ignore")  # type: ignore
+        return pd.to_datetime(dataframe["pub_date"], errors="ignore")
 
     @staticmethod
     def export_sciscrape_results(
@@ -228,7 +256,11 @@ class SciScraper:
         SciScraper.dataframe_logging(dataframe)
         export_name = SciScraper.create_export_name()
         with change_dir(export_dir):
-            logger.info("A spreadsheet was exported as %s in %s.", export_name, export_dir)
+            logger.info(
+                "A spreadsheet was exported as %s in %s.",
+                export_name,
+                export_dir,
+            )
             dataframe.to_csv(export_name, index=False)
 
     @staticmethod

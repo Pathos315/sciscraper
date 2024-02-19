@@ -4,13 +4,18 @@ for use in the `main` module.
 
 from __future__ import annotations
 
-from argparse import ArgumentParser, Namespace
-from typing import Sequence
+from argparse import ArgumentParser
+from argparse import Namespace
+from typing import TYPE_CHECKING
 
 from pydantic import FilePath
 
-from .config import config
-from .factories import SCISCRAPERS
+from src.config import config
+from src.factories import SCISCRAPERS
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def build_parser(argv: Sequence[str] | None) -> Namespace:
@@ -65,9 +70,7 @@ def build_parser(argv: Sequence[str] | None) -> Namespace:
         "--mode",
         default=None,
         type=str,
-        choices=(
-            [key for key, _ in SCISCRAPERS.items()]
-        ),
+        choices=([key for key, _ in SCISCRAPERS.items()]),
         help="Specify the sciscraper to be used,\
             if None is provided, the user will be prompted\
             with an input: %(default)s)",

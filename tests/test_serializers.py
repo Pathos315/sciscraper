@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from sciscrape.serials import serialize_from_csv, serialize_from_directory
+from src.serials import serialize_from_csv, serialize_from_directory
 
 
 @pytest.mark.skip

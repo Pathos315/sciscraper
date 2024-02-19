@@ -10,18 +10,22 @@ from __future__ import annotations
 from functools import partial
 from pathlib import Path
 
-from .config import config
-from .docscraper import DocScraper
-from .downloaders import BulkPDFScraper, ImagesDownloader
-from .fetch import SciScraper, ScrapeFetcher, StagingFetcher
-from .log import logger
-from .serials import (
-    serialize_from_csv,
-    serialize_from_directory,
-    serialize_from_txt,
-)
-from .stagers import stage_from_series, stage_with_reference
-from .webscrapers import DimensionsScraper, GoogleScholarScraper
+from src.config import config
+from src.docscraper import DocScraper
+from src.downloaders import BulkPDFScraper
+from src.downloaders import ImagesDownloader
+from src.fetch import SciScraper
+from src.fetch import ScrapeFetcher
+from src.fetch import StagingFetcher
+from src.log import logger
+from src.serials import serialize_from_csv
+from src.serials import serialize_from_directory
+from src.serials import serialize_from_txt
+from src.stagers import stage_from_series
+from src.stagers import stage_with_reference
+from src.webscrapers import DimensionsScraper
+from src.webscrapers import GoogleScholarScraper
+
 
 SCRAPERS: dict[str, ScrapeFetcher] = {
     "pdf_lookup": ScrapeFetcher(
@@ -51,7 +55,14 @@ SCRAPERS: dict[str, ScrapeFetcher] = {
         ),
     ),
     "google_lookup": ScrapeFetcher(
-        GoogleScholarScraper(config.google_scholar_url, config.sleep_interval, 2016, 2023, "j", 5),
+        GoogleScholarScraper(
+            config.google_scholar_url,
+            config.sleep_interval,
+            2016,
+            2023,
+            "j",
+            5,
+        ),
         serialize_from_txt,
     ),
 }
@@ -70,10 +81,17 @@ STAGERS: dict[str, StagingFetcher] = {
         DimensionsScraper(config.dimensions_ai_dataset_url),
         stage_with_reference,
     ),
-    "download": StagingFetcher(BulkPDFScraper(config.downloader_url), partial(stage_from_series, column="doi")),
-    "images": StagingFetcher(ImagesDownloader(url=""), partial(stage_with_reference, column_x="figures")),
+    "download": StagingFetcher(
+        BulkPDFScraper(config.downloader_url),
+        partial(stage_from_series, column="doi"),
+    ),
+    "images": StagingFetcher(
+        ImagesDownloader(url=""),
+        partial(stage_with_reference, column_x="figures"),
+    ),
     "pdf_expanded": StagingFetcher(
-        DimensionsScraper(config.dimensions_ai_dataset_url), partial(stage_from_series, column="doi_from_pdf")
+        DimensionsScraper(config.dimensions_ai_dataset_url),
+        partial(stage_from_series, column="doi_from_pdf"),
     ),
 }
 
@@ -99,8 +117,12 @@ def read_factory() -> SciScraper:
     """
 
     while True:
-        scrape_process = input(f"Enter desired data scraping process ({', '.join(SCISCRAPERS)}): ")
+        scrape_process = input(
+            f"Enter desired data scraping process ({', '.join(SCISCRAPERS)}): "
+        )
         try:
             return SCISCRAPERS[scrape_process]
         except KeyError:
-            logger.error("Unknown data scraping process option: %s.", scrape_process)
+            logger.error(
+                "Unknown data scraping process option: %s.", scrape_process
+            )

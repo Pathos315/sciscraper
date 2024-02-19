@@ -1,16 +1,21 @@
 from __future__ import annotations
 
 import re
+
 from dataclasses import dataclass
+from typing import Any
 
 import pdfplumber
-from feedparser import FeedParserDict, parse as feedparse
+
+from feedparser import FeedParserDict
+from feedparser import parse as feedparse
 from googlesearch import search
 from pydantic import FilePath
 
-from .doi_regex import IDENTIFIER_TYPES, standardize_doi
-from .log import logger
-from .webscrapers import client
+from src.doi_regex import IDENTIFIER_TYPES
+from src.doi_regex import standardize_doi
+from src.log import logger
+from src.webscrapers import client
 
 
 @dataclass(frozen=True)
@@ -21,21 +26,25 @@ class DOIFromPDFResult:
 
 
 def doi_from_pdf(file: FilePath, preprint: str) -> DOIFromPDFResult | None:
-    metadata: dict = extract_metadata(file)
+    metadata: dict[Any, Any] = extract_metadata(file)
     title: str = metadata.get("Title", file.stem)
-    handlers: dict = {
+    handlers: dict[Any, Any] = {
         find_identifier_in_metadata: (metadata,),
         find_identifier_in_pdf_info: (metadata,),
         find_identifier_in_text: (title, IDENTIFIER_TYPES, True),
         find_identifier_in_text: (preprint, IDENTIFIER_TYPES),
-        find_identifier_by_googling_first_N_characters_in_pdf: (preprint,),
+        find_identifier_by_googling_first_n_characters_in_pdf: (preprint,),
     }
-    handler_comprehension = (handler(*args) for handler, args in handlers.items())
-    filtered_handler = filter(None, handler_comprehension)
+    handler_comprehension = (
+        handler(*args) for handler, args in handlers.items()
+    )
+    filtered_handler: filter[Any] = filter(None, handler_comprehension)
     return next(filtered_handler, None)
 
 
-def find_identifier_in_metadata(metadata: dict) -> DOIFromPDFResult | None:
+def find_identifier_in_metadata(
+    metadata: dict[str, Any],
+) -> DOIFromPDFResult | None:
     """
     Searches for a valid identifier (e.g., DOI, arXiv ID) within the given metadata dictionary.
     Prioritizes certain keys for a more efficient search.
@@ -52,17 +61,28 @@ def find_identifier_in_metadata(metadata: dict) -> DOIFromPDFResult | None:
     """
     priority_keys = {"doi", "pdf2doi_identifier", "arxiv"}
 
-    logger.info(f"Method #1: Looking for a valid identifier in the document metadata...")
+    logger.info(
+        "Method #1: Looking for a valid identifier in the document metadata..."
+    )
 
     for key in priority_keys:
         if initial_result := metadata.get(key):
             logger.info(f"Identifier found using Method #1 {initial_result}")
-            return DOIFromPDFResult(identifier=initial_result, identifier_type=key)
+            return DOIFromPDFResult(
+                identifier=initial_result, identifier_type=key
+            )
+        else:
+            continue
+    else:
+        logger.info(
+            "Could not find a valid identifier in the most likely metadata keys."
+        )
+        return None
 
-    logger.info("Could not find a valid identifier in the most likely metadata keys.")
 
-
-def find_identifier_in_pdf_info(metadata: dict[str, str]) -> DOIFromPDFResult | None:
+def find_identifier_in_pdf_info(
+    metadata: dict[str, str],
+) -> DOIFromPDFResult | None:
     """
     Try to find a valid DOI in the values of the 'document information' dictionary.
 
@@ -73,20 +93,26 @@ def find_identifier_in_pdf_info(metadata: dict[str, str]) -> DOIFromPDFResult | 
     -------
     result : dictionary with identifier and other info (see above)
     """
-    values_to_search = (value for key, value in metadata.items() if key != "/wps-journaldoi")
+    values_to_search = (
+        value for key, value in metadata.items() if key != "/wps-journaldoi"
+    )
 
     for value in values_to_search:
         result = find_identifier_in_text(value)
         if result and result.identifier:
-            logger.info(f"A valid {result.identifier_type} was found in the document info labelled '{value}'.")
-            return result
+            logger.info(
+                f"A valid {result.identifier_type} was found in the document info labelled '{value}'."
+            )
+            result = result
         else:
-            logger.info(f"No valid identifier found in the metadata key: '{value}'.")
+            logger.info(
+                f"No valid identifier found in the metadata key: '{value}'."
+            )
+            result = None
+    return result
 
-    logger.info("Could not find a valid identifier in any of the metadata keys.")
 
-
-def extract_metadata(file: FilePath) -> dict:
+def extract_metadata(file: FilePath) -> dict[Any, Any]:
     with pdfplumber.open(file) as pdf:
         metadata = pdf.metadata
         logger.debug(metadata)
@@ -119,22 +145,28 @@ def find_identifier_in_text(
     search_type = "title" if title_search else "text"
 
     for id_type, pattern in pattern_dict.items():
-        logger.info(f"Searching for a valid {id_type.upper()} in the document {search_type}...")
+        logger.info(
+            f"Searching for a valid {id_type.upper()} in the document {search_type}..."
+        )
         for sub_pattern in pattern:
             matches = sub_pattern.findall(text)
         if not matches:
-            logger.info(f"No valid {id_type.upper()} found in the document {search_type}.")
+            logger.info(
+                f"No valid {id_type.upper()} found in the document {search_type}."
+            )
             continue
         identifier = matches[0]
         logger.debug(f"Potential {id_type.upper()} found: {identifier}")
 
         validation = validate_identifier(identifier, id_type)
-        identifier = standardize_doi(identifier) if id_type == "doi" else identifier
+        identifier = (
+            standardize_doi(identifier) if id_type == "doi" else identifier
+        )
 
-        return DOIFromPDFResult(identifier, id_type, validation)
+    return DOIFromPDFResult(identifier, id_type, validation)
 
 
-def validate_identifier(identifier: str, id_type: str) -> str | None:
+def validate_identifier(identifier: str, id_type: str) -> Any:
     """
     Validate an identifier by querying appropriate URLs based on the identifier type.
 
@@ -162,11 +194,13 @@ def validate_identifier(identifier: str, id_type: str) -> str | None:
             response.raise_for_status()
             return response.text
     except Exception as e:
-        logger.error("Some error occured within the function validate_doi_web: %s" % e)
+        logger.error(
+            "Some error occured within the function validate_doi_web: %s" % e
+        )
         return None
 
 
-def find_identifier_by_googling_first_N_characters_in_pdf(
+def find_identifier_by_googling_first_n_characters_in_pdf(
     text: str,
     num_results: int = 3,
     num_characters: int = 50,
@@ -192,7 +226,9 @@ def find_identifier_by_googling_first_N_characters_in_pdf(
 
     trimmed_text = text[:num_characters].lower()
 
-    logger.info(f"Performing google search with first {num_results} characters of the text...")
+    logger.info(
+        f"Performing google search with first {num_results} characters of the text..."
+    )
     return find_identifier_in_google_search(trimmed_text, num_results)
 
 
@@ -213,13 +249,21 @@ def find_identifier_in_google_search(
     DOIFromPDFResult | None
         The result object containing the identifier information, if found; otherwise, None.
     """
-    query_to_display: str = query[0:max_length_display] if len(query) > max_length_display else query
-    logger.info(f"Performing google search with key {query_to_display}, considering first {num_results} results...")
+    query_to_display: str = (
+        query[0:max_length_display]
+        if len(query) > max_length_display
+        else query
+    )
+    logger.info(
+        f"Performing google search with key {query_to_display}, considering first {num_results} results..."
+    )
     for url in search(query, stop=num_results):
         result = find_identifier_in_text(url)
 
         if result and result.identifier:
-            logger.info(f"A valid {result.identifier_type} was found in the search URL.")
+            logger.info(
+                f"A valid {result.identifier_type} was found in the search URL."
+            )
             return result
 
     logger.info("No valid identifier found in the search results.")

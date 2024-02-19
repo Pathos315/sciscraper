@@ -1,20 +1,36 @@
 from __future__ import annotations
 
 import re
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+
+from abc import ABC
+from abc import abstractmethod
+from dataclasses import dataclass
+from dataclasses import field
 from enum import Enum
 from json import loads
 from time import sleep
-from typing import Any, Generator
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import override
 from urllib.parse import urlencode
 
-from bs4 import BeautifulSoup, ResultSet
-from requests import Response, Session
-from selectolax.parser import HTMLParser, Node
+from bs4 import BeautifulSoup
+from bs4 import ResultSet
+from requests import Response
+from requests import Session
+from selectolax.parser import HTMLParser
+from selectolax.parser import Node
 
-from sciscrape.config import DIMENSIONS_AI_KEYS, config
-from sciscrape.log import logger
+from src.config import DIMENSIONS_AI_KEYS
+from src.config import config
+from src.log import logger
+
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from numpy import _SupportsItem
+
 
 client = Session()
 
@@ -68,7 +84,9 @@ class WebScraper(ABC):
     def get_items_from_response(self, response_text: str, key: str) -> Any:
         return loads(response_text)[key][0]
 
-    def get_singular_item_from_response(self, response_text: str, key: str, subkey: str) -> Any:
+    def get_singular_item_from_response(
+        self, response_text: str, key: str, subkey: str
+    ) -> Any:
         doc = self.get_items_from_response(response_text, key)
         return doc[subkey]
 
@@ -84,7 +102,10 @@ class GoogleScholarScraper(WebScraper):
     publication_type: str
     num_articles: int
 
-    def obtain(self, search_text: str) -> Generator[WebScrapeResult, Any, None]:
+    @override
+    def obtain(
+        self, search_text: str
+    ) -> Generator[WebScrapeResult, Any, None]:
         """
         Fetches and parses articles from Google Scholar based on the search_text and
         pre-defined criteria such as publication_type, date range, etc.
@@ -97,11 +118,13 @@ class GoogleScholarScraper(WebScraper):
             "c": "source: conferences",
             # Add more mappings as needed
         }
-        publication_type = publication_type_mapping.get(self.publication_type, "")
+        publication_type = publication_type_mapping.get(
+            self.publication_type, ""
+        )
         num_pages = (self.num_articles - 1) // 10 + 1
         for page in range(num_pages):
             start = page * 10
-            params_ = {
+            params_: _SupportsItem[Any] | None = {
                 "q": search_text,
                 "as_ylo": self.start_year,
                 "as_yhi": self.end_year,
@@ -120,13 +143,23 @@ class GoogleScholarScraper(WebScraper):
 
             for result in results:
                 title_element = result.find("h3", class_="gs_rt")
-                title = str(title_element.text).strip() if title_element else "N/A"
+                title = (
+                    str(title_element.text).strip() if title_element else "N/A"
+                )
 
                 article_url_element = title_element.find("a")
-                article_url = article_url_element["href"] if article_url_element else "N/A"
+                article_url = (
+                    article_url_element["href"]
+                    if article_url_element
+                    else "N/A"
+                )
                 abstract = self.find_element_text(result, class_name="gs_rs")
-                times_cited = self.find_element_text(result, class_name="gs_flb", regex_pattern=r"\d+")
-                publication_year = self.find_element_text(result, class_name="gs_a", regex_pattern=r"\d{4}")
+                times_cited = self.find_element_text(
+                    result, class_name="gs_flb", regex_pattern=r"\d+"
+                )
+                publication_year = self.find_element_text(
+                    result, class_name="gs_a", regex_pattern=r"\d{4}"
+                )
                 yield WebScrapeResult(
                     title=title,
                     pub_date=publication_year,
@@ -148,7 +181,7 @@ class GoogleScholarScraper(WebScraper):
         tag = result.find(element, class_=class_name)
         if not tag:
             return ""
-        text = tag.text
+        text: str = str(tag.text)
         if not regex_pattern:
             return text
         match = re.search(regex_pattern, text)
@@ -204,7 +237,9 @@ class DimensionsScraper(WebScraper):
             data[key] = self.get_extra_variables(data, *getter)
         return data
 
-    def get_extra_variables(self, data: dict[str, Any], query: str, getter: WebScraper) -> WebScrapeResult | None:
+    def get_extra_variables(
+        self, data: dict[str, Any], query: str, getter: WebScraper
+    ) -> WebScrapeResult | None:
         """get_extra_variables queries
         subsidiary scrapers to get
         additional data
@@ -239,7 +274,9 @@ class DimensionsScraper(WebScraper):
                 "search_mode": "content",
                 "search_text": search_text,
                 "search_type": "kws",
-                "search_field": "doi" if search_text.startswith("10.") else "text_search",
+                "search_field": "doi"
+                if search_text.startswith("10.")
+                else "text_search",
             }
         )
 
@@ -278,6 +315,7 @@ class CitationScraper(WebScraper):
     style: Style = Style.APA
     lang: str = "en-US"
 
+    @override
     def obtain(self, search_text: str) -> str | None:
         querystring = self.create_querystring(search_text)
         response = client.get(self.url, params=querystring)
@@ -305,6 +343,7 @@ class OverviewScraper(WebScraper):
     within the dimensions.ai website.
     """
 
+    @override
     def obtain(self, search_text: str) -> str | None:
         url = f"{self.url}/{search_text}/abstract.json"
         response = client.get(url)
@@ -335,6 +374,7 @@ class SemanticFigureScraper(WebScraper):
     from the paper in question.
     """
 
+    @override
     def obtain(self, search_text: str) -> list[str | None] | None:
         paper_url = self.find_paper_url(search_text)
         if paper_url is None:
@@ -346,10 +386,16 @@ class SemanticFigureScraper(WebScraper):
             self,
             response.status_code,
         )
-        return self.parse_html_tree(response.text) if response.status_code == 200 else None
+        return (
+            self.parse_html_tree(response.text)
+            if response.status_code == 200
+            else None
+        )
 
     def find_paper_url(self, search_text: str) -> str | None:
-        paper_searching_url = self.url + urlencode({"query": search_text, "fields": "url", "limit": 1})
+        paper_searching_url = self.url + urlencode(
+            {"query": search_text, "fields": "url", "limit": 1}
+        )
         logger.info(paper_searching_url)
         paper_searching_response = client.get(paper_searching_url)
         logger.info(paper_searching_response)
@@ -367,7 +413,13 @@ class SemanticFigureScraper(WebScraper):
             paper_url = None
         return paper_url
 
-    def parse_html_tree(self, response_text: str) -> list | None:
+    def parse_html_tree(self, response_text: str) -> list[Any] | None:
         tree = HTMLParser(response_text)
-        images: list[Node] = tree.css("li.figure-list__figure > a > figure > div > img")
-        return [image.attributes.get("src") for image in images] if images else None
+        images: list[Node] = tree.css(
+            "li.figure-list__figure > a > figure > div > img"
+        )
+        return (
+            [image.attributes.get("src") for image in images]
+            if images
+            else None
+        )

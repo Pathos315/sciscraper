@@ -1,13 +1,19 @@
 from __future__ import annotations
 
-import pandas as pd
+from typing import TYPE_CHECKING
 
-from .log import logger
-from .serials import clean_any_nested_columns, list_with_na_replacement
+from src.log import logger
+from src.serials import clean_any_nested_columns
+from src.serials import list_with_na_replacement
 
 
+if TYPE_CHECKING:
+    import pandas as pd
 
-def stage_from_series(target: pd.DataFrame, column: str = "abstract") -> list[str]:
+
+def stage_from_series(
+    target: pd.DataFrame, column: str = "abstract"
+) -> list[str]:
     """
     stage_from_series reads a `column` of interest from a
     dataframe `target`, which gets copied internally, and then
@@ -38,7 +44,7 @@ def stage_from_series(target: pd.DataFrame, column: str = "abstract") -> list[st
         >>> stage_from_series(df, 'A') =
         ['apple','orange','N/A']
     """
-    raw_terms: list[str] = list_with_na_replacement(target.copy(),column)
+    raw_terms: list[str] = list_with_na_replacement(target.copy(), column)
     staged_terms = clean_any_nested_columns(raw_terms, column)
     logger.debug(
         "stager=%s, terms=%s",
@@ -109,13 +115,13 @@ def stage_with_reference(
     """
     data = target.copy().explode(column_x)
     data_col_x = clean_any_nested_columns(
-        list_with_na_replacement(data, column_x), column_x,
+        list_with_na_replacement(data, column_x),
+        column_x,
     )
     data_col_y = clean_any_nested_columns(
-        list_with_na_replacement(data, column_y), column_y,
+        list_with_na_replacement(data, column_y),
+        column_y,
     )
     staged_terms = data_col_x, data_col_y
     logger.debug("stager=%s, terms=%s", stage_with_reference, staged_terms)
     return staged_terms
-
-

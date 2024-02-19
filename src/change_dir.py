@@ -1,11 +1,20 @@
 """change_dir.py governs the file creation
 processes for the sciscraper program.
 """
-from contextlib import contextmanager
-from os import chdir, getcwd, makedirs, path
-from typing import Iterator
+from __future__ import annotations
 
-from pydantic import DirectoryPath
+from contextlib import contextmanager
+from os import chdir
+from os import getcwd
+from os import makedirs
+from os import path
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from pydantic import DirectoryPath
 
 
 @contextmanager

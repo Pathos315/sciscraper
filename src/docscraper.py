@@ -1,17 +1,25 @@
 from __future__ import annotations
 
 import re
+
 from collections import Counter
-from dataclasses import dataclass, field
-from pathlib import Path
+from dataclasses import dataclass
+from dataclasses import field
+from typing import TYPE_CHECKING
 from typing import Any
 
 import pdfplumber
-from pydantic import FilePath
 
-from .config import UTF
-from .doifrompdf import doi_from_pdf
-from .log import logger
+from src.config import UTF
+from src.doifrompdf import doi_from_pdf
+from src.log import logger
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from pydantic import FilePath
+
 
 PAPER_STATISTIC = re.compile(r"\(.*\=.*\)")
 
@@ -81,7 +89,9 @@ def match_terms(target: list[str], word_set: set[str]) -> FreqDistAndCount:
     >>> output.term_count           = 7
     """
 
-    matching_terms = Counter((word for word in target if word in word_set)).most_common(3)
+    matching_terms = Counter(
+        word for word in target if word in word_set
+    ).most_common(3)
     term_count = sum(term[1] for term in matching_terms)
     freq = FreqDistAndCount(term_count, matching_terms)
     logger.debug(
@@ -120,7 +130,9 @@ class DocScraper:
         """
         with open(txtfile, encoding=UTF) as iowrapper:
             wordset = {word.strip().lower() for word in iowrapper}
-            logger.debug("func=%s, word_set=%s", self.unpack_txt_files, wordset)
+            logger.debug(
+                "func=%s, word_set=%s", self.unpack_txt_files, wordset
+            )
             return wordset
 
     def obtain(self, search_text: str) -> DocumentResult | None:
@@ -142,7 +154,11 @@ class DocScraper:
         logger.debug(repr(self))
         target_set = self.unpack_txt_files(self.target_words_file)
         bycatch_set = self.unpack_txt_files(self.bycatch_words_file)
-        preprint: str = self.extract_text_from_pdf(search_text) if self.is_pdf else search_text
+        preprint: str = (
+            self.extract_text_from_pdf(search_text)
+            if self.is_pdf
+            else search_text
+        )
         digital_object_identifier = doi_from_pdf(search_text, preprint).identifier if self.is_pdf else None  # type: ignore
         token_list: list[str] = self.format_manuscript(preprint)
         target = match_terms(token_list, target_set)
@@ -178,5 +194,8 @@ class DocScraper:
             str: A string of unformatted words from the entire document.
         """
         with pdfplumber.open(pdf_path) as pdf:
-            text_pages = [page.extract_text(x_tolerance=1, y_tolerance=3) for page in pdf.pages]
+            text_pages = [
+                page.extract_text(x_tolerance=1, y_tolerance=3)
+                for page in pdf.pages
+            ]
         return " ".join(text_pages)

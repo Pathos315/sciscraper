@@ -1,7 +1,7 @@
 from pandas import DataFrame
 import pytest
 
-from sciscrape.stagers import stage_from_series
+from src.stagers import stage_from_series
 
 
 @pytest.mark.skip
@@ -40,4 +40,3 @@ def test_stage_from_series(mock_dataframe: DataFrame, column, expected):
     output = stage_from_series(mock_dataframe, column=column)
     assert isinstance(output, list)
     assert output == expected
-

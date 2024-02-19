@@ -4,13 +4,18 @@ By John Fallot <john.fallot@gmail.com>
 """
 from __future__ import annotations
 
-from collections.abc import Sequence
 from time import perf_counter
+from typing import TYPE_CHECKING
 
-from sciscrape.argsbuilder import build_parser
-from sciscrape.factories import SCISCRAPERS, read_factory
-from sciscrape.log import logger
-from sciscrape.profilers import get_profiler
+from src.argsbuilder import build_parser
+from src.factories import SCISCRAPERS
+from src.factories import read_factory
+from src.log import logger
+from src.profilers import get_profiler
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def main(argv: Sequence[str] | None = None) -> None:
