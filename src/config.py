@@ -9,15 +9,12 @@ Returns
 from __future__ import annotations
 
 import json
-
-from dataclasses import dataclass
-from dataclasses import field
+from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 from typing import Any
 
 import numpy as np
-
 
 FilePath = str | Path
 UTF = "utf-8"
@@ -25,7 +22,6 @@ UTF = "utf-8"
 
 @dataclass
 class ScrapeConfig:
-
     """
     A dataclass containing the overall configurations.
 

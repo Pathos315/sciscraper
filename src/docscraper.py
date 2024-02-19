@@ -1,24 +1,15 @@
 from __future__ import annotations
 
 import re
-
 from collections import Counter
-from dataclasses import dataclass
-from dataclasses import field
-from typing import TYPE_CHECKING
+from dataclasses import dataclass, field
 from typing import Any
 
 import pdfplumber
 
-from src.config import UTF
+from src.config import UTF, FilePath
 from src.doifrompdf import doi_from_pdf
 from src.log import logger
-
-
-if TYPE_CHECKING:
-    from pathlib import Path
-
-    from pydantic import FilePath
 
 
 PAPER_STATISTIC = re.compile(r"\(.*\=.*\)")
@@ -112,11 +103,11 @@ class DocScraper:
     a percentage grade called WordscoreCalculator.
     """
 
-    target_words_file: str | Path
-    bycatch_words_file: str | Path
+    target_words_file: FilePath
+    bycatch_words_file: FilePath
     is_pdf: bool = True
 
-    def unpack_txt_files(self, txtfile: str | Path) -> set[str]:
+    def unpack_txt_files(self, txtfile: FilePath) -> set[str]:
         """
         Opens a .txt file containing the words that will analyze
         the ensuing passage, and creates a set with those words.
@@ -179,9 +170,18 @@ class DocScraper:
         return doc
 
     def format_manuscript(self, preprint: str) -> list[str]:
+        """
+        This function takes a preprint string and returns a list of words after cleaning the text.
+
+        Args:
+            preprint (str): The preprint text to be cleaned.
+
+        Returns:
+            list[str]: A list of words after cleaning the text.
+        """
         return preprint.strip().lower().split(" ")
 
-    def extract_text_from_pdf(self, pdf_path: str) -> str:
+    def extract_text_from_pdf(self, pdf_path: FilePath) -> str:
         """
         Given the provided filepath, `search_text`, it opens the .pdf
         file and cleans the text. Returning the words from each page

@@ -37,7 +37,7 @@ def build_parser(argv: Sequence[str] | None) -> Namespace:
         "-f",
         "--file",
         metavar="FILE",
-        type=FilePath,
+        type=FilePath,  # type: ignore
         default=config.source_file,
         help="Specify the target file: default: %(default)s)",
     )

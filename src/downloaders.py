@@ -6,11 +6,8 @@ from __future__ import annotations
 
 import random
 import re
-
-from abc import ABC
-from abc import abstractmethod
-from dataclasses import dataclass
-from dataclasses import field
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from pathlib import Path
 from tempfile import TemporaryFile
 from time import sleep
@@ -19,14 +16,11 @@ from typing import TYPE_CHECKING
 from selectolax.parser import HTMLParser
 
 from src.change_dir import change_dir
-from src.config import config
+from src.config import config, FilePath
 from src.log import logger
 from src.webscrapers import client
 
-
 if TYPE_CHECKING:
-    from pydantic import DirectoryPath
-    from pydantic import FilePath
     from requests import Response
 
 
@@ -65,7 +59,7 @@ class Downloader(ABC):
     url: str
     sleep_val: float = config.sleep_interval
     cls_name: str = field(init=False)
-    export_dir: DirectoryPath = Path(config.export_dir)
+    export_dir: FilePath = Path(config.export_dir)
 
     def __post_init__(self) -> None:
         self.cls_name = type(self).__name__
@@ -305,7 +299,18 @@ class ImagesDownloader(Downloader):
     file that appears as a result of that query.
     """
 
-    def obtain(self, search_text: str) -> DownloadReceipt:
+    def obtain(self, search_text: str) -> DownloadReceipt | None:
+        """
+        Queries the downloader website with the given search text,
+        and attempts to download the image associated with the search text.
+
+        Parameters:
+        search_text (str): The search text to query the downloader website with.
+
+        Returns:
+        DownloadReceipt: A receipt indicating whether the image was successfully
+        downloaded and the path to the downloaded image.
+        """
         sleep(self.sleep_val)
         search_ext = search_text.split(".")[-1]
         response = client.get(search_text, stream=True, allow_redirects=True)

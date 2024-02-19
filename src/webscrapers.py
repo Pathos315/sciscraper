@@ -1,32 +1,24 @@
 from __future__ import annotations
 
 import re
-
-from abc import ABC
-from abc import abstractmethod
-from dataclasses import dataclass
-from dataclasses import field
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from enum import Enum
 from json import loads
 from time import sleep
-from typing import TYPE_CHECKING
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode
 
-from bs4 import BeautifulSoup
-from bs4 import ResultSet
-from requests import Response
-from requests import Session
-from selectolax.parser import HTMLParser
-from selectolax.parser import Node
+from bs4 import BeautifulSoup, ResultSet
+from requests import Response, Session
+from selectolax.parser import HTMLParser, Node
 
-from src.config import DIMENSIONS_AI_KEYS
-from src.config import config
+from src.config import DIMENSIONS_AI_KEYS, config
 from src.log import logger
-
 
 if TYPE_CHECKING:
     from collections.abc import Generator
+
     from numpy import _SupportsItem
 
 

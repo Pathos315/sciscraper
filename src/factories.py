@@ -12,20 +12,16 @@ from pathlib import Path
 
 from src.config import config
 from src.docscraper import DocScraper
-from src.downloaders import BulkPDFScraper
-from src.downloaders import ImagesDownloader
-from src.fetch import SciScraper
-from src.fetch import ScrapeFetcher
-from src.fetch import StagingFetcher
+from src.downloaders import BulkPDFScraper, ImagesDownloader
+from src.fetch import SciScraper, ScrapeFetcher, StagingFetcher
 from src.log import logger
-from src.serials import serialize_from_csv
-from src.serials import serialize_from_directory
-from src.serials import serialize_from_txt
-from src.stagers import stage_from_series
-from src.stagers import stage_with_reference
-from src.webscrapers import DimensionsScraper
-from src.webscrapers import GoogleScholarScraper
-
+from src.serials import (
+    serialize_from_csv,
+    serialize_from_directory,
+    serialize_from_txt,
+)
+from src.stagers import stage_from_series, stage_with_reference
+from src.webscrapers import DimensionsScraper, GoogleScholarScraper
 
 SCRAPERS: dict[str, ScrapeFetcher] = {
     "pdf_lookup": ScrapeFetcher(

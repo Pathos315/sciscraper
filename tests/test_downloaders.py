@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import re
-
 from os import path
 from typing import Literal
 from unittest import mock
@@ -9,9 +8,7 @@ from unittest import mock
 import pytest
 
 from src.config import config
-from src.downloaders import BulkPDFScraper
-from src.downloaders import DownloadReceipt
-from src.downloaders import ImagesDownloader
+from src.downloaders import BulkPDFScraper, DownloadReceipt, ImagesDownloader
 
 
 def test_downloader_config(mock_bulkpdfscraper: BulkPDFScraper):

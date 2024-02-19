@@ -4,7 +4,6 @@ import dis
 import pstats
 import subprocess
 import sys
-
 from cProfile import Profile
 from functools import partial
 from typing import TYPE_CHECKING
@@ -14,7 +13,6 @@ import psutil
 
 from src.config import config
 
-
 if TYPE_CHECKING:
     from argparse import Namespace
 
@@ -22,7 +20,14 @@ if TYPE_CHECKING:
 
 
 def _kill(proc_pid: int) -> None:
-    """Kill the current benchmark process with SIGKILL, pre-emptively checking whether PID has been reused."""
+    """Kill the current benchmark process with SIGKILL, pre-emptively checking whether PID has been reused.
+
+    Args:
+        proc_pid (int): The process ID of the process to be killed.
+
+    Returns:
+        None
+    """
     process = psutil.Process(proc_pid)
     for proc in process.children(recursive=True):
         proc.kill()
@@ -66,18 +71,36 @@ def run_benchmark(args: Namespace, sciscrape: SciScraper) -> None:
         _kill(proc.pid)
 
 
-@memory_profiler.profile(precision=4) # type: ignore[misc]
+@memory_profiler.profile(precision=4)  # type: ignore[misc]
 def run_memory_profiler(args: Namespace, sciscrape: SciScraper) -> None:
     """Benchmark the line by line memory usage of the `sciscraper` program."""
     sciscrape(args.file)
 
 
 def run_bytecode_profiler(sciscrape: SciScraper) -> None:
-    """Reproduce the bytecode of the entire `sciscraper` program."""
+    """
+    Reproduces the bytecode of the entire `sciscraper` program.
+
+    Args:
+        sciscrape (SciScraper): The sciscraper function to be profiled.
+
+    Returns:
+        None
+    """
     dis.dis(sciscrape.__call__)
 
 
-def get_profiler(args: Namespace, sciscrape: SciScraper) -> None: # type: ignore[misc]
+def get_profiler(args: Namespace, sciscrape: SciScraper) -> None:  # type: ignore[misc]
+    """
+    Get the profiler based on the given arguments and sciscraper function.
+
+    Args:
+        args (Namespace): The arguments passed to the script.
+        sciscrape (SciScraper): The sciscraper function to be profiled.
+
+    Returns:
+        None
+    """
     profiler_dict = {
         "benchmark": partial(run_benchmark, args=args),
         "memory": partial(run_memory_profiler, args=args),

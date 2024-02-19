@@ -1,19 +1,21 @@
 from __future__ import annotations
+from pathlib import Path
 
 import re
-
 from dataclasses import dataclass
 from typing import Any
 
 import pdfplumber
-
-from feedparser import FeedParserDict  # type: ignore[import-untyped, unused-ignore]
-from feedparser import parse as feedparse  # type: ignore[import-untyped, unused-ignore]
+from feedparser import (
+    FeedParserDict,
+)  # type: ignore[import-untyped, unused-ignore]
+from feedparser import (
+    parse as feedparse,
+)  # type: ignore[import-untyped, unused-ignore]
 from googlesearch import search  # type: ignore[import-untyped, unused-ignore]
-from pydantic import FilePath
+from src.config import FilePath
 
-from src.doi_regex import IDENTIFIER_TYPES
-from src.doi_regex import standardize_doi
+from src.doi_regex import IDENTIFIER_PATTERNS, extract_identifier
 from src.log import logger
 from src.webscrapers import client
 
@@ -26,13 +28,23 @@ class DOIFromPDFResult:
 
 
 def doi_from_pdf(file: FilePath, preprint: str) -> DOIFromPDFResult | None:
+    """
+    Extracts a DOI from a PDF file using a set of heuristics.
+
+    Parameters:
+        file (FilePath): The path to the PDF file.
+        preprint (str): A preprint identifier, such as a manuscript ID or arXiv ID.
+
+    Returns:
+        DOIFromPDFResult: A data class containing the extracted DOI, if any, and its type.
+    """
     metadata: dict[Any, Any] = extract_metadata(file)
-    title: str = metadata.get("Title", file.stem)
+    title: str = metadata.get("Title", Path(file).stem)
     handlers: dict[Any, Any] = {
         find_identifier_in_metadata: (metadata,),
         find_identifier_in_pdf_info: (metadata,),
-        find_identifier_in_text: (title, IDENTIFIER_TYPES, True),
-        find_identifier_in_text: (preprint, IDENTIFIER_TYPES),
+        find_identifier_in_text: (title, IDENTIFIER_PATTERNS, True),
+        find_identifier_in_text: (preprint, IDENTIFIER_PATTERNS),
         find_identifier_by_googling_first_n_characters_in_pdf: (preprint,),
     }
     handler_comprehension = (
@@ -113,6 +125,15 @@ def find_identifier_in_pdf_info(
 
 
 def extract_metadata(file: FilePath) -> dict[Any, Any]:
+    """
+    Extracts metadata from a PDF file using the pdfplumber library.
+
+    Parameters:
+        file (FilePath): The path to the PDF file.
+
+    Returns:
+        dict: A dictionary containing the metadata key-value pairs.
+    """
     with pdfplumber.open(file) as pdf:
         metadata = pdf.metadata
         logger.debug(metadata)
@@ -121,7 +142,7 @@ def extract_metadata(file: FilePath) -> dict[Any, Any]:
 
 def find_identifier_in_text(
     text: str,
-    pattern_dict: dict[str, list[re.Pattern[str]]] = IDENTIFIER_TYPES,
+    pattern_dict: dict[str, list[re.Pattern[str]]] = IDENTIFIER_PATTERNS,
     title_search: bool = False,
 ) -> DOIFromPDFResult | None:
     """
@@ -160,7 +181,7 @@ def find_identifier_in_text(
 
         validation = validate_identifier(identifier, id_type)
         identifier = (
-            standardize_doi(identifier) if id_type == "doi" else identifier
+            extract_identifier(identifier) if id_type == "doi" else identifier
         )
 
     return DOIFromPDFResult(identifier, id_type, validation)

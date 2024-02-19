@@ -1,12 +1,16 @@
 from __future__ import annotations
+from argparse import Namespace
 
 import contextlib
+import logging
 
 from typing import Literal
+from unittest.mock import Mock
 
 import pytest
 
 from main import main
+from src.profilers import get_profiler
 
 
 @pytest.mark.parametrize("option", ("-h", "--help"))

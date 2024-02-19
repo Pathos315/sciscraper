@@ -4,20 +4,19 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 
-from src.config import UTF
+from src.config import UTF, FilePath
 from src.log import logger
-
 
 if TYPE_CHECKING:
     from pathlib import Path
 
 
-def serialize_from_txt(target: Path) -> list[str]:
+def serialize_from_txt(target: FilePath) -> list[str]:
     with open(target, encoding=UTF) as iowrapper:
         return [word.strip().lower() for word in iowrapper]
 
 
-def serialize_from_csv(target: Path, column: str = "doi") -> list[str]:
+def serialize_from_csv(target: FilePath, column: str = "doi") -> list[str]:
     """
     serialize_from_csv
         Reads a .csv file of papers
@@ -48,7 +47,9 @@ def serialize_from_csv(target: Path, column: str = "doi") -> list[str]:
     return cleaned_data
 
 
-def serialize_from_directory(target: Path, suffix: str = "pdf") -> list[Path]:
+def serialize_from_directory(
+    target: FilePath, suffix: str = "pdf"
+) -> list[Path]:
     """
     serialize_directory takes a directory `target` and returns a list[str]
     of its contents to be scraped.
@@ -67,7 +68,7 @@ def serialize_from_directory(target: Path, suffix: str = "pdf") -> list[Path]:
         A list of files from the provided directory, `target` that adhere
         to the requested format `suffix`.
     """
-    data_list: list[Path] = list(target.rglob(f"*.{suffix}"))
+    data_list: list[Path] = list(Path(target).rglob(f"*.{suffix}"))
     logger.debug(
         "serializer=%s, terms=%s", serialize_from_directory, data_list
     )

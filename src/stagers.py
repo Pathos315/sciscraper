@@ -3,9 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from src.log import logger
-from src.serials import clean_any_nested_columns
-from src.serials import list_with_na_replacement
-
+from src.serials import clean_any_nested_columns, list_with_na_replacement
 
 if TYPE_CHECKING:
     import pandas as pd

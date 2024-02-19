@@ -3,35 +3,21 @@ returning various dataframes for each"""
 
 from __future__ import annotations
 
-from abc import ABC
-from abc import abstractmethod
-from collections.abc import Callable
-from collections.abc import Iterable
+from abc import ABC, abstractmethod
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
-
 from tqdm import tqdm
 
 from src.change_dir import change_dir
-from src.config import KEY_TYPE_PAIRINGS
-from src.config import config
-from src.docscraper import DocScraper
-from src.docscraper import DocumentResult
-from src.downloaders import Downloader
-from src.downloaders import DownloadReceipt
+from src.config import KEY_TYPE_PAIRINGS, FilePath, config
+from src.docscraper import DocScraper, DocumentResult
+from src.downloaders import Downloader, DownloadReceipt
 from src.log import logger
-from src.webscrapers import WebScraper
-from src.webscrapers import WebScrapeResult
-
-
-if TYPE_CHECKING:
-    from pydantic import DirectoryPath
-    from pydantic import FilePath
-
+from src.webscrapers import WebScraper, WebScrapeResult
 
 SerializationStrategyFunction = Callable[[Path], list[Any]]
 StagingStrategyFunction = Callable[[pd.DataFrame], Iterable[Any]]
@@ -250,7 +236,7 @@ class SciScraper:
     @staticmethod
     def export_sciscrape_results(
         dataframe: pd.DataFrame,
-        export_dir: DirectoryPath = Path(config.export_dir),
+        export_dir: FilePath = Path(config.export_dir),
     ) -> None:
         """Export data to the specified export directory."""
         SciScraper.dataframe_logging(dataframe)

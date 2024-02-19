@@ -2,17 +2,16 @@
 
 By John Fallot <john.fallot@gmail.com>
 """
+
 from __future__ import annotations
 
 from time import perf_counter
 from typing import TYPE_CHECKING
 
 from src.argsbuilder import build_parser
-from src.factories import SCISCRAPERS
-from src.factories import read_factory
+from src.factories import SCISCRAPERS, read_factory
 from src.log import logger
 from src.profilers import get_profiler
-
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
