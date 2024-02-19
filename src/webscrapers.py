@@ -130,10 +130,10 @@ class GoogleScholarScraper(WebScraper):
                 "as_yhi": self.end_year,
                 f"{publication_type}": publication_type,
                 "start": start,
-            }
+            }  # type: ignore
 
             sleep(self.sleep_val)
-            response = client.get(self.url, params=params_)
+            response = client.get(self.url, params=params_)  # type: ignore
             if not response.ok:
                 logger.error(f"An error occurred for {search_text}")
                 return
@@ -274,9 +274,9 @@ class DimensionsScraper(WebScraper):
                 "search_mode": "content",
                 "search_text": search_text,
                 "search_type": "kws",
-                "search_field": "doi"
-                if search_text.startswith("10.")
-                else "text_search",
+                "search_field": (
+                    "doi" if search_text.startswith("10.") else "text_search"
+                ),
             }
         )
 

@@ -112,11 +112,11 @@ class DocScraper:
     a percentage grade called WordscoreCalculator.
     """
 
-    target_words_file: Path
-    bycatch_words_file: Path
+    target_words_file: str | Path
+    bycatch_words_file: str | Path
     is_pdf: bool = True
 
-    def unpack_txt_files(self, txtfile: FilePath) -> set[str]:
+    def unpack_txt_files(self, txtfile: str | Path) -> set[str]:
         """
         Opens a .txt file containing the words that will analyze
         the ensuing passage, and creates a set with those words.

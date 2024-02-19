@@ -245,7 +245,7 @@ class SciScraper:
         dataframe: pd.DataFrame | pd.Series,
     ) -> pd.Timestamp:
         """Converts all paper publication dates to the datetime format."""
-        return pd.to_datetime(dataframe["pub_date"], errors="ignore")
+        return pd.to_datetime(dataframe["pub_date"], errors="coerce")  # type: ignore
 
     @staticmethod
     def export_sciscrape_results(

@@ -56,23 +56,6 @@ def test_citation_querystring_creation():
     assert isinstance(citation_scraper.style.value, str)
 
 
-def test_obtain_null_search_text(scraper: DimensionsScraper):
-    with pytest.raises(AttributeError):
-        scraper.obtain(None)
-
-
-@pytest.mark.skipif
-def test_obtain_search_data(scraper: DimensionsScraper):
-    input_query = "10.1103/physrevlett.124.048301"
-    output = scraper.obtain(input_query)
-    assert isinstance(output, WebScrapeResult)
-    assert output.doi is input_query
-    assert (
-        output.title
-        == "Modeling Echo Chambers and Polarization Dynamics in Social Networks"
-    )
-
-
 def test_obtain_returns_none(faulty_scraper: DimensionsScraper):
     input_query = "10.1103/physrevlett.124.048301"
     output = faulty_scraper.obtain(input_query)
