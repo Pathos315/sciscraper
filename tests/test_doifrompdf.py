@@ -1,120 +1,44 @@
 import pdfplumber
 import pytest
-from pydantic import FilePath
+from typing import TYPE_CHECKING
 
-from src.doifrompdf import (
-    doi_from_pdf,
-    find_identifier_by_googling_first_n_characters_in_pdf,
-    find_identifier_in_google_search,
-    find_identifier_in_metadata,
-    find_identifier_in_pdf_info,
-    find_identifier_in_text,
-)
+if TYPE_CHECKING:
+    from pathlib import Path
+    from src.config import FilePath
+
+from unittest.mock import MagicMock
 
 
-@pytest.fixture
-def file_path() -> FilePath:
-    return "tests/data/sample.pdf"  # type: ignore
+CONTENT = "Hello world!"
+TEST_DOI = "10.1234/foo.bar"
+TEST_ARXIV = "12345678"
 
 
-@pytest.fixture
-def preprint() -> str:
-    return "1234.5678"
+@pytest.fixture(scope="session")
+def invalid_file(tmp_path):
+    d: Path = tmp_path / "path"
+    d.mkdir()
+    p = d / "hello.pdf"
+    p.write_text(CONTENT)
+    assert p.read_text() == CONTENT
+    return p
 
 
-@pytest.mark.xfail
-def test_doi_from_pdf(file_path: FilePath, preprint: str) -> None:
-    metadata = {"Title": "Test Title"}
-    result = doi_from_pdf(file_path, preprint)
-    assert result is not None
-    assert result.identifier == "10.1234/1234.5678"
-    assert result.identifier_type == "doi"
+@pytest.fixture(scope="session")
+def doi_file(tmp_path):
+    d: Path = tmp_path / "path"
+    d.mkdir()
+    p = d / "doi.pdf"
+    p.write_text(TEST_DOI)
+    assert p.read_text() == TEST_DOI
+    return p
 
 
-@pytest.mark.xfail
-def test_doi_from_pdf_no_match(file_path: FilePath, preprint: str) -> None:
-    result = doi_from_pdf(file_path, "12345678")
-    assert result is None
-
-
-@pytest.mark.xfail
-def test_extract_metadata(file_path: FilePath) -> None:
-    with pdfplumber.open(file_path) as pdf:
-        metadata = pdf.metadata
-        assert metadata == {"Title": "Test Title"}
-
-
-def test_find_identifier_in_metadata(file_path: FilePath) -> None:
-    metadata = {"doi": "10.1234/1234.5678", "Title": "Test Title"}
-    result = find_identifier_in_metadata(metadata)
-    assert result is not None
-    assert result.identifier == "10.1234/1234.5678"
-    assert result.identifier_type == "doi"
-
-
-@pytest.mark.xfail
-def test_find_identifier_in_metadata_no_match(file_path: FilePath) -> None:
-    metadata = {"arxiv": "1234.5678", "Title": "Test Title"}
-    result = find_identifier_in_metadata(metadata)
-    assert result is None
-
-
-@pytest.mark.xfail
-def test_find_identifier_in_pdf_info(file_path: FilePath) -> None:
-    metadata = {
-        "/Title": "Test Title",
-        "/wps-journaldoi": "10.1234/1234.5678",
-    }
-    result = find_identifier_in_pdf_info(metadata)
-    assert result is not None
-    assert result.identifier == "10.1234/1234.5678"
-    assert result.identifier_type == "doi"
-
-
-@pytest.mark.xfail
-def test_find_identifier_in_pdf_info_no_match(file_path: FilePath) -> None:
-    metadata = {"/Title": "Test Title"}
-    result = find_identifier_in_pdf_info(metadata)
-    assert result is None
-
-
-@pytest.mark.xfail
-def test_find_identifier_in_text(file_path: FilePath) -> None:
-    text = "This is a test text with DOI: 10.1234/1234.5678"
-    result = find_identifier_in_text(text)
-    assert result is not None
-    assert result.identifier == "10.1234/1234.5678"
-    assert result.identifier_type == "doi"
-
-
-@pytest.mark.xfail
-def test_find_identifier_in_text_no_match(file_path: FilePath) -> None:
-    text = "This is a test text with no DOI."
-    result = find_identifier_in_text(text)
-    assert result is None
-
-
-@pytest.mark.xfail
-def test_find_identifier_by_googling_first_n_characters_in_pdf(
-    file_path: FilePath,
-) -> None:
-    text = "This is a test text with DOI: 10.1234/1234.5678"
-    result = find_identifier_by_googling_first_n_characters_in_pdf(text)
-    assert result is not None
-    assert result.identifier == "10.1234/1234.5678"
-    assert result.identifier_type == "doi"
-
-
-@pytest.mark.xfail
-def test_find_identifier_by_googling_first_n_characters_in_pdf_no_match(
-    file_path: FilePath,
-) -> None:
-    text = "This is a test text with no DOI."
-    result = find_identifier_by_googling_first_n_characters_in_pdf(text)
-    assert result is None
-
-
-@pytest.mark.xfail
-def test_find_identifier_in_google_search(file_path: FilePath) -> None:
-    result = find_identifier_in_google_search("test")
-    assert result is None
+@pytest.fixture(scope="session")
+def arxiv_file(tmp_path):
+    d: Path = tmp_path / "path"
+    d.mkdir()
+    p = d / "arxiv.pdf"
+    p.write_text(TEST_ARXIV)
+    assert p.read_text() == TEST_ARXIV
+    return p

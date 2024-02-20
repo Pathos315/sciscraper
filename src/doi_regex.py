@@ -1,5 +1,4 @@
 from __future__ import annotations
-from itertools import chain
 import re
 
 DOI_PATTERNS = [
@@ -55,17 +54,13 @@ def standardize_identifier(identifier: str, pattern_key: str) -> str | None:
     for matches in regex.finditer(identifier.casefold()):
         meta.update(matches.groupdict())
 
-    if pattern_key == "doi" and any(
-        key not in meta for key in ["registrant", "suffix"]
-    ):
-        return None
-    elif pattern_key == "arxiv" and "identifier" not in meta:
-        return None
-
     if pattern_key == "doi":
-        return f"10.{meta['registrant']}/{meta['suffix']}"
-    else:
-        return meta["identifier"]
+        return (
+            None
+            if any(key not in meta for key in ["registrant", "suffix"])
+            else f"10.{meta['registrant']}/{meta['suffix']}"
+        )
+    return None if "identifier" not in meta else meta["identifier"]
 
 
 def extract_identifier(
@@ -75,9 +70,9 @@ def extract_identifier(
     for pattern_key, pattern_list in IDENTIFIER_PATTERNS.items():
         for pattern in pattern_list:
             if match := pattern.search(text.casefold()):
-                if pattern_key == "arxiv" and (meta := match.group(0)):
-                    return standardize_identifier(meta, pattern_key)
-                if meta := match.group(1):
+                if pattern_key == "arxiv" and (arxiv_meta := match.group(0)):
+                    return standardize_identifier(arxiv_meta, pattern_key)
+                if doi_meta := match.group(1):
                     # For DOI, standardize and return it
-                    return standardize_identifier(meta, pattern_key)
+                    return standardize_identifier(doi_meta, pattern_key)
     return None

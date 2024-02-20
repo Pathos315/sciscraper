@@ -1,20 +1,17 @@
 from __future__ import annotations
-from pathlib import Path
 
 import re
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import pdfplumber
-from feedparser import (
-    FeedParserDict,
-)  # type: ignore[import-untyped, unused-ignore]
-from feedparser import (
-    parse as feedparse,
-)  # type: ignore[import-untyped, unused-ignore]
+from feedparser import FeedParserDict
+from feedparser import \
+    parse as feedparse  # type: ignore[import-untyped, unused-ignore]
 from googlesearch import search  # type: ignore[import-untyped, unused-ignore]
-from src.config import FilePath
 
+from src.config import FilePath
 from src.doi_regex import IDENTIFIER_PATTERNS, extract_identifier
 from src.log import logger
 from src.webscrapers import client

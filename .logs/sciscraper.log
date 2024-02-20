@@ -950,3 +950,360 @@
 
 [sciscraper]: 2024-02-19 19:22:36,315 - No valid DOI found in the document text.
 
+
+[sciscraper]: 2024-02-19 19:54:45,227 - Performing google search with key test, considering first 3 results...
+
+
+[sciscraper]: 2024-02-19 19:54:47,926 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-19 19:54:47,927 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-20 08:01:03,074 - Method #1: Looking for a valid identifier in the document metadata...
+
+
+[sciscraper]: 2024-02-20 08:01:03,077 - Identifier found using Method #1 10.1234/1234.5678
+
+
+[sciscraper]: 2024-02-20 08:01:03,081 - Method #1: Looking for a valid identifier in the document metadata...
+
+
+[sciscraper]: 2024-02-20 08:01:03,082 - Identifier found using Method #1 1234.5678
+
+
+[sciscraper]: 2024-02-20 08:01:03,105 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-20 08:01:03,106 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-20 08:01:03,155 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-20 08:01:03,160 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-20 08:01:03,193 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-20 08:01:03,194 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-20 08:01:03,215 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-20 08:01:03,216 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-20 08:01:03,238 - Method #4: Trying to do a google search with the first 50 characters of this pdf file...
+
+
+[sciscraper]: 2024-02-20 08:01:03,239 - Performing google search with first 3 characters of the text...
+
+
+[sciscraper]: 2024-02-20 08:01:03,239 - Performing google search with key this is a test text with doi: 10.1234/1234.5678, considering first 3 results...
+
+
+[sciscraper]: 2024-02-20 08:01:05,749 - No valid identifier found in the search results.
+
+
+[sciscraper]: 2024-02-20 08:01:05,760 - Method #4: Trying to do a google search with the first 50 characters of this pdf file...
+
+
+[sciscraper]: 2024-02-20 08:01:05,760 - Performing google search with first 3 characters of the text...
+
+
+[sciscraper]: 2024-02-20 08:01:05,760 - Performing google search with key this is a test text with no doi., considering first 3 results...
+
+
+[sciscraper]: 2024-02-20 08:01:08,358 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-20 08:01:08,358 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-20 08:01:08,386 - Performing google search with key test, considering first 3 results...
+
+
+[sciscraper]: 2024-02-20 08:01:11,202 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-20 08:01:11,202 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-20 08:01:11,443 - Unknown data scraping process option: lisjdfklsdjlkfjdsklfjsd.
+
+
+[sciscraper]: 2024-02-20 08:01:11,519 - 
+
+   col1  col2
+0     1     4
+1     2     5
+2     3     6
+
+
+[sciscraper]: 2024-02-20 08:01:11,579 - A spreadsheet was exported as test_50.csv.
+
+
+[sciscraper]: 2024-02-20 08:01:11,667 - [<Mock name='mock.obtain()' id='4854992336'>]
+
+
+[sciscraper]: 2024-02-20 08:01:11,679 - []
+
+
+[sciscraper]: 2024-02-20 08:01:12,814 - Starting new HTTPS connection (1): httpstat.us:443
+
+
+[sciscraper]: 2024-02-20 08:01:13,104 - https://httpstat.us:443 "GET /404?search_mode=content&search_text=10.1103%2Fphysrevlett.124.048301&search_type=kws&search_field=doi HTTP/1.1" 404 13
+
+
+[sciscraper]: 2024-02-20 08:01:13,106 - search_text=10.1103/physrevlett.124.048301, scraper=DimensionsScraper(url='https://httpstat.us/404', sleep_val=1.0, query_subset_citations=False), status_code=404
+
+
+[sciscraper]: 2024-02-20 08:01:13,208 - Starting new HTTPS connection (1): citation.crosscite.org:443
+
+
+[sciscraper]: 2024-02-20 08:01:13,750 - https://citation.crosscite.org:443 "GET /format?doi=10.0000&style=apa&lang=en-US HTTP/1.1" 404 None
+
+
+[sciscraper]: 2024-02-20 08:01:13,752 - search_text=10.0000, scraper=CitationScraper(url='https://citation.crosscite.org/format', sleep_val=0.1, style=<Style.APA: 'apa'>, lang='en-US'), status_code=404
+
+
+[sciscraper]: 2024-02-20 08:01:55,328 - Method #1: Looking for a valid identifier in the document metadata...
+
+
+[sciscraper]: 2024-02-20 08:01:55,329 - Identifier found using Method #1 10.1234/1234.5678
+
+
+[sciscraper]: 2024-02-20 08:01:55,331 - Method #1: Looking for a valid identifier in the document metadata...
+
+
+[sciscraper]: 2024-02-20 08:01:55,331 - Identifier found using Method #1 1234.5678
+
+
+[sciscraper]: 2024-02-20 08:01:55,340 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-20 08:01:55,341 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-20 08:01:55,363 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-20 08:01:55,363 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-20 08:01:55,383 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-20 08:01:55,384 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-20 08:01:55,402 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-20 08:01:55,402 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-20 08:01:55,420 - Method #4: Trying to do a google search with the first 50 characters of this pdf file...
+
+
+[sciscraper]: 2024-02-20 08:01:55,421 - Performing google search with first 3 characters of the text...
+
+
+[sciscraper]: 2024-02-20 08:01:55,422 - Performing google search with key this is a test text with doi: 10.1234/1234.5678, considering first 3 results...
+
+
+[sciscraper]: 2024-02-20 08:01:57,862 - No valid identifier found in the search results.
+
+
+[sciscraper]: 2024-02-20 08:01:57,871 - Method #4: Trying to do a google search with the first 50 characters of this pdf file...
+
+
+[sciscraper]: 2024-02-20 08:01:57,871 - Performing google search with first 3 characters of the text...
+
+
+[sciscraper]: 2024-02-20 08:01:57,871 - Performing google search with key this is a test text with no doi., considering first 3 results...
+
+
+[sciscraper]: 2024-02-20 08:02:00,296 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-20 08:02:00,296 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-20 08:02:00,319 - Performing google search with key test, considering first 3 results...
+
+
+[sciscraper]: 2024-02-20 08:02:03,017 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-20 08:02:03,017 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-20 08:02:03,162 - Unknown data scraping process option: lisjdfklsdjlkfjdsklfjsd.
+
+
+[sciscraper]: 2024-02-20 08:02:03,248 - 
+
+   col1  col2
+0     1     4
+1     2     5
+2     3     6
+
+
+[sciscraper]: 2024-02-20 08:02:03,288 - A spreadsheet was exported as test_50.csv.
+
+
+[sciscraper]: 2024-02-20 08:02:03,312 - [<Mock name='mock.obtain()' id='4868340768'>]
+
+
+[sciscraper]: 2024-02-20 08:02:03,324 - []
+
+
+[sciscraper]: 2024-02-20 08:02:04,396 - Starting new HTTPS connection (1): httpstat.us:443
+
+
+[sciscraper]: 2024-02-20 08:02:04,691 - https://httpstat.us:443 "GET /404?search_mode=content&search_text=10.1103%2Fphysrevlett.124.048301&search_type=kws&search_field=doi HTTP/1.1" 404 13
+
+
+[sciscraper]: 2024-02-20 08:02:04,694 - search_text=10.1103/physrevlett.124.048301, scraper=DimensionsScraper(url='https://httpstat.us/404', sleep_val=1.0, query_subset_citations=False), status_code=404
+
+
+[sciscraper]: 2024-02-20 08:02:04,700 - Starting new HTTPS connection (1): citation.crosscite.org:443
+
+
+[sciscraper]: 2024-02-20 08:02:05,317 - https://citation.crosscite.org:443 "GET /format?doi=10.0000&style=apa&lang=en-US HTTP/1.1" 404 None
+
+
+[sciscraper]: 2024-02-20 08:02:05,318 - search_text=10.0000, scraper=CitationScraper(url='https://citation.crosscite.org/format', sleep_val=0.1, style=<Style.APA: 'apa'>, lang='en-US'), status_code=404
+
+
+[sciscraper]: 2024-02-20 08:02:57,682 - Method #1: Looking for a valid identifier in the document metadata...
+
+
+[sciscraper]: 2024-02-20 08:02:57,683 - Identifier found using Method #1 10.1234/1234.5678
+
+
+[sciscraper]: 2024-02-20 08:02:57,685 - Method #1: Looking for a valid identifier in the document metadata...
+
+
+[sciscraper]: 2024-02-20 08:02:57,685 - Identifier found using Method #1 1234.5678
+
+
+[sciscraper]: 2024-02-20 08:02:57,694 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-20 08:02:57,694 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-20 08:02:57,715 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-20 08:02:57,716 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-20 08:02:57,735 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-20 08:02:57,735 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-20 08:02:57,751 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-20 08:02:57,752 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-20 08:02:57,768 - Method #4: Trying to do a google search with the first 50 characters of this pdf file...
+
+
+[sciscraper]: 2024-02-20 08:02:57,768 - Performing google search with first 3 characters of the text...
+
+
+[sciscraper]: 2024-02-20 08:02:57,769 - Performing google search with key this is a test text with doi: 10.1234/1234.5678, considering first 3 results...
+
+
+[sciscraper]: 2024-02-20 08:03:00,217 - No valid identifier found in the search results.
+
+
+[sciscraper]: 2024-02-20 08:03:00,225 - Method #4: Trying to do a google search with the first 50 characters of this pdf file...
+
+
+[sciscraper]: 2024-02-20 08:03:00,225 - Performing google search with first 3 characters of the text...
+
+
+[sciscraper]: 2024-02-20 08:03:00,226 - Performing google search with key this is a test text with no doi., considering first 3 results...
+
+
+[sciscraper]: 2024-02-20 08:03:02,648 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-20 08:03:02,649 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-20 08:03:02,671 - Performing google search with key test, considering first 3 results...
+
+
+[sciscraper]: 2024-02-20 08:03:05,274 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-20 08:03:05,274 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-20 08:03:05,409 - Unknown data scraping process option: lisjdfklsdjlkfjdsklfjsd.
+
+
+[sciscraper]: 2024-02-20 08:03:05,467 - 
+
+   col1  col2
+0     1     4
+1     2     5
+2     3     6
+
+
+[sciscraper]: 2024-02-20 08:03:05,503 - A spreadsheet was exported as test_50.csv.
+
+
+[sciscraper]: 2024-02-20 08:03:05,529 - [<Mock name='mock.obtain()' id='4713118224'>]
+
+
+[sciscraper]: 2024-02-20 08:03:05,541 - []
+
+
+[sciscraper]: 2024-02-20 08:03:06,615 - Starting new HTTPS connection (1): httpstat.us:443
+
+
+[sciscraper]: 2024-02-20 08:03:06,935 - https://httpstat.us:443 "GET /404?search_mode=content&search_text=10.1103%2Fphysrevlett.124.048301&search_type=kws&search_field=doi HTTP/1.1" 404 13
+
+
+[sciscraper]: 2024-02-20 08:03:06,937 - search_text=10.1103/physrevlett.124.048301, scraper=DimensionsScraper(url='https://httpstat.us/404', sleep_val=1.0, query_subset_citations=False), status_code=404
+
+
+[sciscraper]: 2024-02-20 08:03:06,959 - Starting new HTTPS connection (1): citation.crosscite.org:443
+
+
+[sciscraper]: 2024-02-20 08:03:07,554 - https://citation.crosscite.org:443 "GET /format?doi=10.0000&style=apa&lang=en-US HTTP/1.1" 404 None
+
+
+[sciscraper]: 2024-02-20 08:03:07,556 - search_text=10.0000, scraper=CitationScraper(url='https://citation.crosscite.org/format', sleep_val=0.1, style=<Style.APA: 'apa'>, lang='en-US'), status_code=404
+
+
+[sciscraper]: 2024-02-20 08:44:31,612 - seek: 0
+
+
+[sciscraper]: 2024-02-20 08:44:31,895 - seek: 0
+
+
+[sciscraper]: 2024-02-20 08:44:32,046 - seek: 0
+
+
+[sciscraper]: 2024-02-20 08:44:42,319 - seek: 0
+
+
+[sciscraper]: 2024-02-20 08:44:42,571 - seek: 0
+
+
+[sciscraper]: 2024-02-20 08:44:42,687 - seek: 0
+

@@ -4,15 +4,13 @@ for use in the `main` module.
 
 from __future__ import annotations
 
-from argparse import ArgumentParser
-from argparse import Namespace
+from argparse import ArgumentParser, Namespace
 from typing import TYPE_CHECKING
 
 from pydantic import FilePath
 
 from src.config import config
 from src.factories import SCISCRAPERS
-
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
