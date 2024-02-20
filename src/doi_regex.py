@@ -45,32 +45,27 @@ ARXIV_REGEX = re.compile(
 IDENTIFIER_PATTERNS = {"doi": DOI_PATTERNS, "arxiv": ARXIV_PATTERNS}
 
 
-def standardize_doi(identifier: str) -> str | None:
+def standardize_identifier(identifier: str, pattern_key: str) -> str | None:
     """
-    Standardize a DOI by removing any marker, lowercase, and applying a consistent separator
+    Standardize a DOI or arXiv identifier by removing any marker, lowercase, and applying a consistent separator
     """
-    doi_meta = {}
-    for matches in DOI_REGEX.finditer(identifier.casefold()):
-        doi_meta.update(matches.groupdict())
+    meta = {}
+    regex = DOI_REGEX if pattern_key == "doi" else ARXIV_REGEX
 
-    if any(key not in doi_meta for key in ["registrant", "suffix"]):
+    for matches in regex.finditer(identifier.casefold()):
+        meta.update(matches.groupdict())
+
+    if pattern_key == "doi" and any(
+        key not in meta for key in ["registrant", "suffix"]
+    ):
+        return None
+    elif pattern_key == "arxiv" and "identifier" not in meta:
         return None
 
-    return f"10.{doi_meta['registrant']}/{doi_meta['suffix']}"
-
-
-def standardize_arxiv(identifier: str) -> str | None:
-    """
-    Standardize a DOI by removing any marker, lowercase, and applying a consistent separator
-    """
-    arxiv_meta = {}
-    for matches in ARXIV_REGEX.finditer(identifier.casefold()):
-        arxiv_meta.update(matches.groupdict())
-
-    if any(key not in arxiv_meta for key in ["identifier"]):
-        return None
-
-    return f"{arxiv_meta['identifier']}"
+    if pattern_key == "doi":
+        return f"10.{meta['registrant']}/{meta['suffix']}"
+    else:
+        return meta["identifier"]
 
 
 def extract_identifier(
@@ -80,9 +75,9 @@ def extract_identifier(
     for pattern_key, pattern_list in IDENTIFIER_PATTERNS.items():
         for pattern in pattern_list:
             if match := pattern.search(text.casefold()):
-                if pattern_key == "arxiv" and match.group(0):
-                    return standardize_arxiv(match.group(0))
-                if match.group(1):
+                if pattern_key == "arxiv" and (meta := match.group(0)):
+                    return standardize_identifier(meta, pattern_key)
+                if meta := match.group(1):
                     # For DOI, standardize and return it
-                    return standardize_doi(match.group(1))
+                    return standardize_identifier(meta, pattern_key)
     return None
