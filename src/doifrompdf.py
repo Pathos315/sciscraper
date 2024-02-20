@@ -83,13 +83,10 @@ def find_identifier_in_metadata(
             return DOIFromPDFResult(
                 identifier=initial_result, identifier_type=key
             )
-        else:
-            continue
-    else:
-        logger.info(
-            "Could not find a valid identifier in the most likely metadata keys."
-        )
-        return None
+    logger.info(
+        "Could not find a valid identifier in the most likely metadata keys."
+    )
+    return None
 
 
 def find_identifier_in_pdf_info(
@@ -142,7 +139,6 @@ def extract_metadata(file: FilePath) -> dict[Any, Any]:
 
 def find_identifier_in_text(
     text: str,
-    pattern_dict: dict[str, list[re.Pattern[str]]] = IDENTIFIER_PATTERNS,
     title_search: bool = False,
 ) -> DOIFromPDFResult | None:
     """
@@ -165,7 +161,7 @@ def find_identifier_in_text(
     """
     search_type = "title" if title_search else "text"
 
-    for id_type, pattern in pattern_dict.items():
+    for id_type, pattern in IDENTIFIER_PATTERNS.items():
         logger.info(
             f"Searching for a valid {id_type.upper()} in the document {search_type}..."
         )
@@ -175,7 +171,6 @@ def find_identifier_in_text(
             logger.info(
                 f"No valid {id_type.upper()} found in the document {search_type}."
             )
-            continue
         identifier = matches[0]
         logger.debug(f"Potential {id_type.upper()} found: {identifier}")
 

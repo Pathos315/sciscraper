@@ -878,3 +878,75 @@
 
 [sciscraper]: 2024-02-19 18:07:37,660 - search_text=10.0000, scraper=CitationScraper(url='https://citation.crosscite.org/format', sleep_val=0.1, style=<Style.APA: 'apa'>, lang='en-US'), status_code=404
 
+
+[sciscraper]: 2024-02-19 19:22:28,169 - Method #1: Looking for a valid identifier in the document metadata...
+
+
+[sciscraper]: 2024-02-19 19:22:28,172 - Identifier found using Method #1 10.1234/1234.5678
+
+
+[sciscraper]: 2024-02-19 19:22:28,177 - Method #1: Looking for a valid identifier in the document metadata...
+
+
+[sciscraper]: 2024-02-19 19:22:28,178 - Identifier found using Method #1 1234.5678
+
+
+[sciscraper]: 2024-02-19 19:22:28,191 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-19 19:22:28,192 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-19 19:22:28,222 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-19 19:22:28,223 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-19 19:22:28,255 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-19 19:22:28,255 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-19 19:22:28,276 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-19 19:22:28,277 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-19 19:22:28,298 - Method #4: Trying to do a google search with the first 50 characters of this pdf file...
+
+
+[sciscraper]: 2024-02-19 19:22:28,299 - Performing google search with first 3 characters of the text...
+
+
+[sciscraper]: 2024-02-19 19:22:28,299 - Performing google search with key this is a test text with doi: 10.1234/1234.5678, considering first 3 results...
+
+
+[sciscraper]: 2024-02-19 19:22:30,824 - No valid identifier found in the search results.
+
+
+[sciscraper]: 2024-02-19 19:22:30,835 - Method #4: Trying to do a google search with the first 50 characters of this pdf file...
+
+
+[sciscraper]: 2024-02-19 19:22:30,835 - Performing google search with first 3 characters of the text...
+
+
+[sciscraper]: 2024-02-19 19:22:30,836 - Performing google search with key this is a test text with no doi., considering first 3 results...
+
+
+[sciscraper]: 2024-02-19 19:22:33,442 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-19 19:22:33,442 - No valid DOI found in the document text.
+
+
+[sciscraper]: 2024-02-19 19:22:33,468 - Performing google search with key test, considering first 3 results...
+
+
+[sciscraper]: 2024-02-19 19:22:36,314 - Searching for a valid DOI in the document text...
+
+
+[sciscraper]: 2024-02-19 19:22:36,315 - No valid DOI found in the document text.
+
