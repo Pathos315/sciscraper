@@ -155,7 +155,11 @@ class DocScraper:
         target = match_terms(token_list, target_set)
         bycatch = match_terms(token_list, bycatch_set)
         total_word_count = len(token_list)
-        wordscore: float = target.term_count / 1 + bycatch.term_count
+        wordscore: float = calculate_likelihood(
+            total_word_count,
+            target.term_count,
+            bycatch.term_count,
+        )
         doc = DocumentResult(
             doi_from_pdf=digital_object_identifier,
             matching_terms=target.term_count,
@@ -199,3 +203,42 @@ class DocScraper:
                 for page in pdf.pages
             ]
         return " ".join(text_pages)
+
+
+def calculate_likelihood(
+    total_words: int, desired_matches: int, undesired_matches: int
+) -> float:
+    """
+    Calculates the likelihood score of a manuscript based on the number of words,
+    the number of desired matches, and the number of undesired matches.
+
+    :param int total_words: The total number of words in the manuscript.
+    :param int desired_matches: The number of desired matches between the target words and the manuscript.
+    :param int undesired_matches: The number of undesired matches between the bycatch words and the manuscript.
+
+    :rtype float:
+    :return: The likelihood score, which is a value between 0 and 1. A score of 0 indicates
+        that the manuscript is not relevant to the target words, while a score of 1 indicates
+        that the manuscript is highly relevant to the target words.
+    """
+    if total_words <= 0 or desired_matches < 0 or undesired_matches < 0:
+        return 0.0
+
+    # Calculate the number of words that don't match any criteria
+    other_words = total_words - desired_matches - undesired_matches
+
+    # Calculate the likelihood score
+    desired_weight = 1.0
+    undesired_weight = -0.25
+    other_weight = 0.5
+
+    likelihood_score = (
+        desired_matches * desired_weight
+        + undesired_matches * undesired_weight
+        + other_words * other_weight
+    ) / total_words
+
+    # Ensure the likelihood score is between 0 and 1
+    likelihood_score = max(0.0, min(1.0, likelihood_score))
+
+    return likelihood_score

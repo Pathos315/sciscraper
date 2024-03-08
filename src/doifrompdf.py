@@ -7,8 +7,9 @@ from typing import Any
 
 import pdfplumber
 from feedparser import FeedParserDict
-from feedparser import \
-    parse as feedparse  # type: ignore[import-untyped, unused-ignore]
+from feedparser import (
+    parse as feedparse,
+)  # type: ignore[import-untyped, unused-ignore]
 from googlesearch import search  # type: ignore[import-untyped, unused-ignore]
 
 from src.config import FilePath
@@ -19,6 +20,8 @@ from src.webscrapers import client
 
 @dataclass(frozen=True)
 class DOIFromPDFResult:
+    "A data class containing the extracted identifier, and its type."
+
     identifier: str | None = None
     identifier_type: str | None = None
     validation_info: str | bool | None = True
@@ -28,12 +31,10 @@ def doi_from_pdf(file: FilePath, preprint: str) -> DOIFromPDFResult | None:
     """
     Extracts a DOI from a PDF file using a set of heuristics.
 
-    Parameters:
-        file (FilePath): The path to the PDF file.
-        preprint (str): A preprint identifier, such as a manuscript ID or arXiv ID.
+    :param FilePath file: The path to the PDF file.
+    :param str preprint: A preprint identifier, such as a manuscript ID, or arXiv ID.
 
-    Returns:
-        DOIFromPDFResult: A data class containing the extracted DOI, if any, and its type.
+    :returns: A data class containing the extracted DOI, if any, and its type.
     """
     metadata: dict[Any, Any] = extract_metadata(file)
     title: str = metadata.get("Title", Path(file).stem)
@@ -58,15 +59,10 @@ def find_identifier_in_metadata(
     Searches for a valid identifier (e.g., DOI, arXiv ID) within the given metadata dictionary.
     Prioritizes certain keys for a more efficient search.
 
-    Parameters
-    ----------
-    metadata : dict
-        A dictionary containing metadata key-value pairs.
+    :param dict metadata: A dictionary containing metadata key-value pairs.
 
-    Returns
-    -------
-    DOIFromPDFResult | None
-        A data class containing the identifier and its type if a valid identifier is found; otherwise, None.
+    :rtype: DOIFromPDFResult | None
+    :returns: A data class containing the identifier and its type if a valid identifier is found; otherwise, None.
     """
     priority_keys = {"doi", "pdf2doi_identifier", "arxiv"}
 
@@ -92,12 +88,9 @@ def find_identifier_in_pdf_info(
     """
     Try to find a valid DOI in the values of the 'document information' dictionary.
 
-    Parameters
-    ----------
-    file : object file
-    Returns
-    -------
-    result : dictionary with identifier and other info (see above)
+    :param dict metadata: A dictionary containing metadata key-value pairs.
+    :rtype: DOIFromPDFResult | None
+    :returns: A dictionary with identifier and other info (see above)
     """
     values_to_search = (
         value for key, value in metadata.items() if key != "/wps-journaldoi"
@@ -122,14 +115,13 @@ def extract_metadata(file: FilePath) -> dict[Any, Any]:
     """
     Extracts metadata from a PDF file using the pdfplumber library.
 
-    Parameters:
-        file (FilePath): The path to the PDF file.
+    :param FilePath file: The path to the PDF file.
 
-    Returns:
-        dict: A dictionary containing the metadata key-value pairs.
+    :rtype: dict[Any, Any]
+    :returns: A dictionary containing the metadata key-value pairs.
     """
     with pdfplumber.open(file) as pdf:
-        metadata = pdf.metadata
+        metadata: dict[Any, Any] = pdf.metadata
         logger.debug(metadata)
     return metadata
 
@@ -141,19 +133,11 @@ def find_identifier_in_text(
     """
     Searches for a valid identifier (e.g., DOI or arXiv ID) within a text.
 
-    Parameters
-    ----------
-    text : str
-        Text to be analyzed.
+    :param str text: Text to be analyzed.
+    :param bool title_search: Flag indicating whether the search is for a title.
 
-    Returns
-    -------
-    identifier : string
-        A valid identifier if any is found, or None if nothing was found.
-    pattern_dict : dict
-        Dictionary containing regex patterns as keys and identifier types as values.
-    title_search : bool
-        Flag indicating whether the text is a title.
+    :rtype: DOIFromPDFResult | None
+    :returns: A data class containing the identifier and its type if a valid identifier is found; otherwise, None.
 
     """
     search_type = "title" if title_search else "text"
@@ -183,17 +167,10 @@ def validate_identifier(identifier: str, id_type: str) -> Any:
     """
     Validate an identifier by querying appropriate URLs based on the identifier type.
 
-    Parameters
-    ----------
-    identifier : str
-        The identifier to be validated.
-    id_type : str
-        Type of the identifier ('arxiv' or 'doi').
-
-    Returns
-    -------
-    str | None
-        A string representation of the validation result, or None if validation fails.
+    :params str identifier: The identifier to be validated.
+    :params str id_type: Type of the identifier ('arxiv' or 'doi').
+    :rtype: Any
+    :returns: A string representation of the validation result, or None if validation fails.
     """
     try:
         if id_type == "arxiv":
@@ -222,12 +199,9 @@ def find_identifier_by_googling_first_n_characters_in_pdf(
     Perform a Google search using the first N characters of the text and
     find an identifier in the search results.
 
-    Parameters
-    ----------
-    text : str
-    num_results : int
-    num_characters : int
-    websearch : bool
+    :param str text: The text in which to search for an identifier.
+    :param int num_results: The number of search results to consider, defaults to 3.
+    :param int num_characters: The maximum number of characters to consider, defaults to 50.
     """
     logger.info(
         f"Method #4: Trying to do a google search with the first {num_characters} characters of this pdf file..."
@@ -250,17 +224,13 @@ def find_identifier_in_google_search(
 ) -> DOIFromPDFResult | None:
     """Perform a Google search using the query and find an identifier in the search results.
 
-    Parameters
-    ----------
-    query : str
-        The search query.
-    num_results : int
-        The number of search results to consider.
+    :param str query: The search query.
+    :param int num_results:  The number of search results to consider.
+    :param int max_length_display: The maximum number of characters to consider. Defaults to 100.
 
-    Returns
-    -------
-    DOIFromPDFResult | None
-        The result object containing the identifier information, if found; otherwise, None.
+
+    :rtype: DOIFromPDFResult | None
+    :returns: The result object containing the identifier information, if found; otherwise, None.
     """
     query_to_display: str = (
         query[0:max_length_display]

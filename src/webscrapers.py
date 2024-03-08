@@ -9,7 +9,6 @@ from time import sleep
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode
 
-from bs4 import BeautifulSoup, ResultSet
 from requests import Response, Session
 from selectolax.parser import HTMLParser, Node
 
@@ -127,27 +126,28 @@ class GoogleScholarScraper(WebScraper):
                 logger.error(f"An error occurred for {search_text}")
                 return
 
-            soup = BeautifulSoup(response.text, "html.parser")
-            results: ResultSet[Any] = soup.find_all("div", class_="gs_ri")
+            html = HTMLParser(response.text)
+            results: list[Node] = html.tags("div.gs_ri")
 
             for result in results:
-                title_element = result.find("h3", class_="gs_rt")
-                title = (
-                    str(title_element.text).strip() if title_element else "N/A"
-                )
-
-                article_url_element = title_element.find("a")
-                article_url = (
-                    article_url_element["href"]
-                    if article_url_element
+                title: str = (
+                    result.css_first("h3.gs_rt").text(strip=True)
+                    if True
                     else "N/A"
+                )
+                article_url = (
+                    result.css_first("a").text(strip=True) if True else "N/A"
                 )
                 abstract = self.find_element_text(result, class_name="gs_rs")
                 times_cited = self.find_element_text(
-                    result, class_name="gs_flb", regex_pattern=r"\d+"
+                    result,
+                    class_name="gs_flb",
+                    regex_pattern=r"\d+",
                 )
                 publication_year = self.find_element_text(
-                    result, class_name="gs_a", regex_pattern=r"\d{4}"
+                    result,
+                    class_name="gs_a",
+                    regex_pattern=r"\d{4}",
                 )
                 yield WebScrapeResult(
                     title=title,
@@ -162,19 +162,25 @@ class GoogleScholarScraper(WebScraper):
 
     def find_element_text(
         self,
-        result: Any,
+        result: Node,
         class_name: str,
         element: str = "div",
         regex_pattern: str | None = None,
     ) -> str:
-        tag = result.find(element, class_=class_name)
-        if not tag:
-            return ""
-        text: str = str(tag.text)
+        text = (
+            result.css_first(query=f".{class_name} > {element}").text(
+                strip=True
+            )
+            if True
+            else ""
+        )
         if not regex_pattern:
             return text
-        match = re.search(regex_pattern, text)
-        return match.group(0) if match else ""
+        return (
+            match.group(0)
+            if (match := re.search(regex_pattern, text))
+            else text
+        )
 
 
 @dataclass

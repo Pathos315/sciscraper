@@ -1307,3 +1307,97 @@
 
 [sciscraper]: 2024-02-20 08:44:42,687 - seek: 0
 
+
+[sciscraper]: 2024-03-08 08:26:33,593 - Unknown data scraping process option: lisjdfklsdjlkfjdsklfjsd.
+
+
+[sciscraper]: 2024-03-08 08:26:33,687 - 
+
+   col1  col2
+0     1     4
+1     2     5
+2     3     6
+
+
+[sciscraper]: 2024-03-08 08:26:33,721 - A spreadsheet was exported as test_50.csv.
+
+
+[sciscraper]: 2024-03-08 08:26:33,783 - [<Mock name='mock.obtain()' id='4865860832'>]
+
+
+[sciscraper]: 2024-03-08 08:26:33,799 - []
+
+
+[sciscraper]: 2024-03-08 08:26:34,985 - Starting new HTTPS connection (1): httpstat.us:443
+
+
+[sciscraper]: 2024-03-08 08:26:35,282 - https://httpstat.us:443 "GET /404?search_mode=content&search_text=10.1103%2Fphysrevlett.124.048301&search_type=kws&search_field=doi HTTP/1.1" 404 13
+
+
+[sciscraper]: 2024-03-08 08:26:35,284 - search_text=10.1103/physrevlett.124.048301, scraper=DimensionsScraper(url='https://httpstat.us/404', sleep_val=1.0, query_subset_citations=False), status_code=404
+
+
+[sciscraper]: 2024-03-08 08:26:35,330 - Starting new HTTPS connection (1): citation.crosscite.org:443
+
+
+[sciscraper]: 2024-03-08 08:26:35,983 - https://citation.crosscite.org:443 "GET /format?doi=10.0000&style=apa&lang=en-US HTTP/1.1" 404 None
+
+
+[sciscraper]: 2024-03-08 08:26:35,984 - search_text=10.0000, scraper=CitationScraper(url='https://citation.crosscite.org/format', sleep_val=0.1, style=<Style.APA: 'apa'>, lang='en-US'), status_code=404
+
+
+[sciscraper]: 2024-03-08 08:26:37,030 - Starting new HTTPS connection (1): scholar.google.com:443
+
+
+[sciscraper]: 2024-03-08 08:26:37,258 - https://scholar.google.com:443 "GET /scholar?q=10.1007%2Fs42979-022-00422-4&as_ylo=2022&as_yhi=2022&=&start=0 HTTP/1.1" 200 None
+
+
+[sciscraper]: 2024-03-08 08:27:35,948 - Unknown data scraping process option: lisjdfklsdjlkfjdsklfjsd.
+
+
+[sciscraper]: 2024-03-08 08:27:36,016 - 
+
+   col1  col2
+0     1     4
+1     2     5
+2     3     6
+
+
+[sciscraper]: 2024-03-08 08:27:36,069 - A spreadsheet was exported as test_50.csv.
+
+
+[sciscraper]: 2024-03-08 08:27:36,105 - [<Mock name='mock.obtain()' id='4676974832'>]
+
+
+[sciscraper]: 2024-03-08 08:27:36,125 - []
+
+
+[sciscraper]: 2024-03-08 08:27:37,270 - Starting new HTTPS connection (1): httpstat.us:443
+
+
+[sciscraper]: 2024-03-08 08:27:44,135 - https://httpstat.us:443 "GET /404?search_mode=content&search_text=10.1103%2Fphysrevlett.124.048301&search_type=kws&search_field=doi HTTP/1.1" 404 13
+
+
+[sciscraper]: 2024-03-08 08:27:44,139 - search_text=10.1103/physrevlett.124.048301, scraper=DimensionsScraper(url='https://httpstat.us/404', sleep_val=1.0, query_subset_citations=False), status_code=404
+
+
+[sciscraper]: 2024-03-08 08:27:44,147 - Starting new HTTPS connection (1): citation.crosscite.org:443
+
+
+[sciscraper]: 2024-03-08 08:27:44,790 - https://citation.crosscite.org:443 "GET /format?doi=10.0000&style=apa&lang=en-US HTTP/1.1" 404 None
+
+
+[sciscraper]: 2024-03-08 08:27:44,791 - search_text=10.0000, scraper=CitationScraper(url='https://citation.crosscite.org/format', sleep_val=0.1, style=<Style.APA: 'apa'>, lang='en-US'), status_code=404
+
+
+[sciscraper]: 2024-03-08 08:27:45,807 - Starting new HTTPS connection (1): scholar.google.com:443
+
+
+[sciscraper]: 2024-03-08 08:27:46,057 - https://scholar.google.com:443 "GET /scholar?q=10.1007%2Fs42979-022-00422-4&as_ylo=2022&as_yhi=2022&=&start=0 HTTP/1.1" 200 None
+
+
+[sciscraper]: 2024-03-08 09:01:36,961 - Starting new HTTPS connection (1): scholar.google.com:443
+
+
+[sciscraper]: 2024-03-08 09:01:37,116 - https://scholar.google.com:443 "GET /scholar?q=10.1007%2Fs42979-022-00422-4&as_ylo=2022&as_yhi=2022&=&start=0 HTTP/1.1" 200 None
+

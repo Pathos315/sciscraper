@@ -82,19 +82,10 @@ class Downloader(ABC):
         or not the download was successful, and,
         if so, where the ensuing .pdf may be found.
 
-        Parameters
-        ----------
-        search_text : str
-            Often is the pubid or digital object identifier (DOI)
-            of the paper in question. Might
-            otherwise be a URL as a string.
+        :param str search_text: Often, this the pubid or digital object identifier (DOI) of the paper in question. Might otherwise be a URL as a string.
 
-        Returns
-        -------
-        DownloadReceipt : dataclass
-            A dataclass that describes the `Downloader` used,
-            whether or not the download was successful, and,
-            if so, where that file may be found.
+        :rtype DownloadReceipt:
+        :returns: A dataclass that describes the `Downloader` used, whether or not the download was successful, and, if so, where that file may be found.
         """
 
     def create_document(

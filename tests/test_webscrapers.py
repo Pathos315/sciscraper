@@ -7,7 +7,7 @@ from unittest import mock
 import pytest
 
 from src.config import config
-from src.webscrapers import CitationScraper
+from src.webscrapers import CitationScraper, GoogleScholarScraper
 from src.webscrapers import DimensionsScraper
 from src.webscrapers import WebScrapeResult
 
@@ -94,3 +94,32 @@ def test_obtain_with_mock_patch(
         result = scraper.obtain("test")
         assert isinstance(result, WebScrapeResult)
         assert result == result_data_as_class
+
+
+@pytest.mark.skip
+def test_google_scholar_scraper():
+    scraper = GoogleScholarScraper(
+        url="https://scholar.google.com/scholar",
+        sleep_val=1.0,
+        start_year=2022,
+        end_year=2022,
+        publication_type="all",
+        num_articles=2,
+    )
+    search_text = "10.1007/s42979-022-00422-4"
+    result = next(scraper.obtain(search_text))
+    if result:
+        assert isinstance(result, WebScrapeResult) == True
+        assert (
+            result.title
+            == "A Unified Framework for Federated Learning with Heterogeneous Data"
+        )
+        assert result.pub_date == "2022"
+        assert result.doi == "10.1007/s42979-022-00422-4"
+        assert result.internal_id == "all"
+        assert result.abstract == "N/A"
+        assert result.times_cited == 0
+        assert result.journal_title == None
+        assert result.keywords == ["10.1007/s42979-022-00422-4"]
+        assert result.figures == None
+        assert result.biblio == None

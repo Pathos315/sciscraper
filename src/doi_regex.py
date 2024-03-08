@@ -1,6 +1,7 @@
 from __future__ import annotations
 import re
 
+
 DOI_PATTERNS = [
     re.compile(r"doi[\s\.\:]{0,2}(10\.\d{4}[\d\:\.\-\/a-z]+)(?:[\s\n\"<]|$)"),
     re.compile(r"(10\.\d{4}[\d\:\.\-\/a-z]+)(?:[\s\n\"<]|$)"),
@@ -41,7 +42,10 @@ ARXIV_REGEX = re.compile(
     flags=re.IGNORECASE,  # Using IGNORECASE flag to make the regex case-insensitive
 )
 
-IDENTIFIER_PATTERNS = {"doi": DOI_PATTERNS, "arxiv": ARXIV_PATTERNS}
+IDENTIFIER_PATTERNS = {
+    "doi": DOI_PATTERNS,
+    "arxiv": ARXIV_PATTERNS,
+}
 
 
 def standardize_identifier(identifier: str, pattern_key: str) -> str | None:

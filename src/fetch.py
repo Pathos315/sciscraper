@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import pandas as pd
 from tqdm import tqdm
@@ -93,13 +93,13 @@ class ScrapeFetcher(Fetcher):
     """
 
     serializer: SerializationStrategyFunction
-    _title_serializer: SerializationStrategyFunction | None = None
+    title_serializer: SerializationStrategyFunction | None = None
 
     def __call__(self, target: Path) -> pd.DataFrame:
         search_terms: list[str] = self.serializer(target)
         outcome = self.fetch(search_terms)
-        if self._title_serializer:
-            outcome["title"] = self._title_serializer(target)
+        if self.title_serializer:
+            outcome["title"] = self.title_serializer(target)
         return outcome
 
 

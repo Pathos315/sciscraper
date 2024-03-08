@@ -45,7 +45,7 @@ SCRAPERS: dict[str, ScrapeFetcher] = {
             serialize_from_csv,
             column="abstract",
         ),
-        _title_serializer=partial(
+        title_serializer=partial(
             serialize_from_csv,
             column="title",
         ),
