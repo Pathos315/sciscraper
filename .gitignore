@@ -14,6 +14,6 @@ Pipfile
 **/sciscrape/local_bibtexparser.py
 **src/config_setup.json
 dist/**
-sciscrape/sciscraper.code-workspace
+sciscraper.code-workspace
 .logs/** */
 .logs/sciscraper.log
