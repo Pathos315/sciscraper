@@ -1,278 +1,578 @@
+"""
+Identifier extraction from PDF documents.
+
+This module provides functionality to extract and validate document identifiers
+(DOI, arXiv) from PDF files using various methods including metadata analysis,
+text extraction, and external services.
+"""
+
 from __future__ import annotations
 
+import re
+from dataclasses import dataclass
+from enum import Enum, auto
 from pathlib import Path
-from typing import Any
+from typing import (
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Protocol,
+    Set,
+    Tuple,
+    Union,
+    cast,
+)
 
 import pdfplumber
-from feedparser import FeedParserDict
-from feedparser import (
-    parse as feedparse,
-)  # type: ignore[import-untyped, unused-ignore]
-from googlesearch import search  # type: ignore[import-untyped, unused-ignore]
 
-from src.config import FilePath, config
-from src.doi_regex import IDENTIFIER_PATTERNS, extract_identifier
+from src.doi_regex import extract_identifier
+from src.exceptions import DocumentError
+from src.http_client import HttpClient
 from src.log import logger
-from src.scraperesults import DOIFromPDFResult
-from src.webscrapers import client
 
 
-def doi_from_pdf(file: FilePath, preprint: str) -> DOIFromPDFResult | None:
-    """
-    Extracts a DOI from a PDF file using a set of heuristics.
+class IdentifierType(Enum):
+    """Types of document identifiers."""
 
-    :param FilePath file: The path to the PDF file.
-    :param str preprint: A preprint identifier, such as a manuscript ID, or arXiv ID.
+    DOI = auto()
+    ARXIV = auto()
+    UNKNOWN = auto()
 
-    :returns: A data class containing the extracted DOI, if any, and its type.
-    """
-    metadata: dict[Any, Any] = extract_metadata(file)
-    title: str = metadata.get("Title", Path(file).stem)
-    handlers: dict[Any, Any] = {
-        find_identifier_in_metadata: (metadata,),
-        find_identifier_in_pdf_info: (metadata,),
-        find_identifier_in_text: (title, IDENTIFIER_PATTERNS, True),
-        find_identifier_in_text: (preprint, IDENTIFIER_PATTERNS),
-        find_identifier_by_googling_first_n_characters_in_pdf: (preprint,),
-    }
-    handler_comprehension = (
-        handler(*args) for handler, args in handlers.items()
-    )
-    filtered_handler: filter[Any] = filter(None, handler_comprehension)
-    return next(filtered_handler, None)
+    @classmethod
+    def from_string(cls, value: str) -> "IdentifierType":
+        """Convert a string to an IdentifierType."""
+        value = value.lower()
+        if value in ("doi", "digital object identifier"):
+            return cls.DOI
+        elif value in ("arxiv", "arxivid", "arxiv id"):
+            return cls.ARXIV
+        return cls.UNKNOWN
 
 
-def find_identifier_in_metadata(
-    metadata: dict[str, Any],
-) -> DOIFromPDFResult | None:
-    """
-    Searches for a valid identifier (e.g., DOI, arXiv ID) within the given metadata dictionary.
-    Prioritizes certain keys for a more efficient search.
+@dataclass
+class IdentifierResult:
+    """Result of an identifier extraction operation."""
 
-    :param dict metadata: A dictionary containing metadata key-value pairs.
+    identifier: str
+    """The extracted identifier value."""
 
-    :rtype: DOIFromPDFResult | None
-    :returns: A data class containing the identifier and its type if a valid identifier is found; otherwise, None.
-    """
+    id_type: IdentifierType
+    """The type of the identifier."""
 
-    logger.info(
-        "Method #1: Looking for a valid identifier in the document metadata..."
-    )
+    method: str
+    """Method used to extract the identifier."""
 
-    for key in config.priority_keys:
-        if not (initial_result := metadata.get(key)):
-            continue
-        logger.info(f"Identifier found using Method #1 {initial_result}")
-        return DOIFromPDFResult(identifier=initial_result, identifier_type=key)
-    logger.info(
-        "Could not find a valid identifier in the most likely metadata keys."
-    )
-    return None
+    confidence: float = 1.0
+    """Confidence level (0.0-1.0) in the correctness of the identifier."""
 
+    validated: bool = False
+    """Whether the identifier has been validated."""
 
-def find_identifier_in_pdf_info(
-    metadata: dict[str, str],
-) -> DOIFromPDFResult | None:
-    """
-    Try to find a valid DOI in the values of the 'document information' dictionary.
+    source: str = ""
+    """Source of the identifier (e.g., metadata field name)."""
 
-    :param dict metadata: A dictionary containing metadata key-value pairs.
-    :rtype: DOIFromPDFResult | None
-    :returns: A dictionary with identifier and other info (see above)
-    """
-    values_to_search = (
-        value for key, value in metadata.items() if key != "/wps-journaldoi"
-    )
-
-    for value in values_to_search:
-        result = find_identifier_in_text(value)
-        if not (result and result.identifier):
-            continue
-        logger.info(
-            f"A valid {result.identifier_type} was found in the document info labelled '{value}'."
+    @property
+    def is_valid(self) -> bool:
+        """Check if this is a valid, high-confidence result."""
+        return bool(
+            self.identifier
+            and self.confidence > 0.5
+            and self.id_type != IdentifierType.UNKNOWN
         )
-        return result
-    logger.info(f"No valid identifier found in the metadata key: '{value}'.")
-    return None
 
-
-def extract_metadata(file: FilePath) -> dict[Any, Any]:
-    """
-    Extracts metadata from a PDF file using the pdfplumber library.
-
-    :param FilePath file: The path to the PDF file.
-
-    :rtype: dict[Any, Any]
-    :returns: A dictionary containing the metadata key-value pairs.
-    """
-    with pdfplumber.open(file) as pdf:
-        metadata: dict[Any, Any] = pdf.metadata
-        logger.debug(metadata)
-    return metadata
-
-
-def find_identifier_in_text(
-    text: str,
-    title_search: bool = False,
-) -> DOIFromPDFResult | None:
-    """
-    Searches for a valid identifier (e.g., DOI or arXiv ID) within a text.
-
-    :param str text: Text to be analyzed.
-    :param bool title_search: Flag indicating whether the search is for a title.
-
-    :rtype: DOIFromPDFResult | None
-    :returns: A data class containing the identifier and its type if a valid identifier is found; otherwise, None.
-
-    """
-    search_type = "title" if title_search else "text"
-
-    identifier = ""
-    for id_type, pattern in IDENTIFIER_PATTERNS.items():
-        logger.info(
-            f"Searching for a valid {id_type.upper()} in the document {search_type}..."
+    @classmethod
+    def create_doi_result(
+        cls,
+        doi: str,
+        method: str,
+        confidence: float = 1.0,
+        validated: bool = False,
+        source: str = "",
+    ) -> "IdentifierResult":
+        """Create a DOI result."""
+        return cls(
+            identifier=doi,
+            id_type=IdentifierType.DOI,
+            method=method,
+            confidence=confidence,
+            validated=validated,
+            source=source,
         )
-        for sub_pattern in pattern:
-            matches = sub_pattern.findall(text)
-        if not matches:
-            logger.info(
-                f"No valid {id_type.upper()} found in the document {search_type}."
+
+    @classmethod
+    def create_arxiv_result(
+        cls,
+        arxiv_id: str,
+        method: str,
+        confidence: float = 1.0,
+        validated: bool = False,
+        source: str = "",
+    ) -> "IdentifierResult":
+        """Create an arXiv result."""
+        return cls(
+            identifier=arxiv_id,
+            id_type=IdentifierType.ARXIV,
+            method=method,
+            confidence=confidence,
+            validated=validated,
+            source=source,
+        )
+
+
+class IdentifierExtractor:
+    """
+    Extracts document identifiers (DOI, arXiv) from PDFs.
+
+    This class uses multiple extraction strategies, trying them in sequence
+    until a valid identifier is found.
+    """
+
+    def __init__(self, http_client: Optional[HttpClient] = None):
+        """
+        Initialize the extractor.
+
+        Args:
+            http_client: Optional HTTP client for validation and online services
+        """
+        self.http_client = http_client or HttpClient()
+
+    def extract_from_pdf(
+        self, pdf_path: Union[str, Path], validate: bool = True
+    ) -> Optional[IdentifierResult]:
+        """
+        Extract an identifier from a PDF file.
+
+        Args:
+            pdf_path: Path to the PDF file
+            validate: Whether to validate extracted identifiers
+
+        Returns:
+            IdentifierResult if an identifier was found, otherwise None
+
+        Raises:
+            DocumentError: If the PDF cannot be processed
+        """
+        try:
+            pdf_path = Path(pdf_path)
+            if not pdf_path.exists():
+                raise DocumentError(f"PDF file not found: {pdf_path}")
+
+            # Extract the metadata
+            metadata = self._extract_metadata(pdf_path)
+
+            # Try different extraction methods in sequence
+            result = (
+                # Method 1: Look in metadata for direct identifier fields
+                self._find_in_metadata_fields(metadata)
+                or
+                # Method 2: Look for identifiers in PDF info dictionary text
+                self._find_in_pdf_info(metadata)
+                or
+                # Method 3: Extract text from the first few pages and search
+                self._find_in_pdf_text(pdf_path)
+                or
+                # Method 4: Try using the filename or title
+                self._find_from_filename(pdf_path)
             )
+
+            # Validate the result if requested
+            if result and validate:
+                self._validate_result(result)
+
+            return result
+
+        except Exception as e:
+            if not isinstance(e, DocumentError):
+                e = DocumentError(
+                    f"Failed to extract identifier from PDF: {e}",
+                    document_path=str(pdf_path),
+                )
+            logger.error(str(e))
             return None
-        identifier = matches[0] if matches else ""
-        logger.debug(f"Potential {id_type.upper()} found: {identifier}")
 
-        validation = validate_identifier(identifier, id_type)
-        identifier = extract_identifier(identifier) if id_type == "doi" else ""
+    def _extract_metadata(self, pdf_path: Path) -> Dict:
+        """
+        Extract metadata from a PDF file.
 
-    return DOIFromPDFResult(identifier, id_type, validation)
+        Args:
+            pdf_path: Path to the PDF file
 
+        Returns:
+            Dictionary of metadata fields
 
-def validate_identifier(identifier: str, id_type: str) -> str:
-    """
-    Validate an identifier by querying appropriate URLs based on the identifier type.
+        Raises:
+            DocumentError: If metadata extraction fails
+        """
+        try:
+            with pdfplumber.open(pdf_path) as pdf:
+                metadata = pdf.metadata or {}
+                logger.debug(f"Extracted metadata: {metadata}")
+                return metadata
+        except Exception as e:
+            raise DocumentError(
+                f"Failed to extract metadata: {e}", document_path=str(pdf_path)
+            ) from e
 
-    :params str identifier: The identifier to be validated.
-    :params str id_type: Type of the identifier ('arxiv' or 'doi').
-    :rtype: Any
-    :returns: A string representation of the validation result, or None if validation fails.
-    """
-    try:
-        return (
-            validate_arxiv(identifier)
-            if id_type == "arxiv"
-            else validate_doi(identifier)
-        )
-    except Exception as e:
-        logger.error(
-            "Some error occured within the function validate_doi_web: %s" % e
-        )
-        return ""
+    def _find_in_metadata_fields(
+        self, metadata: Dict
+    ) -> Optional[IdentifierResult]:
+        """
+        Look for identifiers in common metadata fields.
 
+        Args:
+            metadata: PDF metadata dictionary
 
-def validate_doi(identifier: str) -> str:
-    """
-    Validates a DOI by making a GET request to the DOI resolution service.
+        Returns:
+            IdentifierResult if found, otherwise None
+        """
+        # Priority fields for DOI
+        doi_fields = ["doi", "DOI", "Doi", "pdf2doi_identifier"]
 
-    The function constructs a URL using the provided DOI identifier and sends a GET request
-    to the DOI resolution service (http://dx.doi.org/). It includes the "accept" header
-    with the value "application/citeproc+json" to specify the desired response format.
+        # Priority fields for arXiv
+        arxiv_fields = ["arxiv", "arXiv", "ARXIV", "eprint"]
 
-    After receiving the response, the function checks if the request was successful by
-    raising an exception if the status code indicates an error. Finally, it returns the
-    text content of the response.
+        # Check DOI fields
+        for field in doi_fields:
+            if field in metadata and metadata[field]:
+                value = str(metadata[field]).strip()
+                doi = extract_identifier(value)
+                if doi:
+                    logger.info(
+                        f"Found DOI in metadata field '{field}': {doi}"
+                    )
+                    return IdentifierResult.create_doi_result(
+                        doi=doi,
+                        method="metadata_field",
+                        confidence=0.9,
+                        source=field,
+                    )
 
-    Parameters:
-    identifier (str): The DOI identifier to be validated.
+        # Check arXiv fields
+        for field in arxiv_fields:
+            if field in metadata and metadata[field]:
+                value = str(metadata[field]).strip()
+                arxiv_id = extract_identifier(value)
+                if arxiv_id:
+                    logger.info(
+                        f"Found arXiv ID in metadata field '{field}': {arxiv_id}"
+                    )
+                    return IdentifierResult.create_arxiv_result(
+                        arxiv_id=arxiv_id,
+                        method="metadata_field",
+                        confidence=0.9,
+                        source=field,
+                    )
 
-    Returns:
-    str: The text content of the response from the DOI resolution service.
-    """
-    url = f"http://dx.doi.org/{identifier}"
-    headers = {"accept": "application/citeproc+json"}
-    response = client.get(url, headers=headers)
-    response.raise_for_status()
-    return response.text
-
-
-def validate_arxiv(identifier: str) -> str:
-    """
-    Validates an ArXiv identifier by querying the ArXiv API.
-
-    The function constructs a URL to query the ArXiv API using the provided identifier.
-    It then parses the response using the feedparser library and retrieves the first entry.
-    The function returns the string representation of the first entry.
-
-    Parameters:
-    identifier (str): The ArXiv identifier to be validated.
-
-    Returns:
-    str: The string representation of the first entry from the ArXiv API response.
-    """
-    url = f"http://export.arxiv.org/api/query?search_query=id:{identifier}"
-    result: FeedParserDict = feedparse(url)
-    item = str(result["entries"][0])
-    return item
-
-
-def find_identifier_by_googling_first_n_characters_in_pdf(
-    text: str,
-    num_results: int = 3,
-    num_characters: int = 50,
-) -> DOIFromPDFResult | None:
-    """
-    Perform a Google search using the first N characters of the text and
-    find an identifier in the search results.
-
-    :param str text: The text in which to search for an identifier.
-    :param int num_results: The number of search results to consider, defaults to 3.
-    :param int num_characters: The maximum number of characters to consider, defaults to 50.
-    """
-    logger.info(
-        f"Method #4: Trying to do a google search with the first {num_characters} characters of this pdf file..."
-    )
-
-    if not text.strip():
-        logger.error("No meaningful text could be extracted from this file.")
         return None
 
-    trimmed_text = text[:num_characters].lower()
+    def _find_in_pdf_info(self, metadata: Dict) -> Optional[IdentifierResult]:
+        """
+        Search for identifiers in the text of metadata fields.
 
-    logger.info(
-        f"Performing google search with first {num_results} characters of the text..."
-    )
-    return find_identifier_in_google_search(trimmed_text, num_results)
+        Args:
+            metadata: PDF metadata dictionary
+
+        Returns:
+            IdentifierResult if found, otherwise None
+        """
+        # Skip fields that are already checked in metadata_fields
+        skip_fields = {
+            "doi",
+            "DOI",
+            "Doi",
+            "arxiv",
+            "arXiv",
+            "ARXIV",
+            "eprint",
+        }
+
+        # Check all metadata values
+        for field, value in metadata.items():
+            if field in skip_fields:
+                continue
+
+            if not value or not isinstance(value, str):
+                continue
+
+            # Try to find a DOI
+            doi = extract_identifier(value)
+            if doi:
+                logger.info(f"Found DOI in metadata value '{field}': {doi}")
+                return IdentifierResult.create_doi_result(
+                    doi=doi,
+                    method="metadata_text",
+                    confidence=0.8,
+                    source=field,
+                )
+
+            # Try to find an arXiv ID
+            arxiv_id = extract_identifier(value)
+            if arxiv_id:
+                logger.info(
+                    f"Found arXiv ID in metadata value '{field}': {arxiv_id}"
+                )
+                return IdentifierResult.create_arxiv_result(
+                    arxiv_id=arxiv_id,
+                    method="metadata_text",
+                    confidence=0.8,
+                    source=field,
+                )
+
+        return None
+
+    def _find_in_pdf_text(self, pdf_path: Path) -> Optional[IdentifierResult]:
+        """
+        Extract text from PDF and search for identifiers.
+
+        Args:
+            pdf_path: Path to the PDF file
+
+        Returns:
+            IdentifierResult if found, otherwise None
+        """
+        try:
+            with pdfplumber.open(pdf_path) as pdf:
+                # Only process first few pages for efficiency
+                max_pages = min(5, len(pdf.pages))
+
+                # Extract text from each page
+                for i in range(max_pages):
+                    page = pdf.pages[i]
+                    text = page.extract_text()
+
+                    if not text:
+                        continue
+
+                    # Try to find a DOI
+                    doi = extract_identifier(text)
+                    if doi:
+                        logger.info(
+                            f"Found DOI in PDF text (page {i+1}): {doi}"
+                        )
+                        return IdentifierResult.create_doi_result(
+                            doi=doi,
+                            method="pdf_text",
+                            confidence=0.7,
+                            source=f"page_{i+1}",
+                        )
+
+                    # Try to find an arXiv ID
+                    arxiv_id = extract_identifier(text)
+                    if arxiv_id:
+                        logger.info(
+                            f"Found arXiv ID in PDF text (page {i+1}): {arxiv_id}"
+                        )
+                        return IdentifierResult.create_arxiv_result(
+                            arxiv_id=arxiv_id,
+                            method="pdf_text",
+                            confidence=0.7,
+                            source=f"page_{i+1}",
+                        )
+
+            return None
+
+        except Exception as e:
+            logger.warning(f"Failed to extract text from PDF: {e}")
+            return None
+
+    def _find_from_filename(
+        self, pdf_path: Path
+    ) -> Optional[IdentifierResult]:
+        """
+        Try to find an identifier in the filename.
+
+        Args:
+            pdf_path: Path to the PDF file
+
+        Returns:
+            IdentifierResult if found, otherwise None
+        """
+        filename = pdf_path.stem
+
+        # Try to find a DOI
+        doi = extract_identifier(filename)
+        if doi:
+            logger.info(f"Found DOI in filename: {doi}")
+            return IdentifierResult.create_doi_result(
+                doi=doi, method="filename", confidence=0.6, source="filename"
+            )
+
+        # Try to find an arXiv ID
+        arxiv_id = extract_identifier(filename)
+        if arxiv_id:
+            logger.info(f"Found arXiv ID in filename: {arxiv_id}")
+            return IdentifierResult.create_arxiv_result(
+                arxiv_id=arxiv_id,
+                method="filename",
+                confidence=0.6,
+                source="filename",
+            )
+
+        return None
+
+    def _validate_result(self, result: IdentifierResult) -> None:
+        """
+        Validate an identifier using appropriate web services.
+
+        Args:
+            result: The identifier result to validate
+
+        Updates:
+            The result's validated flag based on validation outcome
+        """
+        try:
+            if result.id_type == IdentifierType.DOI:
+                validated = self._validate_doi(result.identifier)
+            elif result.id_type == IdentifierType.ARXIV:
+                validated = self._validate_arxiv(result.identifier)
+            else:
+                validated = False
+
+            result.validated = validated
+            if validated:
+                logger.info(
+                    f"Validated {result.id_type.name}: {result.identifier}"
+                )
+            else:
+                logger.warning(
+                    f"Failed to validate {result.id_type.name}: {result.identifier}"
+                )
+
+        except Exception as e:
+            logger.error(f"Validation error: {e}")
+            result.validated = False
+
+    def _validate_doi(self, doi: str) -> bool:
+        """
+        Validate a DOI by checking with the DOI resolution service.
+
+        Args:
+            doi: The DOI to validate
+
+        Returns:
+            True if the DOI is valid, False otherwise
+        """
+        try:
+            url = f"https://doi.org/api/handles/{doi}"
+            response = self.http_client.get(url)
+
+            if response.ok:
+                data = response.json()
+                return data.get("responseCode", 0) == 1
+
+            return False
+
+        except Exception as e:
+            logger.warning(f"DOI validation failed: {e}")
+            return False
+
+    def _validate_arxiv(self, arxiv_id: str) -> bool:
+        """
+        Validate an arXiv ID by checking with the arXiv API.
+
+        Args:
+            arxiv_id: The arXiv ID to validate
+
+        Returns:
+            True if the arXiv ID is valid, False otherwise
+        """
+        try:
+            url = f"http://export.arxiv.org/api/query?id_list={arxiv_id}"
+            response = self.http_client.get(url)
+
+            if response.ok:
+                return "<entry>" in response.text
+
+            return False
+
+        except Exception as e:
+            logger.warning(f"arXiv validation failed: {e}")
+            return False
 
 
-def find_identifier_in_google_search(
-    query: str, num_results: int = 3, max_length_display: int = 100
-) -> DOIFromPDFResult | None:
-    """Perform a Google search using the query and find an identifier in the search results.
+# Helper functions for common operations
 
-    :param str query: The search query.
-    :param int num_results:  The number of search results to consider.
-    :param int max_length_display: The maximum number of characters to consider. Defaults to 100.
 
-    :rtype: DOIFromPDFResult | None
-    :returns: The result object containing the identifier information, if found; otherwise, None.
+def extract_doi_from_pdf(pdf_path: Union[str, Path]) -> Optional[str]:
     """
-    query_to_display: str = (
-        query[0:max_length_display]
-        if len(query) > max_length_display
-        else query
-    )
-    logger.info(
-        f"Performing google search with key {query_to_display}, considering first {num_results} results..."
-    )
-    for url in search(query, stop=num_results):
-        result = find_identifier_in_text(url)
+    Simple function to extract a DOI from a PDF.
 
-        if not (result and result.identifier):
-            continue
-        logger.info(
-            f"A valid {result.identifier_type} was found in the search URL."
-        )
-        return result
+    This is a convenience function for backward compatibility.
 
-    logger.info("No valid identifier found in the search results.")
+    Args:
+        pdf_path: Path to the PDF file
+
+    Returns:
+        DOI string if found, otherwise None
+    """
+    extractor = IdentifierExtractor()
+    result = extractor.extract_from_pdf(pdf_path)
+
+    if result and result.id_type == IdentifierType.DOI:
+        return result.identifier
+
     return None
+
+
+def extract_identifier_from_pdf(
+    pdf_path: Union[str, Path], validate: bool = True
+) -> Optional[IdentifierResult]:
+    """
+    Extract any identifier (DOI, arXiv) from a PDF.
+
+    Args:
+        pdf_path: Path to the PDF file
+        validate: Whether to validate the identifier
+
+    Returns:
+        IdentifierResult if found, otherwise None
+    """
+    extractor = IdentifierExtractor()
+    return extractor.extract_from_pdf(pdf_path, validate=validate)
+
+
+class OnlineIdentifierService:
+    """
+    Service for finding document identifiers using online services.
+
+    This service can search for identifiers using Google or other
+    academic search engines.
+    """
+
+    def __init__(self, http_client: Optional[HttpClient] = None):
+        """
+        Initialize the service.
+
+        Args:
+            http_client: HTTP client for making requests
+        """
+        self.http_client = http_client or HttpClient()
+
+    def search_by_title(
+        self, title: str, max_results: int = 3
+    ) -> Optional[IdentifierResult]:
+        """
+        Search for a document identifier using its title.
+
+        Args:
+            title: Document title
+            max_results: Maximum number of search results to check
+
+        Returns:
+            IdentifierResult if found, otherwise None
+        """
+        try:
+            # This would be implemented using a search API or web scraping
+            # For now, we'll just log that this would happen
+            logger.info(f"Would search for identifier using title: {title}")
+            logger.info(
+                "Online search functionality requires additional implementation"
+            )
+
+            # Mock implementation (in a real implementation, this would do a proper search)
+            return None
+
+        except Exception as e:
+            logger.error(f"Failed to search by title: {e}")
+            return None

@@ -7,8 +7,6 @@ from __future__ import annotations
 from argparse import ArgumentParser, Namespace
 from typing import TYPE_CHECKING
 
-from pydantic import FilePath
-
 from src.config import config
 from src.factories import SCISCRAPERS
 
@@ -35,7 +33,7 @@ def build_parser(argv: Sequence[str] | None) -> Namespace:
         "-f",
         "--file",
         metavar="FILE",
-        type=FilePath,  # type: ignore
+        type=str,
         default=config.source_file,
         help="Specify the target file: default: %(default)s)",
     )
