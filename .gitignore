@@ -17,3 +17,5 @@ dist/**
 sciscraper.code-workspace
 .logs/** */
 .logs/sciscraper.log
+poetry.toml
+poetry.lock
