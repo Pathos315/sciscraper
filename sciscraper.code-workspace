@@ -1,0 +1,98 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		// Editor settings
+		"editor.rulers": [88],
+		"editor.formatOnSave": true,
+		"editor.codeActionsOnSave": {
+		  "source.organizeImports": "explicit"
+		},
+		"editor.defaultFormatter": "ms-python.black-formatter",
+
+		// Python settings
+		"python.analysis.autoIndent": true,
+		"python.analysis.diagnosticMode": "workspace",
+		"python.poetryPath": "poetry",
+		"python.languageServer": "Pylance",
+
+		// Linting with mypy - comprehensive arguments
+		"mypy-type-checker.args": [
+		"--config-file=pyproject.toml",
+		"--python-version=3.8",
+		"--show-column-numbers",
+		"--show-error-codes",
+		"--no-pretty",
+		"--disallow-untyped-defs",
+		"--disallow-incomplete-defs",
+		"--check-untyped-defs",
+		"--disallow-untyped-decorators",
+		"--no-implicit-optional",
+		"--warn-redundant-casts",
+		"--warn-unused-ignores",
+		"--warn-return-any",
+		"--warn-unreachable",
+		"--allow-redefinition"
+		],
+		"mypy-type-checker.reportingScope": "workspace",
+		"mypy-type-checker.preferDaemon": true,
+		"mypy-type-checker.importStrategy": "fromEnvironment",
+		"mypy-type-checker.severity": {
+		"error": "Error",
+		"note": "Information"
+		},
+
+		// Formatter settings
+		"black-formatter.args": [
+		  "--config",
+		  "pyproject.toml"
+		],
+		"isort.args": [
+		  "--profile",
+		  "black"
+		],
+
+		// File associations
+		"files.associations": {
+		  "*.py": "python"
+		},
+
+		// Exclude patterns from file explorer
+		"files.exclude": {
+		  "**/__pycache__": true,
+		  "**/.pytest_cache": true,
+		  "**/.mypy_cache": true,
+		  "**/.coverage": true,
+		  "htmlcov": true,
+		  "**/*.pyc": true
+		},
+
+		// Terminal settings
+		"terminal.integrated.env.linux": {
+		  "PYTHONPATH": "${workspaceFolder}"
+		},
+		"terminal.integrated.env.osx": {
+		  "PYTHONPATH": "${workspaceFolder}"
+		},
+		"terminal.integrated.env.windows": {
+		  "PYTHONPATH": "${workspaceFolder}"
+		},
+
+		// Python test settings
+		"python.testing.pytestEnabled": true,
+		"python.testing.unittestEnabled": false,
+		"python.testing.pytestArgs": [
+		  "tests",
+		  "--cov=src",
+		  "-vv",
+		  "--cov-report=xml"
+		],
+
+		// Auto docstring
+		"autoDocstring.docstringFormat": "google",
+		"autoDocstring.startOnNewLine": true,
+	}
+}

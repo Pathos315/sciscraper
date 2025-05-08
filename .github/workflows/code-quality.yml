@@ -1,0 +1,59 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+  schedule:
+    - cron: '0 0 * * 0'  # Run weekly on Sunday at midnight UTC
+  workflow_dispatch:
+
+jobs:
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit safety
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          
+      - name: Run Bandit (Security Linter)
+        run: bandit -r src/ -f json -o bandit-results.json
+        continue-on-error: true
+        
+      - name: Run Safety Check
+        run: safety check --full-report
+        continue-on-error: true
+
+  complexity-scan:
+    name: Complexity Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install radon xenon
+          
+      - name: Run Radon (Code Metrics)
+        run: |
+          radon cc src/ --show-complexity --average --total-average
+          
+      - name: Run Xenon (Code Complexity Threshold Checker)
+        run: xenon --max-absolute B --max-modules A --max-average A src/
