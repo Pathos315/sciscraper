@@ -30,7 +30,7 @@ selectolax = "^0.3.14"
 python-dotenv = "^1.0.0"
 pydantic = "^2.0.3"
 pandas-stubs = "^2.2.0.240218"
-types-tqdm = "^4.66.0.20240106"
+types-tqdm = "^4.67.0.20250809"
 httpx = "^0.27.0"
 
 
