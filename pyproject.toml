@@ -51,7 +51,7 @@ requests-mock = "^1.11.0"
 hypothesis = "^6.82.0"
 
 [tool.poetry.group.formatting.dependencies]
-black = "^23.7.0"
+black = "^25.9.0"
 
 [tool.poetry.scripts]
 sciscraper_cli = "sciscrape.main:main"
