@@ -39,7 +39,7 @@ pytest = "^8.0.0"
 python-semantic-release = "^7.34.6"
 snakeviz = "^2.2.0"
 types-psutil = "^5.9.5.20240205"
-psutil = "^5.9.8"
+psutil = "^7.1.1"
 memory-profiler = "^0.61.0"
 ruff = "^0.2.2"
 
